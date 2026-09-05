@@ -1,7 +1,14 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { Buildings } from "@medusajs/icons"
-import { Container, Heading, Text, Badge } from "@medusajs/ui"
 import { useEffect, useMemo, useState } from "react"
+
+const PanelIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" />
+    <rect x="14" y="3" width="7" height="7" />
+    <rect x="14" y="14" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" />
+  </svg>
+)
 
 type Stats = {
   orders: number
@@ -25,6 +32,8 @@ async function count(path: string): Promise<number> {
   }
 }
 
+type Tile = { emo: string; lab: string; href: string; live: boolean; note?: string }
+
 function KontrollpanelPage() {
   const [s, setS] = useState<Stats>({
     orders: 0, ordersYear: 0, salesYear: 0, customers: 0,
@@ -41,7 +50,9 @@ function KontrollpanelPage() {
         count("/admin/products?limit=1"),
         count("/admin/product-categories?limit=1"),
       ])
-      let ordersYear = 0, salesYear = 0, offset = 0
+      let ordersYear = 0
+      let salesYear = 0
+      let offset = 0
       try {
         for (let i = 0; i < 50; i++) {
           const r = await fetch(
@@ -59,7 +70,9 @@ function KontrollpanelPage() {
           if (list.length < 200) break
           offset += 200
         }
-      } catch { /* ignore */ }
+      } catch {
+        // ignore
+      }
       if (alive) setS({ orders, ordersYear, salesYear, customers, products, categories, loading: false })
     })()
     return () => { alive = false }
@@ -68,7 +81,7 @@ function KontrollpanelPage() {
   const sek = (n: number) =>
     new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 0 }).format(n)
 
-  const groups = useMemo(() => ([
+  const groups: { title: string; tiles: Tile[] }[] = useMemo(() => ([
     {
       title: "Ordrar och kunder",
       tiles: [
@@ -141,19 +154,21 @@ function KontrollpanelPage() {
   ]
 
   return (
-    <Container className="p-0 overflow-hidden">
+    <div className="bg-ui-bg-base rounded-lg border overflow-hidden">
       <div className="flex items-center justify-between px-6 py-5 border-b">
         <div>
-          <Heading level="h1">Kontrollpanelen</Heading>
-          <Text size="small" className="text-ui-fg-subtle">Teknikhouse.se · Nordic Teknik House AB</Text>
+          <h1 className="text-xl font-semibold">Kontrollpanelen</h1>
+          <p className="text-sm text-ui-fg-subtle">Teknikhouse.se · Nordic Teknik House AB</p>
         </div>
-        <Badge color="green">SEK · Moms 25% inkl.</Badge>
+        <span className="text-xs px-3 py-1 rounded-full bg-ui-tag-green-bg text-ui-tag-green-text border border-ui-tag-green-border">
+          SEK · Moms 25% inkl.
+        </span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-ui-border-base">
         {kpis.map((c) => (
           <div key={c.k} className="bg-ui-bg-base px-5 py-4">
-            <Text size="xsmall" className="text-ui-fg-subtle">{c.k}</Text>
+            <p className="text-xs text-ui-fg-subtle">{c.k}</p>
             <div className="text-2xl font-semibold mt-1">{c.v}</div>
           </div>
         ))}
@@ -162,13 +177,13 @@ function KontrollpanelPage() {
       <div className="px-6 pb-8">
         {groups.map((g) => (
           <div key={g.title} className="mt-8">
-            <Heading level="h2" className="text-ui-fg-subtle border-b pb-2 mb-4">{g.title}</Heading>
+            <h2 className="text-sm font-semibold text-ui-fg-subtle border-b pb-2 mb-4 uppercase tracking-wide">{g.title}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
               {g.tiles.map((t) => (
                 <a
                   key={t.lab}
                   href={t.href}
-                  className="relative flex flex-col items-center text-center rounded-lg border border-transparent hover:border-ui-border-base hover:bg-ui-bg-base-hover px-3 pt-4 pb-5 min-h-[120px]"
+                  className="relative flex flex-col items-center text-center rounded-lg border border-transparent hover:border-ui-border-base hover:bg-ui-bg-base-hover px-3 pt-4 pb-5 min-h-[120px] no-underline"
                 >
                   {!t.live && (
                     <span className="absolute top-2 right-2 text-[9px] px-2 py-[1px] rounded-full bg-ui-bg-subtle text-ui-fg-muted border">
@@ -183,13 +198,13 @@ function KontrollpanelPage() {
           </div>
         ))}
       </div>
-    </Container>
+    </div>
   )
 }
 
 export const config = defineRouteConfig({
   label: "Kontrollpanel",
-  icon: Buildings,
+  icon: PanelIcon,
 })
 
 export default KontrollpanelPage
