@@ -1,4 +1,5 @@
 import { model, Module, MedusaService } from "@medusajs/framework/utils"
+import createPurchasingTables from "./loaders/create-tables"
 
 export const Supplier = model.define("supplier", {
   id: model.id().primaryKey(),
@@ -40,4 +41,5 @@ export const PURCHASING_MODULE = "purchasing"
 
 export default Module(PURCHASING_MODULE, {
   service: PurchasingModuleService,
+  loaders: [createPurchasingTables],
 })
