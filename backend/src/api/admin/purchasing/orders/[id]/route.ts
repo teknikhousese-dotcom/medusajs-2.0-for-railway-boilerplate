@@ -1,21 +1,21 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { PURCHASING_MODULE } from "../../../../../modules/purchasing"
+import { getPg, ensureTables, q } from "../../db"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const service: any = req.scope.resolve(PURCHASING_MODULE)
+  const pg = getPg(req.scope); await ensureTables(pg)
   const { id } = req.params
-  const order = await service.retrievePurchaseOrder(id)
-  const lines = await service.listPurchaseOrderLines({ purchase_order_id: id }, { take: 100000, order: { title: "ASC" } })
-  res.json({ order, lines })
+  const orders = await q(pg, `SELECT * FROM "purchase_order" WHERE "id" = ?`, [id])
+  const lines = await q(pg, `SELECT * FROM "purchase_order_line" WHERE "purchase_order_id" = ? AND "deleted_at" IS NULL ORDER BY "title" ASC`, [id])
+  res.json({ order: orders[0], lines })
 }
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
-  // update status (e.g. archive) or reference
-  const service: any = req.scope.resolve(PURCHASING_MODULE)
+  const pg = getPg(req.scope); await ensureTables(pg)
   const { id } = req.params
-  const body: any = req.body || {}
-  const update: any = { id }
-  for (const k of ["status", "reference"]) if (k in body) update[k] = body[k]
-  const order = await service.updatePurchaseOrders(update)
-  res.json({ order })
+  const b: any = req.body || {}
+  const sets: string[] = []; const vals: any[] = []
+  for (const k of ["status", "reference"]) { if (k in b) { sets.push(`"${k}" = ?`); vals.push(b[k]) } }
+  if (sets.length) { sets.push(`"updated_at" = now()`); vals.push(id); await q(pg, `UPDATE "purchase_order" SET ${sets.join(", ")} WHERE "id" = ?`, vals) }
+  const rows = await q(pg, `SELECT * FROM "purchase_order" WHERE "id" = ?`, [id])
+  res.json({ order: rows[0] })
 }
