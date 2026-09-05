@@ -1,6 +1,15 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useMemo, useState } from "react"
 
+/**
+ * Teknikhouse.se — Kontrollpanel
+ * A 1:1 Swedish mirror of the Wikinggruppen "butikadmin" control panel, built
+ * as a native Medusa admin route. The dashboard shows live store stats and the
+ * same grouped section tiles. Every Wiki section opens a real Swedish page:
+ * native features link into the live Medusa admin; custom features open an
+ * in-hub Swedish page. All data is read same-origin with the session cookie.
+ */
+
 const ADMIN = "/app"
 const PanelIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -23,8 +32,15 @@ type Section = {
   status?: "live" | "planering"; bullets?: string[]; actions?: { lab: string; href: string }[]; wiki?: string;
 }
 
+function initialView(): string {
+  try {
+    const p = new URLSearchParams(window.location.search).get("s")
+    return p || "home"
+  } catch { return "home" }
+}
+
 function KontrollpanelPage() {
-  const [view, setView] = useState<string>("home")
+  const [view, setView] = useState<string>(initialView)
   const [s, setS] = useState({ orders: 0, ordersYear: 0, salesYear: 0, customers: 0, products: 0, categories: 0, loading: true })
 
   useEffect(() => {
@@ -249,7 +265,7 @@ function KontrollpanelPage() {
           <div className="text-3xl font-extrabold tracking-tight leading-none">Teknik<span className="text-ui-fg-interactive">house</span>.se</div>
           <div className="text-[10px] uppercase tracking-[0.25em] text-ui-fg-muted mt-1">Framgångsrik e-handel · Medusa</div>
         </div>
-        <a href={`${ADMIN}/login`} className="flex flex-col items-center gap-0.5 text-[11px] text-ui-fg-interactive no-underline">
+        <a href={`${ADMIN}/login`} className="flex flex-col items-center gap-0.5 text-[11px] text-ui-fg-error no-underline">
           <span className="text-2xl leading-none">⏻</span>Logga ut
         </a>
       </div>
@@ -259,7 +275,7 @@ function KontrollpanelPage() {
         {s.orders > 0 ? (
           <button onClick={() => { window.location.href = `${ADMIN}/orders` }}
             className="w-full text-left text-sm font-semibold px-4 py-2.5 rounded-md border bg-ui-tag-orange-bg text-ui-tag-orange-text border-ui-tag-orange-border">
-            Du har {s.orders} ordrar. Klicka här för att visa ordrar →
+            Du har {s.orders} olästa ordrar! Klicka på orderknappen nedan.
           </button>
         ) : (
           <div className="w-full text-sm px-4 py-2.5 rounded-md border bg-ui-tag-green-bg text-ui-tag-green-text border-ui-tag-green-border">
@@ -280,17 +296,14 @@ function KontrollpanelPage() {
       <div className="px-6 pb-8">
         {groups.map((g) => (
           <div key={g.title} className="mt-8">
-            <h2 className="text-sm font-semibold text-ui-fg-subtle border-b pb-2 mb-4 uppercase tracking-wide">{g.title}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+            <h2 className="text-lg font-normal text-ui-fg-muted border-b pb-2 mb-5">{g.title}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               {g.tiles.map((t) => (
                 <button key={t.lab} onClick={() => go(t)}
-                  className="relative flex flex-col items-center text-center rounded-lg border border-transparent hover:border-ui-border-base hover:bg-ui-bg-base-hover px-3 pt-4 pb-5 min-h-[124px]">
-                  {t.section && (
-                    <span className="absolute top-2 right-2 text-[9px] px-2 py-[1px] rounded-full bg-ui-bg-subtle text-ui-fg-muted border">{t.note || "öppna"}</span>
-                  )}
-                  <span className="text-4xl leading-none mb-3">{t.emo}</span>
-                  <span className="text-xs font-medium text-ui-fg-base leading-tight">{t.lab}</span>
-                  {t.sub && <span className="text-[10px] text-ui-fg-muted mt-0.5">{t.sub}</span>}
+                  className="flex flex-col items-center text-center rounded-lg border border-transparent hover:border-ui-border-base hover:bg-ui-bg-base-hover px-3 pt-5 pb-6 min-h-[150px]">
+                  <span className="text-6xl leading-none mb-3">{t.emo}</span>
+                  <span className="text-sm font-medium text-ui-fg-base leading-tight">{t.lab}</span>
+                  {t.sub && <span className="text-[11px] text-ui-fg-muted mt-0.5">{t.sub}</span>}
                 </button>
               ))}
             </div>
