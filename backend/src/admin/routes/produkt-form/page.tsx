@@ -19,7 +19,7 @@ function ProduktFormPage() {
   const [f, setF] = useState<any>({
     artnr: "", namn: "", googleNamn: "", category_ids: [] as string[],
     skick: "Nyskick", momssats: "25", inpris: "", utpris: "", kampanj: false, kampanjpris: "", kampanjStart: "", kampanjSlut: "",
-    antal: "", oandligt: false, lagervarning: "", weight: "", skrymmande: false,
+    antal: "", oandligt: false, lagervarning: "", weight: "", skrymmande: false, bestallningsvara: false, emptyStockText: "", customText: "",
     beskrivning: "", images: "", htmlFalt: "", lagerplats: "", leverantor: "",
     tillverkare: "", ean: "", modell: "", sokord: "", visning: "show",
     metaTitle: "", metaDesc: "", h1: "",
@@ -45,7 +45,7 @@ function ProduktFormPage() {
           modell: m.modell || "", lagerplats: m.lagerplats || "", sokord: m.sokord || "",
           antal: m.antal || "", oandligt: m.oandligt === true || m.oandligt === "true",
           visning: m.visning || "show", metaTitle: m.seo_title || "", metaDesc: m.seo_desc || "", h1: m.h1 || "",
-          kampanj: m.kampanj === true || m.kampanj === "true", kampanjpris: m.kampanjpris || "", kampanjStart: m.kampanj_start || "", kampanjSlut: m.kampanj_slut || "", htmlFalt: m.html_falt || "",
+          kampanj: m.kampanj === true || m.kampanj === "true", kampanjpris: m.kampanjpris || "", kampanjStart: m.kampanj_start || "", kampanjSlut: m.kampanj_slut || "", htmlFalt: m.html_falt || "", bestallningsvara: m.bestallningsvara === true || m.bestallningsvara === "true", emptyStockText: m.empty_stock_text || "", customText: m.custom_text || "",
         }))
       }).catch(() => {})
     }
@@ -171,6 +171,9 @@ function ProduktFormPage() {
               <label style={{ fontSize: "12px", paddingBottom: "8px" }}><input type="checkbox" checked={f.skrymmande} onChange={(e) => set("skrymmande", e.target.checked)} /> Skrymmande?</label>
             </div>
 
+            <label style={{ ...lbl, fontWeight: 400 }}><input type="checkbox" checked={f.bestallningsvara} onChange={(e) => set("bestallningsvara", e.target.checked)} /> Beställningsvara (går att köpa även när den är slut i lager)</label>
+            {f.bestallningsvara && (<><label style={lbl}>Text som visas när varan är slut i lager</label><input style={inp} value={f.emptyStockText} onChange={(e) => set("emptyStockText", e.target.value)} placeholder="t.ex. Beställningsvara – leverans 5–7 dagar" /></>)}
+
             <label style={lbl}>Produktbeskrivning</label>
             <textarea style={{ ...inp, height: "150px" }} value={f.beskrivning} onChange={(e) => set("beskrivning", e.target.value)} />
 
@@ -181,6 +184,9 @@ function ProduktFormPage() {
 
             <label style={lbl}>HTML-fält (t.ex. YouTube-embed, max bredd 400px)</label>
             <textarea style={{ ...inp, height: "50px", fontFamily: "monospace" }} value={f.htmlFalt} onChange={(e) => set("htmlFalt", e.target.value)} />
+
+            <label style={lbl}>Egen text (visas på produktsidan)</label>
+            <textarea style={{ ...inp, height: "60px" }} value={f.customText} onChange={(e) => set("customText", e.target.value)} />
 
             <div style={{ display: "flex", gap: "12px" }}>
               <div style={{ flex: 1 }}>
