@@ -1,5 +1,6 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
+import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
 
 /**
  * Teknikhouse.se — Recensioner / Betyg (1:1 mirror of Wikinggruppen reviews.php)
@@ -7,68 +8,12 @@ import { useEffect, useState } from "react"
  * click a product to expand its individual reviews; delete inappropriate comments; mark read.
  * Raw-SQL table product_review under /admin/reviews (single dispatch route).
  */
-const ADMIN = "/app"
-const WF = "Verdana, Tahoma, Arial, sans-serif"
 const ReviewIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
     <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
   </svg>
 )
-type MenuItem = { emo: string; lab: string; href?: string }
-const MENU: MenuItem[] = [
-  { emo: "🏠", lab: "Start", href: `${ADMIN}/kontrollpanel` },
-  { emo: "📋", lab: "Visa ordrar", href: `${ADMIN}/ordrar` },
-  { emo: "📊", lab: "Statistik", href: `${ADMIN}/statistik` },
-  { emo: "📦", lab: "Inköp / Lager", href: `${ADMIN}/inkop-lager` },
-  { emo: "📇", lab: "Kunddatabas", href: `${ADMIN}/kunddatabas` },
-  { emo: "🛒", lab: "Kampanjutskick", href: `${ADMIN}/kampanjutskick` },
-  { emo: "✉️", lab: "Nyhetsbrev", href: `${ADMIN}/nyhetsbrev` },
-  { emo: "📱", lab: "SMS-utskick", href: `${ADMIN}/sms-utskick` },
-  { emo: "🤝", lab: "Avtalskunder", href: `${ADMIN}/avtalskunder` },
-  { emo: "🛍", lab: "Hantera produkter", href: `${ADMIN}/hantera-produkter` },
-  { emo: "💡", lab: "Rekommendationer", href: `${ADMIN}/rekommendationer` },
-  { emo: "🗂️", lab: "Hantera Varugrupper", href: `${ADMIN}/categories` },
-  { emo: "🏷️", lab: "Rabattkoder", href: `${ADMIN}/promotions` },
-  { emo: "🎁", lab: "Köp X betala för Y", href: `${ADMIN}/promotions` },
-  { emo: "🚚", lab: "Fraktinställningar", href: `${ADMIN}/settings/locations` },
-  { emo: "💳", lab: "Betalningsalternativ", href: `${ADMIN}/settings` },
-  { emo: "📄", lab: "Redigerbara sidor", href: `${ADMIN}/redigerbara-sidor` },
-  { emo: "📰", lab: "Nyheter", href: `${ADMIN}/nyheter` },
-  { emo: "🔗", lab: "Länkar", href: `${ADMIN}/lankar` },
-  { emo: "🔀", lab: "Import / Export", href: `${ADMIN}/products` },
-  { emo: "⭐", lab: "Recensioner / Betyg", href: `${ADMIN}/recensioner` },
-  { emo: "🖼️", lab: "Bildspel på 1:a sidan", href: `${ADMIN}/kontrollpanel?s=bildspel` },
-  { emo: "📝", lab: "Blogg", href: `${ADMIN}/kontrollpanel?s=blogg` },
-  { emo: "↪️", lab: "Hantera gamla URLer", href: `${ADMIN}/kontrollpanel?s=url301` },
-  { emo: "🌐", lab: "Språk och valuta", href: `${ADMIN}/settings/store` },
-  { emo: "🛍️", lab: "Google Shopping", href: `${ADMIN}/kontrollpanel?s=googlefeed` },
-  { emo: "📧", lab: "E-postmallar", href: `${ADMIN}/kontrollpanel?s=epost` },
-  { emo: "⚙️", lab: "Grundinställningar", href: `${ADMIN}/settings` },
-]
-function Snabbmeny({ online, unread, active }: { online: number | null; unread: number; active: string }) {
-  return (
-    <aside style={{ width: "220px", flexShrink: 0, borderRight: "1px solid #ccc", background: "#f4f4f4", fontFamily: WF }}>
-      <div style={{ padding: "10px 12px", borderBottom: "1px solid #ccc", background: "#fff" }}>
-        <div style={{ fontSize: "12px", fontWeight: 700 }}>Statistik</div>
-        <div style={{ fontSize: "11px", color: "#444", marginTop: "4px" }}>Besökare online: <b>{online == null ? "—" : online} st</b></div>
-        <div style={{ fontSize: "11px", color: "#444" }}>Olästa ordrar: <b>{unread} st</b></div>
-      </div>
-      <nav style={{ fontSize: "12px" }}>
-        {MENU.map((m) => (
-          <a key={m.lab} href={m.href}
-            style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 12px", textDecoration: "none", color: "#000",
-              borderBottom: "1px solid #e2e2e2", background: m.lab === active ? "#e2e2e2" : "transparent", fontWeight: m.lab === active ? 700 : 400 }}>
-            <span style={{ width: "18px", textAlign: "center" }}>{m.emo}</span><span>{m.lab}</span>
-          </a>
-        ))}
-        <a href={`${ADMIN}/login`} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 12px", textDecoration: "none", color: "#a00", borderBottom: "1px solid #e2e2e2" }}>
-          <span style={{ width: "18px", textAlign: "center" }}>⏻</span><span>Logga ut</span>
-        </a>
-      </nav>
-    </aside>
-  )
-}
 async function jget(u: string) { return fetch(u, { credentials: "include" }).then((r) => r.json()) }
 async function jsend(u: string, m: string, b?: any) { return fetch(u, { method: m, credentials: "include", headers: { "Content-Type": "application/json" }, body: b ? JSON.stringify(b) : undefined }).then((r) => r.json()) }
 
