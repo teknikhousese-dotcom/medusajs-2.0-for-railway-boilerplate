@@ -161,11 +161,25 @@ export function installGlobalMenu() {
   tick()
 }
 
+const HIDE_NATIVE_ROUTES = ["ordrar","statistik","inkop-lager","kunddatabas","kampanjutskick","nyhetsbrev","sms-utskick","avtalskunder","hantera-produkter","rekommendationer","varugrupper","rabattkoder","kop-x-for-y","fraktinstallningar","betalningsalternativ","redigerbara-sidor","nyheter","lankar","recensioner","bildspel","blogg","sprak-valuta","google-shopping","epostmallar","grundinstallningar","produkt-form"]
+
+export function installGlobalMenu() {
+  if (typeof document === "undefined") return
+  const id = "__butikadmin_hide_wiki_native"
+  if (document.getElementById(id)) return
+  const NS = '[class*="w-[220px]"][class*="border-e"] '
+  const sel = HIDE_NATIVE_ROUTES.map((r) => NS + 'a[href="' + ADMIN + "/" + r + '"]').join(",")
+  const st = document.createElement("style"); st.id = id
+  st.textContent = sel + "{display:none !important}"
+  document.head.appendChild(st)
+}
+
 /** Bulletproof: hide the native Medusa sidebar via a persistent stylesheet rule.
  *  A CSS rule matches the native sidebar whenever it mounts (no mount-order race),
  *  and is removed on unmount so native pages keep their own sidebar. */
 function useHideNativeSidebar() {
   useEffect(() => {
+    installGlobalMenu()
     const id = "__butikadmin_hide_native"
     let st = document.getElementById(id) as HTMLStyleElement | null
     if (!st) {
