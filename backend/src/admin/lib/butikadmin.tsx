@@ -80,7 +80,7 @@ function useHideNativeSidebar() {
     let st = document.getElementById(id) as HTMLStyleElement | null
     if (!st) {
       st = document.createElement("style"); st.id = id
-      st.textContent = 'div.h-screen.w-\\[220px\\].border-e.lg\\:flex{display:none !important}'
+      st.textContent = 'div.h-screen.w-\\[220px\\].border-e.lg\\:flex{display:none !important}@media print{aside[data-bm="menu"]{display:none !important}body{background:#fff}}'
       document.head.appendChild(st)
     }
     return () => { const e = document.getElementById(id); if (e) e.remove() }
@@ -109,7 +109,7 @@ export function Snabbmeny({ active }: { active?: string }) {
   })
 
   return (
-    <aside style={{ width: "220px", flexShrink: 0, borderRight: "1px solid #ccc", background: "#f4f4f4", fontFamily: WF }}>
+    <aside data-bm="menu" style={{ width: "220px", flexShrink: 0, borderRight: "1px solid #ccc", background: "#f4f4f4", fontFamily: WF }}>
       <div style={{ padding: "10px 12px", borderBottom: "1px solid #ccc", background: "#fff" }}>
         <div style={{ fontSize: "12px", fontWeight: 700 }}>Statistik</div>
         <div style={{ fontSize: "11px", color: "#444", marginTop: "4px" }}>Besökare online: <b>— st</b></div>
