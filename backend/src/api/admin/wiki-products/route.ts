@@ -107,7 +107,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     seo_title: b.metaTitle || "", seo_desc: b.metaDesc || "", h1: b.h1 || "",
     visning: b.visning || "show", kampanj: kampanjAktiv, kampanjpris: kampanjAktiv ? String(kampanjpris) : "", kampanj_start: b.kampanjStart || "", kampanj_slut: b.kampanjSlut || "", ordinarie_pris: kampanjAktiv ? String(utpris) : "", antal: b.antal != null ? String(b.antal) : "",
     oandligt: !!b.oandligt, lagervarning: b.lagervarning != null ? String(b.lagervarning) : "",
-    skrymmande: !!b.skrymmande,
+    skrymmande: !!b.skrymmande, bestallningsvara: !!b.bestallningsvara, empty_stock_text: b.emptyStockText || "", custom_text: b.customText || "",
   }
 
   const variant: any = {
