@@ -30,7 +30,7 @@ export const MENU: MenuItem[] = [
   { emo: "🤝", lab: "Avtalskunder", href: `${ADMIN}/avtalskunder` },
   {
     emo: "🛍", lab: "Hantera produkter", href: `${ADMIN}/hantera-produkter`, children: [
-      { lab: "Lägg in ny produkt", href: `${ADMIN}/products/create` },
+      { lab: "Lägg in ny produkt", href: `${ADMIN}/produkt-form` },
       { lab: "Kopiera produkt", href: `${ADMIN}/hantera-produkter?action=copy` },
       { lab: "Produktsortering", href: `${ADMIN}/hantera-produkter?action=sorting` },
       { lab: "Produktfiltrering", href: `${ADMIN}/hantera-produkter?action=filter` },
