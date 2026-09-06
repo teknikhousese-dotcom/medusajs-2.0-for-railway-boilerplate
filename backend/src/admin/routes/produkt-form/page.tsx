@@ -18,7 +18,7 @@ function ProduktFormPage() {
 
   const [f, setF] = useState<any>({
     artnr: "", namn: "", googleNamn: "", category_ids: [] as string[],
-    skick: "Nyskick", momssats: "25", inpris: "", utpris: "", kampanj: false,
+    skick: "Nyskick", momssats: "25", inpris: "", utpris: "", kampanj: false, kampanjpris: "", kampanjStart: "", kampanjSlut: "",
     antal: "", oandligt: false, lagervarning: "", weight: "", skrymmande: false,
     beskrivning: "", images: "", htmlFalt: "", lagerplats: "", leverantor: "",
     tillverkare: "", ean: "", modell: "", sokord: "", visning: "show",
@@ -45,7 +45,7 @@ function ProduktFormPage() {
           modell: m.modell || "", lagerplats: m.lagerplats || "", sokord: m.sokord || "",
           antal: m.antal || "", oandligt: m.oandligt === true || m.oandligt === "true",
           visning: m.visning || "show", metaTitle: m.seo_title || "", metaDesc: m.seo_desc || "", h1: m.h1 || "",
-          kampanj: m.kampanj === true || m.kampanj === "true", htmlFalt: m.html_falt || "",
+          kampanj: m.kampanj === true || m.kampanj === "true", kampanjpris: m.kampanjpris || "", kampanjStart: m.kampanj_start || "", kampanjSlut: m.kampanj_slut || "", htmlFalt: m.html_falt || "",
         }))
       }).catch(() => {})
     }
@@ -131,6 +131,25 @@ function ProduktFormPage() {
             </div>
 
             <label style={{ ...lbl, fontWeight: 400 }}><input type="checkbox" checked={f.kampanj} onChange={(e) => set("kampanj", e.target.checked)} /> Aktivera kampanj</label>
+            {f.kampanj && (
+              <div style={{ border: "1px solid #f0c36d", background: "#fffdf5", borderRadius: "4px", padding: "10px 12px", margin: "4px 0 8px" }}>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={lbl}>Kampanjpris (SEK, inkl. moms)</label>
+                    <input style={inp} value={f.kampanjpris} onChange={(e) => set("kampanjpris", e.target.value)} placeholder="Lägre än utpris" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={lbl}>Kampanj startdatum</label>
+                    <input style={inp} value={f.kampanjStart} onChange={(e) => set("kampanjStart", e.target.value)} placeholder="ÅÅÅÅ-MM-DD (valfritt)" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={lbl}>Kampanj slutdatum</label>
+                    <input style={inp} value={f.kampanjSlut} onChange={(e) => set("kampanjSlut", e.target.value)} placeholder="ÅÅÅÅ-MM-DD (valfritt)" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "11px", color: "#8a6d3b", marginTop: "4px" }}>Kampanjpriset blir produktens aktiva pris. Ordinarie utpris sparas som jämförpris.</div>
+              </div>
+            )}
 
             <div style={{ display: "flex", gap: "12px", alignItems: "flex-end" }}>
               <div style={{ flex: 1 }}>
