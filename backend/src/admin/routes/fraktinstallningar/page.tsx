@@ -8,29 +8,49 @@ const TruckIcon = () => (
   </svg>
 )
 
+const METHODS: [string, string][] = [
+  ["30", "Inrikes - Standard"],
+  ["18", "Inrikes - Postnord Ombud"],
+  ["34", "Inrikes - Express"],
+  ["23", "Inrikes - Hemleverans"],
+  ["33", "Inrikes - Hämta hos oss"],
+  ["7", "Europa - Standard"],
+]
+const emptyMethod = () => ({ levels: [{ weight: "", price: "" }], overweightPrice: "" })
+
 function FraktPage() {
-  const [f, setF] = useState<any>({ levels: [{ weight: "", price: "" }], overweightPrice: "", freeShipping: "", freeShippingRetail: "", bulky: "", method: "weight" })
+  const [current, setCurrent] = useState("30")
+  const [methods, setMethods] = useState<any>({ "30": emptyMethod() })
+  const [freeShipping, setFreeShipping] = useState("")
+  const [freeShippingRetail, setFreeShippingRetail] = useState("")
+  const [bulky, setBulky] = useState("")
   const [msg, setMsg] = useState("")
-  const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }))
 
   useEffect(() => {
     fetch("/admin/wiki-settings?group=shipping", { credentials: "include" }).then((r) => r.json()).then((j) => {
       const d = j.data || {}
-      setF({
-        levels: Array.isArray(d.levels) && d.levels.length ? d.levels : [{ weight: "", price: "" }],
-        overweightPrice: d.overweightPrice || "", freeShipping: d.freeShipping || "",
-        freeShippingRetail: d.freeShippingRetail || "", bulky: d.bulky || "", method: d.method || "weight",
-      })
+      let m = d.methods
+      // migrate old flat structure { levels, overweightPrice } → methods["30"]
+      if (!m && Array.isArray(d.levels)) m = { "30": { levels: d.levels, overweightPrice: d.overweightPrice || "" } }
+      if (!m || !Object.keys(m).length) m = { "30": emptyMethod() }
+      setMethods(m)
+      setCurrent(Object.keys(m)[0] || "30")
+      setFreeShipping(d.freeShipping || "")
+      setFreeShippingRetail(d.freeShippingRetail || "")
+      setBulky(d.bulky || "")
     }).catch(() => {})
   }, [])
   const save = async () => {
     setMsg("Sparar…")
-    const r = await fetch("/admin/wiki-settings", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ group: "shipping", data: f }) })
+    const r = await fetch("/admin/wiki-settings", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ group: "shipping", data: { methods, freeShipping, freeShippingRetail, bulky } }) })
     const j = await r.json(); setMsg(j.ok ? "✔ Fraktinställningar sparade." : "Fel: " + (j.error || ""))
   }
-  const setLevel = (i: number, k: string, v: string) => setF((p: any) => ({ ...p, levels: p.levels.map((l: any, idx: number) => idx === i ? { ...l, [k]: v } : l) }))
-  const addLevel = () => setF((p: any) => ({ ...p, levels: [...p.levels, { weight: "", price: "" }] }))
-  const delLevel = (i: number) => setF((p: any) => ({ ...p, levels: p.levels.filter((_: any, idx: number) => idx !== i) }))
+
+  const cm = methods[current] || emptyMethod()
+  const patchCur = (patch: any) => setMethods((p: any) => ({ ...p, [current]: { ...(p[current] || emptyMethod()), ...patch } }))
+  const setLevel = (i: number, k: string, v: string) => patchCur({ levels: cm.levels.map((l: any, idx: number) => idx === i ? { ...l, [k]: v } : l) })
+  const addLevel = () => patchCur({ levels: [...cm.levels, { weight: "", price: "" }] })
+  const delLevel = (i: number) => patchCur({ levels: cm.levels.filter((_: any, idx: number) => idx !== i) })
 
   const lbl: any = { fontSize: "12px", fontWeight: 700, display: "block", margin: "10px 0 3px" }
   const inp: any = { padding: "6px 8px", border: "1px solid #bbb", borderRadius: "3px", fontSize: "12px", fontFamily: WF, boxSizing: "border-box" }
@@ -49,31 +69,36 @@ function FraktPage() {
           <div style={{ padding: "16px", maxWidth: "760px" }}>
             {msg && <div style={{ padding: "8px 10px", marginBottom: "10px", borderRadius: "3px", background: msg.startsWith("Fel") ? "#fdecea" : "#e8f5e9", color: msg.startsWith("Fel") ? "#a00" : "#256029", fontSize: "12px" }}>{msg}</div>}
 
+            <label style={lbl}>Fraktsätt att redigera</label>
+            <select style={{ ...inp, width: "260px" }} value={current} onChange={(e) => setCurrent(e.target.value)}>
+              {METHODS.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+            </select>
+
             <div style={sect}>Fraktkostnad per vikt</div>
-            <div style={{ fontSize: "11px", color: "#888", marginBottom: "6px" }}>Kostnad per viktnivå. Frakten beräknas utifrån den totala vikten i kundvagnen.</div>
+            <div style={{ fontSize: "11px", color: "#888", marginBottom: "6px" }}>Kostnad per viktnivå för valt fraktsätt. Frakten beräknas utifrån den totala vikten i kundvagnen.</div>
             <table style={{ borderCollapse: "collapse" }}>
               <thead><tr><th style={th}>Vikt (upp till, gram)</th><th style={th}>Pris (kr)</th><th style={th}></th></tr></thead>
               <tbody>
-                {f.levels.map((l: any, i: number) => (
+                {cm.levels.map((l: any, i: number) => (
                   <tr key={i}>
                     <td style={td}><input style={{ ...inp, width: "150px" }} value={l.weight} onChange={(e) => setLevel(i, "weight", e.target.value)} /></td>
                     <td style={td}><input style={{ ...inp, width: "110px" }} value={l.price} onChange={(e) => setLevel(i, "price", e.target.value)} /></td>
-                    <td style={td}>{f.levels.length > 1 && <a style={{ color: "#a00", cursor: "pointer" }} onClick={() => delLevel(i)}>Ta bort</a>}</td>
+                    <td style={td}>{cm.levels.length > 1 && <a style={{ color: "#a00", cursor: "pointer" }} onClick={() => delLevel(i)}>Ta bort</a>}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <div style={{ margin: "8px 0" }}><button style={{ ...btn, background: "#4a90d9", padding: "5px 12px" }} onClick={addLevel}>+ Lägg till viktnivå</button></div>
             <label style={lbl}>Om vikten överstiger alla nivåer, använd följande fraktkostnad (kr)</label>
-            <input style={{ ...inp, width: "150px" }} value={f.overweightPrice} onChange={(e) => set("overweightPrice", e.target.value)} />
+            <input style={{ ...inp, width: "150px" }} value={cm.overweightPrice} onChange={(e) => patchCur({ overweightPrice: e.target.value })} />
 
-            <div style={sect}>Övriga inställningar</div>
+            <div style={sect}>Övriga inställningar (gäller alla fraktsätt)</div>
             <label style={lbl}>Fraktfritt över värde (kr) — 0 = av</label>
-            <input style={{ ...inp, width: "150px" }} value={f.freeShipping} onChange={(e) => set("freeShipping", e.target.value)} />
+            <input style={{ ...inp, width: "150px" }} value={freeShipping} onChange={(e) => setFreeShipping(e.target.value)} />
             <label style={lbl}>Fraktfritt för avtalskunder över värde (kr)</label>
-            <input style={{ ...inp, width: "150px" }} value={f.freeShippingRetail} onChange={(e) => set("freeShippingRetail", e.target.value)} />
+            <input style={{ ...inp, width: "150px" }} value={freeShippingRetail} onChange={(e) => setFreeShippingRetail(e.target.value)} />
             <label style={lbl}>Extra avgift per skrymmande produkt (kr)</label>
-            <input style={{ ...inp, width: "150px" }} value={f.bulky} onChange={(e) => set("bulky", e.target.value)} />
+            <input style={{ ...inp, width: "150px" }} value={bulky} onChange={(e) => setBulky(e.target.value)} />
 
             <div style={{ marginTop: "16px" }}><button style={btn} onClick={save}>Spara fraktinställningar</button></div>
           </div>
