@@ -45,8 +45,8 @@ export const MENU: MenuItem[] = [
   },
   { emo: "🏷️", lab: "Rabattkoder", href: `${ADMIN}/rabattkoder` },
   { emo: "🎁", lab: "Köp X betala för Y", href: `${ADMIN}/kop-x-for-y` },
-  { emo: "🚚", lab: "Fraktinställningar", href: `${ADMIN}/settings/locations` },
-  { emo: "💳", lab: "Betalningsalternativ", href: `${ADMIN}/settings` },
+  { emo: "🚚", lab: "Fraktinställningar", href: `${ADMIN}/fraktinstallningar` },
+  { emo: "💳", lab: "Betalningsalternativ", href: `${ADMIN}/betalningsalternativ` },
   { emo: "📄", lab: "Redigerbara sidor", href: `${ADMIN}/redigerbara-sidor` },
   {
     emo: "📰", lab: "Nyheter", href: `${ADMIN}/nyheter`, children: [
@@ -59,11 +59,11 @@ export const MENU: MenuItem[] = [
   { emo: "🖼️", lab: "Bildspel på 1:a sidan", href: `${ADMIN}/bildspel` },
   { emo: "📝", lab: "Blogg", href: `${ADMIN}/blogg` },
   { emo: "↪️", lab: "Hantera gamla URLer", href: `${ADMIN}/kontrollpanel?s=url301` },
-  { emo: "🌐", lab: "Språk och valuta", href: `${ADMIN}/settings/store` },
+  { emo: "🌐", lab: "Språk och valuta", href: `${ADMIN}/sprak-valuta` },
   { emo: "🈳", lab: "Översättningar", href: `${ADMIN}/kontrollpanel?s=translations` },
   { emo: "🛍️", lab: "Google Shopping", href: `${ADMIN}/google-shopping` },
   { emo: "📧", lab: "E-postmallar", href: `${ADMIN}/epostmallar` },
-  { emo: "⚙️", lab: "Grundinställningar", href: `${ADMIN}/settings` },
+  { emo: "⚙️", lab: "Grundinställningar", href: `${ADMIN}/grundinstallningar` },
 ]
 
 export async function jget(u: string) { return fetch(u, { credentials: "include" }).then((r) => r.json()) }
