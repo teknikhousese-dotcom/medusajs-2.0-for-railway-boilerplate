@@ -4,9 +4,10 @@ import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
 
 /**
  * Teknikhouse.se — Hantera produkter (mirror of Wikinggruppen products_multiedit.php)
- * Bulk product editor over the native Medusa product APIs (same-origin fetch, no custom tables).
- * Filter (Varugrupp / Sök / Status) → checkbox-select → bulk Publicera/Avpublicera + Koppla varugrupp.
- * Per-row: Redigera (native), Kopiera (duplicate). Sub-items: Lägg in ny / Sortering / Filtrering.
+ * Default view: bulk product editor over the native Medusa product APIs.
+ * ?action=copy → the dedicated "KOPIERA PRODUKT" wizard (products.php?action=copy):
+ *   1. Produkt som ska kopieras (sök)  2. Vad ska kopieras (Valalternativ /
+ *   Associeringar / Köp X betala för Y-regler)  3. Nytt artikelnummer  4. Skapa kopia.
  */
 const BoxIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -18,8 +19,176 @@ async function jget(u: string) { return fetch(u, { credentials: "include" }).the
 async function jsend(u: string, m: string, b?: any) { return fetch(u, { method: m, credentials: "include", headers: { "Content-Type": "application/json" }, body: b ? JSON.stringify(b) : undefined }).then((r) => r.json()) }
 
 const PAGE = 50
+const inp: any = { fontFamily: WF, fontSize: "12px", padding: "4px 6px", border: "1px solid #bbb", borderRadius: "2px" }
+const btn: any = { fontFamily: WF, fontSize: "12px", padding: "4px 12px", border: "1px solid #999", borderRadius: "3px", background: "#f0f0f0", cursor: "pointer" }
 
-function HanteraProdukterPage() {
+function useHideNativeNav() {
+  useEffect(() => {
+    const el = Array.from(document.querySelectorAll("div")).find((d) => {
+      const c = typeof d.className === "string" ? d.className : ""
+      return c.includes("w-[220px]") && c.includes("lg:flex") && c.includes("border-e")
+    }) as HTMLElement | undefined
+    const prev = el ? el.style.display : ""
+    if (el) el.style.display = "none"
+    return () => { if (el) el.style.display = prev }
+  }, [])
+}
+
+/* ------------------------------------------------------------------ COPY WIZARD */
+function CopyPage() {
+  useHideNativeNav()
+  const [meta, setMeta] = useState<{ online: number | null; unread: number }>({ online: null, unread: 0 })
+  const [q, setQ] = useState("")
+  const [results, setResults] = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const [sel, setSel] = useState<any>(null)
+  const [opts, setOpts] = useState({ valalternativ: true, associeringar: true, xy: false })
+  const [artnr, setArtnr] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState("")
+  const [done, setDone] = useState<any>(null)
+
+  useEffect(() => { jget("/admin/orders?limit=1").then((o) => setMeta((s) => ({ ...s, unread: o.count || 0 }))).catch(() => {}) }, [])
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("id")
+    if (!id) return
+    jget(`/admin/products/${id}?fields=id,title,thumbnail,*variants`).then((d) => { if (d.product) pick(d.product) }).catch(() => {})
+  }, [])
+
+  const search = async () => {
+    if (q.trim().length < 2) { setMsg("Ange minst 2 tecken för att söka."); return }
+    setSearching(true); setMsg("")
+    try {
+      const d = await jget(`/admin/products?limit=15&q=${encodeURIComponent(q.trim())}&fields=id,title,thumbnail,*variants`)
+      setResults(d.products || [])
+      if (!(d.products || []).length) setMsg("Inga produkter matchar sökningen.")
+    } catch { setMsg("Kunde inte söka produkter.") }
+    setSearching(false)
+  }
+  const pick = (p: any) => { setSel(p); setResults([]); setQ(p.title); const sku = (p.variants || [])[0]?.sku || ""; setArtnr(sku ? sku + "-KOPIA" : "") }
+
+  const skapaKopia = async () => {
+    if (!sel) { setMsg("Välj först en produkt att kopiera."); return }
+    if (!artnr.trim()) { setMsg("Ange ett nytt artikelnummer."); return }
+    setBusy(true); setMsg("Skapar kopia…"); setDone(null)
+    try {
+      const full = await jget(`/admin/products/${sel.id}?fields=id,title,subtitle,description,handle,weight,material,thumbnail,status,*images,*options,*options.values,*variants,*variants.options,*variants.prices,*categories,*tags,collection_id`)
+      const p = full.product
+      const useVar = opts.valalternativ && (p.options || []).length > 0
+      const payload: any = {
+        title: p.title + " (kopia)",
+        status: "draft",
+        subtitle: p.subtitle || undefined,
+        description: p.description || undefined,
+        handle: (p.handle ? p.handle : "produkt") + "-kopia-" + Date.now().toString(36),
+        weight: p.weight || undefined,
+        material: p.material || undefined,
+        thumbnail: p.thumbnail || undefined,
+        images: (p.images || []).map((im: any) => ({ url: im.url })),
+      }
+      if (opts.associeringar) {
+        payload.categories = (p.categories || []).map((c: any) => ({ id: c.id }))
+        if (p.collection_id) payload.collection_id = p.collection_id
+        if ((p.tags || []).length) payload.tags = p.tags.map((t: any) => ({ id: t.id }))
+      }
+      if (useVar) {
+        payload.options = (p.options || []).map((o: any) => ({ title: o.title, values: (o.values || []).map((v: any) => v.value) }))
+        payload.variants = (p.variants || []).map((v: any, i: number) => ({
+          title: v.title || "Default",
+          sku: i === 0 ? artnr.trim() : (v.sku ? v.sku + "-KOPIA" : undefined),
+          prices: (v.prices || []).map((pr: any) => ({ amount: pr.amount, currency_code: pr.currency_code })),
+          options: Object.fromEntries((v.options || []).map((o: any) => [o.option?.title || "Default", o.value])),
+        }))
+      } else {
+        const v0 = (p.variants || [])[0] || {}
+        payload.options = [{ title: "Default", values: ["Default"] }]
+        payload.variants = [{ title: v0.title || "Default", sku: artnr.trim(), prices: (v0.prices || []).map((pr: any) => ({ amount: pr.amount, currency_code: pr.currency_code })), options: { Default: "Default" } }]
+      }
+      const r = await jsend("/admin/products", "POST", payload)
+      if (!r.product) { setMsg("Kunde inte skapa kopian: " + (r.message || JSON.stringify(r).slice(0, 160))); setBusy(false); return }
+      const np = r.product
+      let xyMsg = ""
+      if (opts.xy) {
+        try {
+          const list = await jget("/admin/wiki-xfory")
+          const rules = (list.rules || list.promotions || []).filter((ru: any) => JSON.stringify(ru).includes(sel.id))
+          let made = 0
+          for (const ru of rules) {
+            const ids = Array.from(new Set([...(ru.product_ids || []), np.id]))
+            const rr = await jsend("/admin/wiki-xfory", "POST", { namn: (ru.namn || ru.name || "Kopia-regel") + " (kopia)", x: ru.x || ru.buy_quantity, y: ru.y || ru.pay_quantity, product_ids: ids })
+            if (rr && !rr.error) made++
+          }
+          xyMsg = made ? ` ${made} Köp-X-betala-för-Y-regel(er) kopierade.` : " Inga matchande X-för-Y-regler hittades."
+        } catch { xyMsg = " (X-för-Y-regler kunde inte kopieras automatiskt.)" }
+      }
+      setDone(np)
+      setMsg(`✔ Kopia skapad som utkast: ${np.title} (artnr ${artnr.trim()}).` + xyMsg)
+    } catch (e: any) { setMsg("Fel: " + String((e && e.message) || e)) }
+    setBusy(false)
+  }
+
+  const card: any = { border: "1px solid #ddd", borderRadius: "5px", background: "#fafafa", padding: "12px 14px", marginBottom: "12px" }
+  const step: any = { fontWeight: 700, fontSize: "13px", marginBottom: "8px", color: "#333" }
+  const chk: any = { display: "block", fontSize: "12px", margin: "4px 0" }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden", display: "flex", minHeight: "600px", fontFamily: WF }}>
+      <Snabbmeny online={meta.online} unread={meta.unread} active="Hantera produkter" />
+      <div style={{ flex: 1, minWidth: 0, padding: "16px 22px", maxWidth: "760px" }}>
+        <div style={{ textAlign: "center", marginBottom: "14px" }}>
+          <span style={{ fontSize: "22px", verticalAlign: "middle", marginRight: "8px" }}>📋</span>
+          <span style={{ fontSize: "16px", fontWeight: 700, verticalAlign: "middle" }}>KOPIERA PRODUKT</span>
+        </div>
+
+        <div style={card}>
+          <div style={step}>1. Produkt som ska kopieras</div>
+          <div style={{ fontSize: "11px", color: "#777", marginBottom: "6px" }}>För att söka, ange minst 2 tecken av namn eller artikelnummer.</div>
+          <input style={{ ...inp, width: "280px" }} value={q} placeholder="Sök namn eller artikelnummer…" onChange={(e) => { setQ(e.target.value); setSel(null) }} onKeyDown={(e) => { if (e.key === "Enter") search() }} />
+          <button style={{ ...btn, marginLeft: "6px" }} onClick={search} disabled={searching}>{searching ? "Söker…" : "Sök"}</button>
+          {results.length > 0 && (
+            <div style={{ border: "1px solid #ccc", borderRadius: "3px", marginTop: "8px", maxHeight: "220px", overflow: "auto", background: "#fff" }}>
+              {results.map((p) => (
+                <div key={p.id} onClick={() => pick(p)} style={{ padding: "5px 8px", borderBottom: "1px solid #eee", cursor: "pointer", fontSize: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  {p.thumbnail ? <img src={p.thumbnail} style={{ width: "26px", height: "26px", objectFit: "cover", borderRadius: "3px" }} /> : <span style={{ width: "26px" }} />}
+                  <span>{p.title}</span>
+                  <span style={{ color: "#999", marginLeft: "auto" }}>{(p.variants || [])[0]?.sku || ""}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {sel && <div style={{ marginTop: "8px", fontSize: "12px", color: "#036" }}>Vald: <b>{sel.title}</b>{(sel.variants || [])[0]?.sku ? ` (artnr ${(sel.variants || [])[0].sku})` : ""}</div>}
+        </div>
+
+        <div style={card}>
+          <div style={step}>2. Vad ska kopieras (förutom produktdetaljer)?</div>
+          <label style={chk}><input type="checkbox" checked={opts.valalternativ} onChange={(e) => setOpts({ ...opts, valalternativ: e.target.checked })} /> Valalternativ</label>
+          <label style={chk}><input type="checkbox" checked={opts.associeringar} onChange={(e) => setOpts({ ...opts, associeringar: e.target.checked })} /> Associeringar till andra produkter</label>
+          <label style={chk}><input type="checkbox" checked={opts.xy} onChange={(e) => setOpts({ ...opts, xy: e.target.checked })} /> Köp X betala för Y-regler</label>
+        </div>
+
+        <div style={card}>
+          <div style={step}>3. Nytt artikelnummer</div>
+          <input style={{ ...inp, width: "220px" }} value={artnr} placeholder="Nytt artikelnummer…" onChange={(e) => setArtnr(e.target.value)} />
+        </div>
+
+        <div style={card}>
+          <div style={step}>4. Skapa kopia</div>
+          <button style={{ ...btn, background: "#2e7d32", color: "#fff", border: "1px solid #2e7d32", padding: "6px 18px" }} onClick={skapaKopia} disabled={busy || !sel}>Skapa kopia</button>
+          {msg && <div style={{ marginTop: "10px", fontSize: "12px", color: msg.startsWith("Fel") || msg.startsWith("Kunde") ? "#a00" : "#256029" }}>{msg}</div>}
+          {done && <div style={{ marginTop: "6px", fontSize: "12px" }}><a href={`${ADMIN}/products/${done.id}`} style={{ color: "#0060cc" }}>► Öppna kopian för redigering</a></div>}
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: "6px", fontSize: "12px" }}>
+          <a href={`${ADMIN}/hantera-produkter`} style={{ color: "#0060cc" }}>◄ Tillbaka till produktlistan</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------- GRID VIEW */
+function GridPage() {
+  useHideNativeNav()
   const [meta, setMeta] = useState<{ online: number | null; unread: number }>({ online: null, unread: 0 })
   const [cats, setCats] = useState<any[]>([])
   const [catId, setCatId] = useState("")
@@ -33,15 +202,6 @@ function HanteraProdukterPage() {
   const [note, setNote] = useState("")
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => {
-    const el = Array.from(document.querySelectorAll("div")).find((d) => {
-      const c = typeof d.className === "string" ? d.className : ""
-      return c.includes("w-[220px]") && c.includes("lg:flex") && c.includes("border-e")
-    }) as HTMLElement | undefined
-    const prev = el ? el.style.display : ""
-    if (el) el.style.display = "none"
-    return () => { if (el) el.style.display = prev }
-  }, [])
   useEffect(() => {
     jget("/admin/orders?limit=1").then((o) => setMeta((s) => ({ ...s, unread: o.count || 0 }))).catch(() => {})
     jget("/admin/product-categories?limit=1000&fields=id,name,parent_category_id").then((d) => setCats(d.product_categories || [])).catch(() => {})
@@ -84,29 +244,8 @@ function HanteraProdukterPage() {
     }
     setBusy(false); setNote(`${ok} produkt(er) kopplade till varugruppen.`); load(offset)
   }
-  const copyProduct = async (row: any) => {
-    if (!confirm(`Kopiera "${row.title}"?`)) return
-    const full = await jget(`/admin/products/${row.id}?fields=id,title,*categories,*options,*variants,*variants.options`)
-    const p = full.product
-    const opts = (p.options || []).map((o: any) => ({ title: o.title, values: (o.values || []).map((v: any) => v.value) }))
-    const payload: any = {
-      title: p.title + " (kopia)", status: "draft",
-      categories: (p.categories || []).map((c: any) => ({ id: c.id })),
-      options: opts.length ? opts : [{ title: "Default", values: ["Default"] }],
-      variants: (p.variants || []).map((v: any, i: number) => ({
-        title: v.title || "Default",
-        sku: v.sku ? v.sku + "-KOPIA" : undefined,
-        options: opts.length ? Object.fromEntries((v.options || []).map((o: any) => [o.option?.title || "Default", o.value])) : { Default: "Default" },
-      })),
-    }
-    if (!payload.variants.length) payload.variants = [{ title: "Default", options: { Default: "Default" } }]
-    const r = await jsend("/admin/products", "POST", payload)
-    if (r.product) { setNote(`Kopia skapad: ${r.product.title} (utkast).`); load(offset) } else setNote("Kunde inte kopiera produkten.")
-  }
 
   const catName = (row: any) => (row.categories || []).map((c: any) => c.name).join(", ") || "—"
-  const inp: any = { fontFamily: WF, fontSize: "12px", padding: "4px 6px", border: "1px solid #bbb", borderRadius: "2px" }
-  const btn: any = { fontFamily: WF, fontSize: "12px", padding: "4px 12px", border: "1px solid #999", borderRadius: "3px", background: "#f0f0f0", cursor: "pointer" }
   const th: any = { border: "1px solid #bbb", padding: "6px 8px", fontWeight: 700, fontSize: "11px", textAlign: "left", background: "#cccccc" }
   const td: any = { border: "1px solid #e2e2e2", padding: "5px 8px", fontSize: "12px" }
   const sel = ids()
@@ -121,16 +260,16 @@ function HanteraProdukterPage() {
         </div>
         <p style={{ fontSize: "12px", color: "#333", margin: "0 0 10px" }}>Här listas butikens produkter. Genom att kryssa för dem kan du ändra flera i ett svep.</p>
 
-        {/* sub-item bar */}
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "12px", fontSize: "12px" }}>
-          <a href={`${ADMIN}/products/create`} style={{ color: "#0060cc" }}>＋ Lägg in ny produkt</a>
+          <a href={`${ADMIN}/produkt-form`} style={{ color: "#0060cc" }}>＋ Lägg in ny produkt</a>
           <span style={{ color: "#bbb" }}>|</span>
-          <a href={`${ADMIN}/categories`} style={{ color: "#0060cc" }}>Produktsortering (varugrupper)</a>
+          <a href={`${ADMIN}/hantera-produkter?action=copy`} style={{ color: "#0060cc" }}>Kopiera produkt</a>
           <span style={{ color: "#bbb" }}>|</span>
-          <a href={`${ADMIN}/products`} style={{ color: "#0060cc" }}>Produktfiltrering (native)</a>
+          <a href={`${ADMIN}/categories`} style={{ color: "#0060cc" }}>Produktsortering</a>
+          <span style={{ color: "#bbb" }}>|</span>
+          <a href={`${ADMIN}/products`} style={{ color: "#0060cc" }}>Produktfiltrering</a>
         </div>
 
-        {/* Urval */}
         <div style={{ border: "1px solid #ddd", background: "#fafafa", borderRadius: "4px", padding: "10px 14px", marginBottom: "12px" }}>
           <div style={{ fontWeight: 700, fontSize: "12px", marginBottom: "6px" }}>Urval</div>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
@@ -146,7 +285,6 @@ function HanteraProdukterPage() {
           </div>
         </div>
 
-        {/* Bulk bar */}
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center", marginBottom: "8px" }}>
           <span style={{ fontSize: "12px", color: "#555" }}>Markerade: <b>{sel.length}</b></span>
           <button style={btn} onClick={() => bulkStatus("published")} disabled={busy || !sel.length}>Publicera</button>
@@ -179,7 +317,7 @@ function HanteraProdukterPage() {
                   <td style={{ ...td, whiteSpace: "nowrap" }}>
                     <a href={`${ADMIN}/products/${r.id}`} style={{ color: "#0060cc" }}>Redigera</a>
                     <span style={{ color: "#bbb" }}> | </span>
-                    <a href="#" onClick={(e) => { e.preventDefault(); copyProduct(r) }} style={{ color: "#0060cc" }}>Kopiera</a>
+                    <a href={`${ADMIN}/hantera-produkter?action=copy&id=${r.id}`} style={{ color: "#0060cc" }}>Kopiera</a>
                   </td>
                 </tr>
               ))}
@@ -201,5 +339,11 @@ function HanteraProdukterPage() {
     </div>
   )
 }
+
+function HanteraProdukterPage() {
+  const action = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("action") : ""
+  return action === "copy" ? <CopyPage /> : <GridPage />
+}
+
 export const config = defineRouteConfig({ label: "Hantera produkter", icon: BoxIcon })
 export default HanteraProdukterPage
