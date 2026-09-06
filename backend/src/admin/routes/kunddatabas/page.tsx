@@ -1,16 +1,18 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
 
 /**
  * Teknikhouse.se — Kunddatabas (1:1 mirror of Wikinggruppen customers.php)
- * Header KUNDDATABAS, "Gör ett urval / Segmentering" toggle, "Antal resultat: N st",
- * table Namn | E-postadress | Telefonnummer | Ort | Antal ordrar. Reads REAL Medusa
- * customers. Names link to the native Medusa customer page. Native nav hidden; Wiki
- * Snabbmeny on the left.
+ * Header KUNDDATABAS, "Gör ett urval / Segmentering" toggle with the full Wiki
+ * filter set (Namn, E-post, Telefon, Postnummer, Ort, Land, Produkt, Artikelnr),
+ * "Antal resultat: N st", table Namn | E-postadress | Telefonnummer | Ort |
+ * Antal ordrar. Reads REAL Medusa customers; the structured filter calls the
+ * custom /admin/wiki-customer-search endpoint, free listing uses /admin/customers.
  */
 
 const PAGE = 50
+const COUNTRIES: [string, string][] = [["", "Välj…"], ["dk", "Danmark"], ["fi", "Finland"], ["no", "Norge"], ["gb", "Storbritannien"], ["se", "Sverige"], ["de", "Tyskland"]]
 
 const BookIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,22 +21,22 @@ const BookIcon = () => (
 )
 
 const nf = (n: number) => new Intl.NumberFormat("sv-SE").format(Math.round(Number(n || 0)))
-
-
-
 async function jget(url: string) { return fetch(url, { credentials: "include" }).then((r) => r.json()) }
 
 type Cust = { id: string; name: string; email: string; phone: string; city: string; orders: number }
+const emptyFilters = { name: "", email: "", phone: "", zip: "", city: "", country: "", product: "", artNo: "" }
 
 function KunddatabasPage() {
   const [meta, setMeta] = useState<{ online: number | null; unread: number }>({ online: null, unread: 0 })
   const [rows, setRows] = useState<Cust[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(0)
-  const [q, setQ] = useState("")
-  const [qActive, setQActive] = useState("")
+  const [f, setF] = useState<any>({ ...emptyFilters })
+  const [applied, setApplied] = useState<any>({ ...emptyFilters })
   const [seg, setSeg] = useState(false)
   const [loading, setLoading] = useState(true)
+  const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }))
+  const hasFilter = (o: any) => Object.values(o).some((v) => String(v || "").trim() !== "")
 
   useEffect(() => {
     const el = Array.from(document.querySelectorAll("div")).find((d) => {
@@ -51,26 +53,39 @@ function KunddatabasPage() {
   useEffect(() => { (async () => {
     setLoading(true)
     const offset = page * PAGE
-    const qs = qActive.trim() ? `&q=${encodeURIComponent(qActive.trim())}` : ""
     let data: any = {}
     try {
-      data = await jget(`/admin/customers?limit=${PAGE}&offset=${offset}${qs}&fields=id,first_name,last_name,email,phone,*addresses,orders.id`)
+      if (hasFilter(applied)) {
+        const qs = Object.entries(applied).filter(([, v]) => String(v || "").trim() !== "")
+          .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join("&")
+        data = await jget(`/admin/wiki-customer-search?limit=${PAGE}&offset=${offset}&${qs}`)
+      } else {
+        data = await jget(`/admin/customers?limit=${PAGE}&offset=${offset}&fields=id,first_name,last_name,email,phone,*addresses,orders.id`)
+      }
     } catch { data = {} }
     const cs: any[] = data.customers || []
     setTotal(data.count || 0)
     setRows(cs.map((c) => {
+      if (c.name !== undefined) return c as Cust
       const addr = (c.addresses && c.addresses[0]) || {}
       const name = [c.first_name, c.last_name].filter(Boolean).join(" ") || (c.email || "").split("@")[0]
       return { id: c.id, name, email: c.email || "", phone: c.phone || addr.phone || "", city: addr.city || "", orders: Array.isArray(c.orders) ? c.orders.length : 0 }
     }))
     setLoading(false)
-  })() }, [page, qActive])
+  })() }, [page, applied])
+
+  const runSearch = () => { setPage(0); setApplied({ ...f }) }
+  const clearSearch = () => { setF({ ...emptyFilters }); setApplied({ ...emptyFilters }); setPage(0) }
 
   const pages = Math.max(1, Math.ceil(total / PAGE))
   const th: any = { border: "1px solid #bbb", padding: "6px 8px", fontWeight: 700, fontSize: "11px", textAlign: "left", background: "#cccccc" }
   const td: any = { border: "1px solid #e2e2e2", padding: "5px 8px", fontSize: "12px" }
-  const inp: any = { fontFamily: WF, fontSize: "12px", padding: "3px 6px", border: "1px solid #bbb", borderRadius: "2px" }
-  const btn: any = { fontFamily: WF, fontSize: "12px", padding: "4px 12px", border: "1px solid #999", borderRadius: "3px", background: "#f0f0f0", cursor: "pointer" }
+  const inp: any = { fontFamily: WF, fontSize: "12px", padding: "4px 6px", border: "1px solid #bbb", borderRadius: "2px", boxSizing: "border-box", width: "100%" }
+  const lbl: any = { fontSize: "11px", fontWeight: 700, display: "block", marginBottom: "2px" }
+  const btn: any = { fontFamily: WF, fontSize: "12px", padding: "5px 14px", border: "1px solid #999", borderRadius: "3px", background: "#f0f0f0", cursor: "pointer" }
+  const field = (k: string, label: string) => (
+    <div><label style={lbl}>{label}</label><input style={inp} value={f[k]} onChange={(e) => set(k, e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runSearch() }} /></div>
+  )
 
   return (
     <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden", display: "flex", minHeight: "600px", fontFamily: WF }}>
@@ -84,11 +99,25 @@ function KunddatabasPage() {
           <a href="#" onClick={(e) => { e.preventDefault(); setSeg(!seg) }} style={{ color: "#0060cc", fontSize: "12px" }}>Gör ett urval / Segmentering</a>
         </div>
         {seg && (
-          <div style={{ textAlign: "center", marginBottom: "12px" }}>
-            <input style={{ ...inp, width: "260px" }} placeholder="Sök namn, e-post, telefon…" value={q}
-              onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { setPage(0); setQActive(q) } }} />
-            <button style={{ ...btn, marginLeft: "6px" }} onClick={() => { setPage(0); setQActive(q) }}>SÖK</button>
-            {qActive && <button style={{ ...btn, marginLeft: "6px" }} onClick={() => { setQ(""); setQActive(""); setPage(0) }}>Rensa</button>}
+          <div style={{ border: "1px solid #ddd", borderRadius: "5px", background: "#fafafa", padding: "12px 14px", marginBottom: "14px", maxWidth: "720px", marginLeft: "auto", marginRight: "auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 14px" }}>
+              {field("name", "Namn")}
+              {field("email", "E-postadress")}
+              {field("phone", "Telefonnummer")}
+              {field("zip", "Postnummer")}
+              {field("city", "Ort")}
+              <div><label style={lbl}>Land</label>
+                <select style={inp} value={f.country} onChange={(e) => set("country", e.target.value)}>
+                  {COUNTRIES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+                </select>
+              </div>
+              {field("product", "Har köpt produkt")}
+              {field("artNo", "Artikelnummer")}
+            </div>
+            <div style={{ marginTop: "10px", textAlign: "right" }}>
+              {hasFilter(applied) && <button style={{ ...btn, marginRight: "6px" }} onClick={clearSearch}>Rensa</button>}
+              <button style={{ ...btn, background: "#2e7d32", color: "#fff", border: "1px solid #2e7d32" }} onClick={runSearch}>SÖK</button>
+            </div>
           </div>
         )}
         <div style={{ textAlign: "center", fontSize: "12px", color: "#333", marginBottom: "14px" }}>
