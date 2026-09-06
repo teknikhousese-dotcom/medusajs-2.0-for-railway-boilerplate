@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
-import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/core-flows"
+import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 // Wiki "NY PRODUKT" mirror — reads reference data and creates/updates a Medusa
 // product from the Swedish Wiki field set. Extras that Medusa has no native slot
