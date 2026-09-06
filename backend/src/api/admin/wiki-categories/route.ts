@@ -49,7 +49,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       const input: any = { name, handle: (b.handle || "").trim() || slugify(name), is_active: b.is_active !== false }
       if (b.parent_category_id) input.parent_category_id = b.parent_category_id
       if (b.description) input.description = b.description
-      const meta = buildMeta(b)
+      const meta = Object.assign({}, b.metadata || {}, buildMeta(b))
       if (Object.keys(meta).length) input.metadata = meta
       const created = await svc.createProductCategories([input])
       return res.json({ ok: true, id: (created && created[0] && created[0].id) || null })
@@ -63,7 +63,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       if (b.is_active != null) upd.is_active = !!b.is_active
       if (b.description != null) upd.description = b.description
       if (b.rank != null) upd.rank = Math.round(Number(b.rank) || 0)
-      const meta = buildMeta(b)
+      const meta = Object.assign({}, b.metadata || {}, buildMeta(b))
       if (Object.keys(meta).length) upd.metadata = meta
       await svc.updateProductCategories(b.id, upd)
       return res.json({ ok: true, id: b.id })
