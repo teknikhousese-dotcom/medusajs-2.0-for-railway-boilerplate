@@ -434,8 +434,8 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
             <Btn onClick={() => window.print()}>🧾 Visa följesedel</Btn>
             <Btn onClick={() => window.print()}>🖨 Skriv ut order</Btn>
             <Btn href={`mailto:${o.email}`}>✉ Skicka e-post</Btn>
-            <Btn onClick={() => setSaved("SMS-modul under uppbyggnad")}>📱 Skicka SMS</Btn>
-            <Btn onClick={() => setSaved("Uppföljningsmodul under uppbyggnad")}>⭐ Uppföljningsmail</Btn>
+            <Btn href={`sms:${((o.shipping_address && o.shipping_address.phone) || o.phone || "").replace(/\s/g, "")}`}>📱 Skicka SMS</Btn>
+            <Btn href={`mailto:${o.email}?subject=${encodeURIComponent("Uppföljning av din order hos Teknikhouse.se")}&body=${encodeURIComponent("Hej,\n\nTack för din order hos Teknikhouse.se! Vi hoppas att allt är till belåtenhet. Hör gärna av dig om du har några frågor.\n\nMed vänliga hälsningar\nTeknikhouse.se")}`}>⭐ Uppföljningsmail</Btn>
             <div style={{ borderTop: "1px solid #ddd", margin: "8px 0" }} />
             <Btn href={`${ADMIN}/orders/${o.id}`}>📝 Redigera order</Btn>
             <div style={{ fontSize: "11px", marginTop: "10px" }}>
