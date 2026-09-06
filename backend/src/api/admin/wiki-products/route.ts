@@ -92,7 +92,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const artnr = (b.artnr || "").trim()
   if (!namn || !artnr) return res.status(400).json({ error: "Artikelnummer och namn krävs." })
 
-  const price = Math.round(Number(b.utpris) || 0)
+  const utpris = Math.round(Number(b.utpris) || 0)
+  const kampanjpris = Math.round(Number(b.kampanjpris) || 0)
+  const kampanjAktiv = !!b.kampanj && kampanjpris > 0
+  const price = kampanjAktiv ? kampanjpris : utpris
   const weight = Number(b.weight) || undefined
   const catIds: string[] = Array.isArray(b.category_ids) ? b.category_ids : []
   const images: any[] = Array.isArray(b.images) ? b.images.filter(Boolean).map((u: string) => ({ url: u })) : []
@@ -102,7 +105,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     tillverkare: b.tillverkare || "", modell: b.modell || "", lagerplats: b.lagerplats || "",
     sokord: b.sokord || "", google_namn: b.googleNamn || "", html_falt: b.htmlFalt || "",
     seo_title: b.metaTitle || "", seo_desc: b.metaDesc || "", h1: b.h1 || "",
-    visning: b.visning || "show", kampanj: !!b.kampanj, antal: b.antal != null ? String(b.antal) : "",
+    visning: b.visning || "show", kampanj: kampanjAktiv, kampanjpris: kampanjAktiv ? String(kampanjpris) : "", kampanj_start: b.kampanjStart || "", kampanj_slut: b.kampanjSlut || "", ordinarie_pris: kampanjAktiv ? String(utpris) : "", antal: b.antal != null ? String(b.antal) : "",
     oandligt: !!b.oandligt, lagervarning: b.lagervarning != null ? String(b.lagervarning) : "",
     skrymmande: !!b.skrymmande,
   }
