@@ -164,7 +164,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
         <span>Med markerade ordrar:</span>
         <button style={toolBtn} onClick={() => window.print()}>Visa plocklista</button>
         <button style={toolBtn} onClick={() => window.print()}>Skriv ut</button>
-        <button style={toolBtn} onClick={() => setBusy("Uppföljningsmail – modul under uppbyggnad")}>Skicka uppföljningsmail</button>
+        <button style={toolBtn} onClick={() => { const mails = rows.filter((o) => sel[o.id] && o.email).map((o) => o.email); if (!mails.length) { setBusy("Kryssa i minst en order först."); return; } window.location.href = `mailto:?bcc=${encodeURIComponent(mails.join(","))}&subject=${encodeURIComponent("Uppföljning av din order hos Teknikhouse.se")}&body=${encodeURIComponent("Hej,\n\nTack för din order hos Teknikhouse.se! Vi hoppas att allt är till belåtenhet. Hör gärna av dig om du har några frågor.\n\nMed vänliga hälsningar\nTeknikhouse.se")}`; }}>Skicka uppföljningsmail</button>
         <select value={moveTo} onChange={(e) => setMoveTo(e.target.value)} style={{ fontSize: "11px", fontFamily: WF, padding: "2px", border: "1px solid #bbb" }}>
           <option value="">Flytta till…</option><option value="nya">Nya</option><option value="makulerade">Makulerade</option><option value="arkiverade">Arkiverade</option>
         </select>
