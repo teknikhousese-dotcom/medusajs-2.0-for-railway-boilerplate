@@ -51,6 +51,8 @@ function BetalPage() {
         <div style={card}>
           <div style={head}><span>Klarna Checkout</span>{active("klarnaCheckoutActive")}</div>
           <div style={body}>
+            <label style={{ fontSize: "12px", fontWeight: 400, display: "block", marginBottom: "8px" }}><input type="checkbox" checked={f.klarnaCheckoutSwitchToOldActive === "1"} onChange={(e) => set("klarnaCheckoutSwitchToOldActive", e.target.checked ? "1" : "0")} /> Visa länk till gamla kassan</label>
+            <label style={lbl}>Länktext till gamla kassan</label>{txt("klarnaCheckoutSwitchToOld_sv", "260px")}
             <div style={{ fontSize: "11px", color: "#888", marginBottom: "6px" }}>Anpassa färger (hex, t.ex. #4a90d9).</div>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               <div><label style={lbl}>Knapp</label>{txt("kco_color_button", "110px")}</div>
@@ -90,6 +92,11 @@ function BetalPage() {
               <div><label style={lbl}>Avgift (kr)</label>{txt("prePayFee_SEK", "120px")}</div>
             </div>
           </div>
+        </div>
+
+        <div style={card}>
+          <div style={head}><span>Postförskott</span>{active("CODActive")}</div>
+          <div style={body}><label style={lbl}>Expeditionsavgift (kr)</label>{txt("CODFee_SEK", "120px")}</div>
         </div>
 
         <div style={{ marginBottom: "14px" }}><button style={btn} onClick={save}>Spara betalningsalternativ</button></div>
