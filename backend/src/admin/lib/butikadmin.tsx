@@ -163,7 +163,7 @@ export function installGlobalMenu() {
 
 const HIDE_NATIVE_ROUTES = ["ordrar","statistik","inkop-lager","kunddatabas","kampanjutskick","nyhetsbrev","sms-utskick","avtalskunder","hantera-produkter","rekommendationer","varugrupper","rabattkoder","kop-x-for-y","fraktinstallningar","betalningsalternativ","redigerbara-sidor","nyheter","lankar","recensioner","bildspel","blogg","sprak-valuta","google-shopping","epostmallar","grundinstallningar","produkt-form"]
 
-export function installGlobalMenu() {
+export function hideWikiNativeLinks() {
   if (typeof document === "undefined") return
   const id = "__butikadmin_hide_wiki_native"
   if (document.getElementById(id)) return
@@ -179,7 +179,7 @@ export function installGlobalMenu() {
  *  and is removed on unmount so native pages keep their own sidebar. */
 function useHideNativeSidebar() {
   useEffect(() => {
-    installGlobalMenu()
+    hideWikiNativeLinks()
     const id = "__butikadmin_hide_native"
     let st = document.getElementById(id) as HTMLStyleElement | null
     if (!st) {
