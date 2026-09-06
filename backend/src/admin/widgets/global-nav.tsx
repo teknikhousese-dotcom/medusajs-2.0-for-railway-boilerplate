@@ -1,6 +1,6 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { useEffect } from "react"
-import { installGlobalMenu } from "../lib/butikadmin"
+import { installGlobalMenu, hideWikiNativeLinks } from "../lib/butikadmin"
 
 /**
  * Global-nav widget. Native Medusa pages (Categories, Promotions, Products,
@@ -11,7 +11,7 @@ import { installGlobalMenu } from "../lib/butikadmin"
  * sidebar. Renders nothing itself.
  */
 const GlobalNav = () => {
-  useEffect(() => { installGlobalMenu() }, [])
+  useEffect(() => { installGlobalMenu(); hideWikiNativeLinks() }, [])
   return null
 }
 
