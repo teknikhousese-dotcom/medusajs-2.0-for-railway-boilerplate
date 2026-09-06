@@ -66,7 +66,7 @@ function GrundPage() {
       <Snabbmeny active="Grundinställningar" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={card}>
-          <div style={{ background: "#f4f4f4", borderBottom: "1px solid #ddd", padding: "10px 16px", fontWeight: 700, fontSize: "14px" }}>⚚️ Grundinställningar</div>
+          <div style={{ background: "#f4f4f4", borderBottom: "1px solid #ddd", padding: "10px 16px", fontWeight: 700, fontSize: "14px" }}>⚞️ Grundinställningar</div>
           <div style={{ padding: "16px", maxWidth: "860px" }}>
             {msg && <div style={{ padding: "8px 10px", marginBottom: "10px", borderRadius: "3px", background: msg.startsWith("Fel") ? "#fdecea" : "#e8f5e9", color: msg.startsWith("Fel") ? "#a00" : "#256029", fontSize: "12px" }}>{msg}</div>}
 
@@ -113,6 +113,9 @@ function GrundPage() {
               <div style={{ flex: 1, minWidth: "200px" }}><label style={lbl}>Facebook Pixel-ID</label>{txt("facebookPixelID")}</div>
             </div>
             <label style={lbl}>Extra kod i &lt;head&gt;</label><textarea style={{ ...inp, height: "70px", fontFamily: "monospace" }} value={f.extraHeadCode || ""} onChange={(e) => set("extraHeadCode", e.target.value)} />
+            <label style={lbl}>Egen HTML/JavaScript tidigt i sidhuvudet (ej Google Analytics/GTM)</label><textarea style={{ ...inp, height: "60px", fontFamily: "monospace" }} value={f.counterCodeEarly || ""} onChange={(e) => set("counterCodeEarly", e.target.value)} />
+            <label style={lbl}>Egen HTML/JavaScript i sidfoten (ej Google Analytics/GTM)</label><textarea style={{ ...inp, height: "60px", fontFamily: "monospace" }} value={f.counterCode || ""} onChange={(e) => set("counterCode", e.target.value)} />
+            <label style={lbl}>Trackerkod för godkända köp (visas på tack-sidan)</label><textarea style={{ ...inp, height: "60px", fontFamily: "monospace" }} value={f.trackerCode || ""} onChange={(e) => set("trackerCode", e.target.value)} />
 
             <div style={{ marginTop: "16px" }}><button style={btn} onClick={save}>Spara grundinställningar</button></div>
           </div>
