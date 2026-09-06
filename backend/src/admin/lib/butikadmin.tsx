@@ -38,9 +38,9 @@ export const MENU: MenuItem[] = [
   },
   { emo: "💡", lab: "Rekommendationer", href: `${ADMIN}/rekommendationer` },
   {
-    emo: "🗂️", lab: "Hantera Varugrupper", href: `${ADMIN}/categories`, children: [
-      { lab: "Ny varugrupp", href: `${ADMIN}/categories/create` },
-      { lab: "Ordning på varugrupperna", href: `${ADMIN}/categories?sort=1` },
+    emo: "🗂️", lab: "Hantera Varugrupper", href: `${ADMIN}/varugrupper`, children: [
+      { lab: "Ny varugrupp", href: `${ADMIN}/varugrupper?action=new` },
+      { lab: "Ordning på varugrupperna", href: `${ADMIN}/varugrupper?sort=1` },
     ],
   },
   { emo: "🏷️", lab: "Rabattkoder", href: `${ADMIN}/promotions` },
