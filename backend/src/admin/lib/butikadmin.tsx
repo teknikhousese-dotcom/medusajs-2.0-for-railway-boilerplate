@@ -57,7 +57,7 @@ export const MENU: MenuItem[] = [
   { emo: "🔀", lab: "Import / Export", href: `${ADMIN}/products` },
   { emo: "⭐", lab: "Recensioner / Betyg", href: `${ADMIN}/recensioner` },
   { emo: "🖼️", lab: "Bildspel på 1:a sidan", href: `${ADMIN}/bildspel` },
-  { emo: "📝", lab: "Blogg", href: `${ADMIN}/kontrollpanel?s=blogg` },
+  { emo: "📝", lab: "Blogg", href: `${ADMIN}/blogg` },
   { emo: "↪️", lab: "Hantera gamla URLer", href: `${ADMIN}/kontrollpanel?s=url301` },
   { emo: "🌐", lab: "Språk och valuta", href: `${ADMIN}/settings/store` },
   { emo: "🈳", lab: "Översättningar", href: `${ADMIN}/kontrollpanel?s=translations` },
