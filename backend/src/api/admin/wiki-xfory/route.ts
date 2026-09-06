@@ -65,7 +65,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         type: "buyget", is_automatic: true, status: "active",
         application_method: {
           type: "percentage", target_type: "items", allocation: "each",
-          value: 100, apply_to_quantity: free, buy_rules_min_quantity: x,
+          value: 100, apply_to_quantity: free, max_quantity: free, buy_rules_min_quantity: x,
           target_rules: [{ attribute: "product_id", operator: "in", values: ids }],
           buy_rules: [{ attribute: "product_id", operator: "in", values: ids }],
         },
