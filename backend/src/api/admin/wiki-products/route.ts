@@ -109,6 +109,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const variant: any = {
     title: namn, sku: artnr, manage_inventory: !b.oandligt,
+    options: { Variant: "Standard" },
     prices: [{ amount: price, currency_code: "sek" }],
     metadata: { inpris: metadata.inpris, momssats: metadata.momssats },
   }
@@ -118,6 +119,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const productInput: any = {
     title: namn, subtitle: b.googleNamn || undefined, description: b.beskrivning || "",
     status: toStatus(b.visning || "show"), weight,
+    options: [{ title: "Variant", values: ["Standard"] }],
     category_ids: catIds, images, metadata, variants: [variant],
   }
   const scId = await firstId(req.scope, "sales_channel")
