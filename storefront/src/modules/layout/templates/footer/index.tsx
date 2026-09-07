@@ -57,7 +57,7 @@ export default async function Footer() {
         </div>
         <div className="bot">
           <span>© {new Date().getFullYear()} Nordic Teknik House AB · Teknikhouse.se · Org.nr 559118-7488</span>
-          <span><b>Trygg e-handel · Fri frakt över 199 kr · Garanti ingår alltid</b></span>
+          <span><b>Trygg e-handel · Fri frakt över 999 kr · Garanti ingår alltid</b></span>
         </div>
       </div>
     </footer>
