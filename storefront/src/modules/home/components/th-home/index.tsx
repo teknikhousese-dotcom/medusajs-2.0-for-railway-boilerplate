@@ -32,9 +32,9 @@ const CSS = `
 .th .tchip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 13px;font-size:12.5px;color:#D6DBE4;font-weight:600}
 .th .tchip b{color:#fff} .th .tchip .s{color:#00d68a}
 .th .hv{position:relative;min-height:280px;display:flex;align-items:center;justify-content:center}
-.th .device{width:210px;height:300px;border-radius:34px;background:linear-gradient(160deg,#1c2029,#0e1116);border:2px solid #2a2f3a;box-shadow:0 40px 80px -30px rgba(0,0,0,.8),inset 0 0 0 8px #0b0c10;position:relative}
+.th .device{width:220px;height:312px;border-radius:40px;background:linear-gradient(150deg,#3d424e,#161a20 52%,#0b0d11);border:1px solid #4a5160;box-shadow:0 52px 92px -30px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 7px #0a0b0e;position:relative}
 .th .device:before{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:56px;height:7px;border-radius:99px;background:#2a2f3a}
-.th .device .scr{position:absolute;inset:16px;border-radius:24px;background:radial-gradient(circle at 50% 30%,rgba(245,0,0,.25),transparent 60%),#0e1014;display:flex;align-items:center;justify-content:center;color:#5a6270;font-size:12px}
+.th .device .scr{position:absolute;inset:13px;border-radius:30px;overflow:hidden;background:linear-gradient(180deg,#0d0f14,#101219);display:flex;align-items:center;justify-content:center}.scr .glow{position:absolute;inset:0;background:radial-gradient(130px 160px at 50% 34%,rgba(245,0,0,.42),transparent 62%),radial-gradient(90px 90px at 72% 80%,rgba(90,130,255,.16),transparent 60%)}.scr .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:66px;height:17px;border-radius:12px;background:#000;z-index:3}.scr .model{position:relative;z-index:2;font-size:12px;font-weight:800;letter-spacing:.02em;color:#eef1f6;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:7px 13px;border-radius:999px}.scr .home{position:absolute;bottom:11px;left:50%;transform:translateX(-50%);width:98px;height:5px;border-radius:3px;background:rgba(255,255,255,.55);z-index:2}.btns{position:absolute;right:-3px;top:98px;width:3px;height:54px;border-radius:2px;background:linear-gradient(#4a5160,#20242c);z-index:0}.btnv{position:absolute;left:-3px;top:82px;width:3px;height:34px;border-radius:2px;background:linear-gradient(#4a5160,#20242c);box-shadow:0 -46px 0 #3a404c;z-index:0}
 .th .float{position:absolute;background:#fff;color:var(--ink);border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;box-shadow:0 16px 34px -14px rgba(0,0,0,.5)}
 .th .float.a{top:8%;left:-6%} .th .float.b{bottom:14%;right:-8%} .th .float .fit{color:var(--fit);font-weight:800}
 .th .usp{background:#fff;border-bottom:1px solid var(--line)}
@@ -133,7 +133,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
           </div>
         </div>
         <div className="hv">
-          <div className="device"><div className="scr">iPhone 13 Pro</div></div>
+          <div className="device"><span className="btnv" /><span className="btns" /><div className="scr"><span className="notch" /><span className="glow" /><span className="model">iPhone 13 Pro</span><span className="home" /></div></div>
           <div className="float a"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M15 6.5a3.5 3.5 0 0 0-4.6 4.6L4 17.5 6.5 20l6.4-6.4A3.5 3.5 0 0 0 17.5 9l-2.3 2.3-2-2z"/></svg> Skärm iPhone 13 Pro<br /><span className="fit">✓ Livstidsgaranti</span></div>
           <div className="float b"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg> Batteri · 649 kr<br /><span className="fit">✓ Passar din enhet</span></div>
         </div>
