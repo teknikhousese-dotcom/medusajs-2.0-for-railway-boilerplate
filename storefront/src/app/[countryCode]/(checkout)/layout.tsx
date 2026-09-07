@@ -1,6 +1,5 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
-import MedusaCTA from "@modules/layout/components/medusa-cta"
 import { getStoreName } from "@lib/util/env"
 
 export default function CheckoutLayout({
@@ -19,10 +18,10 @@ export default function CheckoutLayout({
           >
             <ChevronDown className="rotate-90" size={16} />
             <span className="mt-px hidden small:block txt-compact-plus text-ui-fg-subtle hover:text-ui-fg-base ">
-              Back to shopping cart
+              Tillbaka till varukorgen
             </span>
             <span className="mt-px block small:hidden txt-compact-plus text-ui-fg-subtle hover:text-ui-fg-base">
-              Back
+              Tillbaka
             </span>
           </LocalizedClientLink>
           <LocalizedClientLink
@@ -35,9 +34,13 @@ export default function CheckoutLayout({
           <div className="flex-1 basis-0" />
         </nav>
       </div>
-      <div className="relative" data-testid="checkout-container">{children}</div>
+      <div className="relative" data-testid="checkout-container">
+        {children}
+      </div>
       <div className="py-4 w-full flex items-center justify-center">
-        <MedusaCTA />
+        <span className="text-ui-fg-muted txt-compact-small">
+          Trygg e-handel · Nordic Teknik House AB
+        </span>
       </div>
     </div>
   )
