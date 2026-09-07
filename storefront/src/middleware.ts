@@ -120,6 +120,29 @@ export async function middleware(request: NextRequest) {
   // cached cart. See getCacheTag in lib/data/cookies.ts.
   const cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
+  // --- Legacy teknikhouse.se URL compatibility: keep the old hierarchical
+  // /kategori/marke/modell/produkt-slug/ URLs resolving on the new site (SEO). ---
+  {
+    const legacySegs = request.nextUrl.pathname.split("/").filter(Boolean)
+    const LEGACY_CATS = [
+      "mobilreservdelar", "mobiltillbehor", "batterier", "kablar-laddare",
+      "powerbank", "horlurar-hogtalare", "datortillbehor", "gaming",
+      "mobiler-surfplattor", "hem-fritid", "mobilreparation", "verktyg",
+      "outlet-fyndvaror",
+    ]
+    if (legacySegs.length >= 1 && LEGACY_CATS.includes(legacySegs[0])) {
+      const target =
+        legacySegs.length >= 4
+          ? `/se/products/${legacySegs[legacySegs.length - 1]}`
+          : "/se/store"
+      const legacyRes = NextResponse.rewrite(new URL(target, request.url))
+      if (!cacheIdCookie) {
+        legacyRes.cookies.set("_medusa_cache_id", cacheId, CACHE_ID_COOKIE_OPTIONS)
+      }
+      return legacyRes
+    }
+  }
+
   const regionMap = await getRegionMap()
 
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
