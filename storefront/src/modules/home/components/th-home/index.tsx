@@ -127,7 +127,7 @@ export default function ThHome() {
             <span className="tchip"><span className="s">★</span> <b>4,9</b> Trustpilot</span>
             <span className="tchip"><b>Garanti ingår alltid</b></span>
             <span className="tchip">Eget lager · <b>snabb</b> leverans</span>
-            <span className="tchip">Fri frakt över <b>199 kr</b></span>
+            <span className="tchip">Fri frakt över <b>999 kr</b></span>
           </div>
         </div>
         <div className="hv">
