@@ -31,7 +31,7 @@ const Review = ({ cart }: { cart: any }) => {
             }
           )}
         >
-          Review
+          Granska beställning
         </Heading>
       </div>
       {isOpen && previousStepsCompleted && (
@@ -39,10 +39,8 @@ const Review = ({ cart }: { cart: any }) => {
           <div className="flex items-start gap-x-1 w-full mb-6">
             <div className="w-full">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                By clicking the Place Order button, you confirm that you have
-                read, understand and accept our Terms of Use, Terms of Sale and
-                Returns Policy and acknowledge that you have read{" "}
-                {getStoreName()}&apos;s Privacy Policy.
+                Genom att klicka på Slutför köp bekräftar du att du har läst och accepterar våra köpvillkor och vår returpolicy, samt att du har läst vår{" "}
+                {getStoreName()}&apos;s Integritetspolicy.
               </Text>
             </div>
           </div>
