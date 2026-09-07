@@ -54,7 +54,7 @@ const Login = ({ setCurrentView }: Props) => {
         className="underline text-small-regular mt-4"
         data-testid="forgot-password-button"
       >
-        Forgot your password?
+        Glömt lösenordet?
       </button>
       <span className="text-center text-ui-fg-base text-small-regular mt-6">
         Inte medlem än?{" "}
