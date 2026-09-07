@@ -33,7 +33,7 @@ export default async function Footer() {
           </div>
           <div>
             <h5>Handla</h5>
-            <LocalizedClientLink href="/kundtjanst">Kundtjänst</LocalizedClientLink>
+            <LocalizedClientLink href="/info/kundtjanst">Kundtjänst</LocalizedClientLink>
             <LocalizedClientLink href="/info/villkor">Köpvillkor</LocalizedClientLink>
             <LocalizedClientLink href="/info/oppet-kop-retur">Öppet köp &amp; Retur</LocalizedClientLink>
             <LocalizedClientLink href="/retur">Anmäl retur</LocalizedClientLink>
