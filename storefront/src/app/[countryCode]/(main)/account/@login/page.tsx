@@ -4,8 +4,8 @@ import LoginTemplate from "@modules/account/templates/login-template"
 import { getStoreName } from "@lib/util/env"
 
 export const metadata: Metadata = {
-  title: "Sign in",
-  description: `Sign in to your ${getStoreName()} account.`,
+  title: "Logga in",
+  description: `Logga in på ditt ${getStoreName()}-konto.`,
 }
 
 export default function Login() {
