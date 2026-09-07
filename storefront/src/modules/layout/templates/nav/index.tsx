@@ -17,7 +17,7 @@ export default async function Nav() {
       <div style={{ background: "#0B0C10", color: "#C9CFDA", fontSize: "12px" }}>
         <div className="content-container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "34px" }}>
           <span>Kundtjänst: <b style={{ color: "#fff" }}>info@teknikhouse.se</b></span>
-          <span>Fri frakt över <b style={{ color: "#fff" }}>199 kr</b> · Öppet köp 30 dagar · Trustpilot <b style={{ color: "#00b67a" }}>★ 4,9</b></span>
+          <span>Fri frakt över <b style={{ color: "#fff" }}>999 kr</b> · Öppet köp 30 dagar · Trustpilot <b style={{ color: "#00b67a" }}>★ 4,9</b></span>
         </div>
       </div>
 
