@@ -21,7 +21,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
   return (
     <div className="w-full">
       <AccountInfo
-        label="Email"
+        label="E-post"
         currentInfo={`${customer.email}`}
         isEditable={false}
         clearState={() => {}}
