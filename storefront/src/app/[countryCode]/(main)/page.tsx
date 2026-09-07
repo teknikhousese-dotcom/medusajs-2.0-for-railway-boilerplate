@@ -5,6 +5,7 @@ import ThHome from "@modules/home/components/th-home"
 import LatestProducts from "@modules/home/components/latest-products"
 import { getCollectionsWithProducts } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
+import { getProductsList } from "@lib/data/products"
 import { getStoreName } from "@lib/util/env"
 
 export const metadata: Metadata = {
@@ -21,6 +22,11 @@ export default async function Home({
   const collections = await getCollectionsWithProducts(countryCode)
   const region = await getRegion(countryCode)
 
+  const homeProductsRes = region
+    ? await getProductsList({ countryCode, queryParams: { limit: 4 } as any })
+    : null
+  const homeProducts = homeProductsRes?.response?.products ?? []
+
   if (!collections || !region) {
     return null
   }
@@ -36,12 +42,12 @@ export default async function Home({
       {/* ===================================================================
         * EXAMPLE SECTION START
         *
-        * <ThHome /> is the dashed placeholder block on your homepage. To delete
-        * it: remove the <ThHome /> line just below, remove its import at the top
+        * <ThHome region={region} products={homeProducts} /> is the dashed placeholder block on your homepage. To delete
+        * it: remove the <ThHome region={region} products={homeProducts} /> line just below, remove its import at the top
         * of this file, then delete the folder
         * src/modules/home/components/hero. Nothing else depends on it.
         * =================================================================== */}
-      <ThHome />
+      <ThHome region={region} products={homeProducts} />
       {/* ===================================================================
         * EXAMPLE SECTION END
         * =================================================================== */}
