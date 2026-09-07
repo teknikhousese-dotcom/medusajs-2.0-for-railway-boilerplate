@@ -30,13 +30,14 @@ export default async function Nav() {
           </div>
 
           <div className="flex items-center h-full">
+            <style dangerouslySetInnerHTML={{ __html: "@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&display=swap');" }} />
             <LocalizedClientLink
               href="/"
               className="hover:opacity-80"
               data-testid="nav-store-link"
-              style={{ fontWeight: 900, fontSize: "22px", letterSpacing: "-0.04em", color: "#14161C" }}
+              style={{ fontFamily: "'Baloo 2', ui-rounded, system-ui, sans-serif", fontWeight: 800, fontSize: "25px", letterSpacing: "-0.02em", color: "#F50000" }}
             >
-              teknik<span style={{ color: "#F50000" }}>house</span>
+              teknikhouse.se
             </LocalizedClientLink>
           </div>
 
