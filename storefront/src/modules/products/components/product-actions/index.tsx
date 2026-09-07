@@ -171,6 +171,23 @@ export default function ProductActions({
             ? "Slut i lager"
             : "Lägg i varukorg"}
         </Button>
+
+        {/* Trygghet / USP */}
+        <div className="mt-4 flex flex-col gap-y-2 rounded-xl border border-ui-border-base bg-ui-bg-subtle p-3 text-sm text-ui-fg-subtle">
+          <div className="flex items-center gap-x-2 font-medium text-ui-fg-base">
+            <span className={`inline-block h-2.5 w-2.5 rounded-full ${inStock ? "bg-green-500" : "bg-gray-400"}`} />
+            {inStock ? "I lager – skickas inom 1–3 vardagar" : "Tillfälligt slut"}
+          </div>
+          <div className="flex items-center gap-x-2"><span className="text-green-600">✓</span> Fri frakt över 999 kr</div>
+          <div className="flex items-center gap-x-2"><span className="text-green-600">✓</span> Öppet köp i 30 dagar</div>
+          <div className="flex items-center gap-x-2"><span className="text-green-600">✓</span> Garanti ingår alltid</div>
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            {["Swish", "Klarna", "VISA", "Mastercard"].map((p) => (
+              <span key={p} className="rounded border border-ui-border-base bg-white px-1.5 py-0.5 text-[11px] font-medium text-ui-fg-subtle">{p}</span>
+            ))}
+          </div>
+        </div>
+
         <ErrorMessage error={error} data-testid="add-product-error-message" />
         <MobileActions
           product={product}
