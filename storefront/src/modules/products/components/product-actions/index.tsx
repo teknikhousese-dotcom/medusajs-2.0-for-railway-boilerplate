@@ -123,7 +123,7 @@ export default function ProductActions({
       // cart badge never moved, and the shopper was told nothing at all. A
       // failed add has to be visible.
       setError(
-        e?.message ?? "Could not add this item to your cart. Please try again."
+        e?.message ?? "Kunde inte lägga varan i varukorgen. Försök igen."
       )
     } finally {
       setIsAdding(false)
@@ -166,10 +166,10 @@ export default function ProductActions({
           data-testid="add-product-button"
         >
           {!selectedVariant
-            ? "Select variant"
+            ? "Välj variant"
             : !inStock
-            ? "Out of stock"
-            : "Add to cart"}
+            ? "Slut i lager"
+            : "Lägg i varukorg"}
         </Button>
         <ErrorMessage error={error} data-testid="add-product-error-message" />
         <MobileActions
