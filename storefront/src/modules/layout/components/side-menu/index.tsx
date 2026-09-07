@@ -11,11 +11,11 @@ import { HttpTypes } from "@medusajs/types"
 import { getStoreName } from "@lib/util/env"
 
 const SideMenuItems = {
-  Home: "/",
-  Store: "/store",
-  Search: "/search",
-  Account: "/account",
-  Cart: "/cart",
+  Hem: "/",
+  Butik: "/store",
+  Sök: "/search",
+  Konto: "/account",
+  Varukorg: "/cart",
 }
 
 const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
@@ -32,7 +32,7 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                   data-testid="nav-menu-button"
                   className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
                 >
-                  Menu
+                  Meny
                 </Popover.Button>
               </div>
 
@@ -103,8 +103,7 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                         />
                       </div>
                       <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} {getStoreName()}. All rights
-                        reserved.
+                        © {new Date().getFullYear()} {getStoreName()}. Alla rättigheter förbehållna.
                       </Text>
                     </div>
                   </div>
