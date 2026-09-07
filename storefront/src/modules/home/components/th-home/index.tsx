@@ -92,7 +92,22 @@ const CSS = `
 @media(max-width:900px){.th .hero .wrap{grid-template-columns:1fr;padding:38px 20px 40px}.th .hv{display:none}.th .repair{grid-template-columns:1fr}.th .cats{grid-template-columns:repeat(3,1fr)}.th .prods{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){.th .usp .wrap{grid-template-columns:repeat(2,1fr)}.th .split{grid-template-columns:1fr}.th .trustband{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}}
-`
+
+.brands{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}
+.brand{display:flex;align-items:center;justify-content:center;height:66px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-weight:800;font-size:15px;color:var(--ink);text-decoration:none;transition:.15s;letter-spacing:-.01em}
+.brand:hover{border-color:var(--red);color:var(--red);transform:translateY(-2px);box-shadow:var(--shadow)}
+.revs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.rev{border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--card);box-shadow:var(--shadow)}
+.rev .stars{color:var(--star);font-size:15px;letter-spacing:3px}
+.rev p{margin:10px 0 14px;font-size:15px;line-height:1.55;color:var(--ink)}
+.rev .who{font-size:13px;color:var(--muted);font-weight:700}
+.news{background:linear-gradient(135deg,#161a20,#0b0d11);border-radius:24px;padding:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;color:#fff}
+.news h2{font-size:26px;margin:0 0 6px;color:#fff}
+.news p{margin:0;color:#aab2c0;font-size:15px;max-width:420px}
+.newsform{display:flex;gap:10px;flex-wrap:wrap}
+.newsform input{border:1px solid #2a2f3a;background:#0e1116;color:#fff;border-radius:12px;padding:14px 16px;font-size:15px;min-width:230px}
+.newsform button{background:var(--red);color:#fff;border:none;border-radius:12px;padding:14px 24px;font-weight:800;font-size:15px;cursor:pointer}
+@media(max-width:900px){.th .brands{grid-template-columns:repeat(4,1fr)}.th .revs{grid-template-columns:1fr}.th .news{padding:28px}}`
 
 export default function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
   return (
@@ -162,7 +177,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
         <div className="shead"><h2>Populärt just nu <span style={{ color: "var(--fit)", fontSize: "15px" }}>✓</span></h2><a>Visa alla →</a></div>
         <div className="prods">
           {region && products && products.length
-            ? products.slice(0, 4).map((p: any) => (
+            ? products.slice(0, 8).map((p: any) => (
                 <ProductPreview key={p.id} product={p} region={region} isFeatured />
               ))
             : null}
@@ -215,6 +230,33 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
             <div className="tb"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg></div><b>Eget lager i Sverige</b><span>Snabb leverans, Postnord &amp; DHL</span></div>
             <div className="tb"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><b>Trygg e-handel</b><span>Svensk Digital Handel · Trustpilot 4,9</span></div>
           </div>
+        </div>
+      </div></section>
+      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+        <div className="shead"><h2>Handla efter märke</h2><a href="/se/store">Visa alla →</a></div>
+        <div className="brands">
+          <a className="brand" href="/se/store">Apple</a>
+          <a className="brand" href="/se/store">Samsung</a>
+          <a className="brand" href="/se/store">Huawei</a>
+          <a className="brand" href="/se/store">Xiaomi</a>
+          <a className="brand" href="/se/store">OnePlus</a>
+          <a className="brand" href="/se/store">Sony</a>
+          <a className="brand" href="/se/store">Motorola</a>
+          <a className="brand" href="/se/store">iPad</a>
+        </div>
+      </div></section>
+      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+        <div className="shead"><h2>Vad våra kunder säger</h2><span style={{ color: "var(--star)", fontWeight: 800 }}>Trustpilot 4,9 ★</span></div>
+        <div className="revs">
+          <div className="rev"><div className="stars">★★★★★</div><p>Snabb leverans och exakt rätt skärm till min iPhone. Bytet tog 15 minuter med deras guide.</p><div className="who">Johan L. · Verifierad kund</div></div>
+          <div className="rev"><div className="stars">★★★★★</div><p>Beställde batteri och verktyg — allt fungerade perfekt. Livstidsgaranti på skärmen kändes tryggt.</p><div className="who">Sara M. · Verifierad kund</div></div>
+          <div className="rev"><div className="stars">★★★★★</div><p>Bäst i Sverige på reservdelar. Bra priser, snabb frakt och grymt kundtjänst när jag hade en fråga.</p><div className="who">Erik N. · Verifierad kund</div></div>
+        </div>
+      </div></section>
+      <section className="blk"><div className="wrap">
+        <div className="news">
+          <div><h2>Få 10% på din första order</h2><p>Anmäl dig till nyhetsbrevet för guider, nyheter och exklusiva erbjudanden.</p></div>
+          <div className="newsform"><input type="email" placeholder="Din e-postadress" aria-label="E-postadress" /><button type="button">Prenumerera</button></div>
         </div>
       </div></section>
     </div>
