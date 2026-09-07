@@ -100,15 +100,15 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       <div className="qnav"><div className="wrap">
-        <a className="hot">🔧 Mobilreservdelar</a>
-        <a>🛡️ Mobiltillbehör</a>
-        <a>🔋 Batterier</a>
-        <a>🔌 Kablar &amp; Laddare</a>
-        <a>🎧 Hörlurar &amp; Högtalare</a>
-        <a>📱 Mobiler &amp; Surfplattor</a>
-        <a>🛠️ Mobilreparation</a>
-        <a>📖 Laga själv-guider</a>
-        <a>🏪 Phone Rep (Butik)</a>
+        <a className="hot"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M15 6.5a3.5 3.5 0 0 0-4.6 4.6L4 17.5 6.5 20l6.4-6.4A3.5 3.5 0 0 0 17.5 9l-2.3 2.3-2-2z"/></svg> Mobilreservdelar</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l7 3v5c0 4.2-2.9 7.3-7 8.9C7.9 18.3 5 15.2 5 11V6z"/><path d="M9 11.5l2 2 4-4"/></svg> Mobiltillbehör</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg> Batterier</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M9 2v5M15 2v5"/><path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z"/><line x1="12" y1="16" x2="12" y2="22"/></svg> Kablar &amp; Laddare</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M5 15v-3a7 7 0 0 1 14 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg> Hörlurar &amp; Högtalare</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"/></svg> Mobiler &amp; Surfplattor</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M15 6.5a3.5 3.5 0 0 0-4.6 4.6L4 17.5 6.5 20l6.4-6.4A3.5 3.5 0 0 0 17.5 9l-2.3 2.3-2-2z"/></svg> Mobilreparation</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 6.5C10.8 5.6 9 5 7 5H3v12h4c2 0 3.8.6 5 1.5M12 6.5C13.2 5.6 15 5 17 5h4v12h-4c-2 0-3.8.6-5 1.5M12 6.5v12"/></svg> Laga själv-guider</a>
+        <a><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M4 9l1-4h14l1 4M5 9v10h14V9M4 9h16"/></svg> Phone Rep (Butik)</a>
       </div></div>
 
       <div className="hero"><div className="wrap">
@@ -134,14 +134,14 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
         </div>
         <div className="hv">
           <div className="device"><div className="scr">iPhone 13 Pro</div></div>
-          <div className="float a">🔧 Skärm iPhone 13 Pro<br /><span className="fit">✓ Livstidsgaranti</span></div>
-          <div className="float b">🔋 Batteri · 649 kr<br /><span className="fit">✓ Passar din enhet</span></div>
+          <div className="float a"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M15 6.5a3.5 3.5 0 0 0-4.6 4.6L4 17.5 6.5 20l6.4-6.4A3.5 3.5 0 0 0 17.5 9l-2.3 2.3-2-2z"/></svg> Skärm iPhone 13 Pro<br /><span className="fit">✓ Livstidsgaranti</span></div>
+          <div className="float b"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg> Batteri · 649 kr<br /><span className="fit">✓ Passar din enhet</span></div>
         </div>
       </div></div>
 
       <div className="usp"><div className="wrap">
-        <div className="u"><span className="g">🚚</span><div><b>Snabba leveranser</b><span>1–3 vardagar · Postnord &amp; DHL</span></div></div>
-        <div className="u"><span className="g">🏷️</span><div><b>Låga priser</b><span>Konkurrenskraftiga priser</span></div></div>
+        <div className="u"><span className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></span><div><b>Snabba leveranser</b><span>1–3 vardagar · Postnord &amp; DHL</span></div></div>
+        <div className="u"><span className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M3 12l8-8 9 9-8 8z"/><circle cx="8.5" cy="8.5" r="1.2"/></svg></span><div><b>Låga priser</b><span>Konkurrenskraftiga priser</span></div></div>
         <div className="u"><span className="g">↩️</span><div><b>Öppet köp i 30 dagar</b><span>Enkelt att returnera &amp; byta</span></div></div>
         <div className="u"><span className="g">✅</span><div><b>Garanti ingår alltid</b><span>Testat av experter</span></div></div>
       </div></div>
@@ -149,12 +149,12 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <section className="blk"><div className="wrap">
         <div className="shead"><h2>Vad letar du efter?</h2><a>Alla kategorier →</a></div>
         <div className="cats">
-          <div className="cat"><div className="g">📱</div><div className="t">Mobilreservdelar</div><div className="s">Skärm · batteri · baksida</div></div>
-          <div className="cat"><div className="g">🛡️</div><div className="t">Mobiltillbehör</div><div className="s">Skal · skärmskydd</div></div>
-          <div className="cat"><div className="g">🔌</div><div className="t">Kablar &amp; Laddare</div><div className="s">USB-C · MagSafe</div></div>
-          <div className="cat"><div className="g">🔋</div><div className="t">Batterier &amp; Powerbank</div><div className="s">Ladda överallt</div></div>
-          <div className="cat"><div className="g">🎧</div><div className="t">Hörlurar &amp; Högtalare</div><div className="s">Ljud &amp; bild</div></div>
-          <div className="cat"><div className="g">♻️</div><div className="t">Begagnade mobiler</div><div className="s">Testade · garanti</div></div>
+          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"/></svg></div><div className="t">Mobilreservdelar</div><div className="s">Skärm · batteri · baksida</div></div>
+          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l7 3v5c0 4.2-2.9 7.3-7 8.9C7.9 18.3 5 15.2 5 11V6z"/><path d="M9 11.5l2 2 4-4"/></svg></div><div className="t">Mobiltillbehör</div><div className="s">Skal · skärmskydd</div></div>
+          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M9 2v5M15 2v5"/><path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z"/><line x1="12" y1="16" x2="12" y2="22"/></svg></div><div className="t">Kablar &amp; Laddare</div><div className="s">USB-C · MagSafe</div></div>
+          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg></div><div className="t">Batterier &amp; Powerbank</div><div className="s">Ladda överallt</div></div>
+          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M5 15v-3a7 7 0 0 1 14 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></div><div className="t">Hörlurar &amp; Högtalare</div><div className="s">Ljud &amp; bild</div></div>
+          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></div><div className="t">Begagnade mobiler</div><div className="s">Testade · garanti</div></div>
         </div>
       </div></section>
 
@@ -210,10 +210,10 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
           <p>Hos Teknikhouse hittar du marknadens bredaste sortiment av mobilreservdelar och mobiltillbehör till iPhone, Samsung, iPad och fler. Vi lagerför iPhone-reservdelar och Samsung-reservdelar – skärmar, batterier, baksidor, kameror och smådelar – med livstidsgaranti på skärmar, fri frakt och snabb leverans från eget lager.</p>
           <p>Teknikhouse.se ägs och drivs av Nordic Teknik House AB med säte i Stockholm. Vi har lång erfarenhet i branschen och hjälper både privatpersoner och företag att reparera sina mobila enheter. Alla produkter testas av experter — och garanti ingår alltid.</p>
           <div className="trustband">
-            <div className="tb"><div className="g">🏬</div><b>Fysisk butik</b><span>Phone Rep — vi lagar på riktigt</span></div>
-            <div className="tb"><div className="g">🛡️</div><b>Garanti ingår alltid</b><span>Livstidsgaranti på skärmar</span></div>
-            <div className="tb"><div className="g">📦</div><b>Eget lager i Sverige</b><span>Snabb leverans, Postnord &amp; DHL</span></div>
-            <div className="tb"><div className="g">🔒</div><b>Trygg e-handel</b><span>Svensk Digital Handel · Trustpilot 4,9</span></div>
+            <div className="tb"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M4 9l1-4h14l1 4M5 9v10h14V9M4 9h16"/></svg></div><b>Fysisk butik</b><span>Phone Rep — vi lagar på riktigt</span></div>
+            <div className="tb"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l7 3v5c0 4.2-2.9 7.3-7 8.9C7.9 18.3 5 15.2 5 11V6z"/><path d="M9 11.5l2 2 4-4"/></svg></div><b>Garanti ingår alltid</b><span>Livstidsgaranti på skärmar</span></div>
+            <div className="tb"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg></div><b>Eget lager i Sverige</b><span>Snabb leverans, Postnord &amp; DHL</span></div>
+            <div className="tb"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><b>Trygg e-handel</b><span>Svensk Digital Handel · Trustpilot 4,9</span></div>
           </div>
         </div>
       </div></section>
