@@ -38,9 +38,9 @@ const ProfilePassword: React.FC<MyInformationProps> = ({ customer }) => {
   return (
     <div className="w-full">
       <AccountInfo
-        label="Password"
+        label="Lösenord"
         currentInfo={
-          <span>The password is not shown for security reasons</span>
+          <span>Lösenordet visas inte av säkerhetsskäl</span>
         }
         isEditable={false}
         clearState={() => {}}
