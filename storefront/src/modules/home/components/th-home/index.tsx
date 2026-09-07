@@ -177,13 +177,37 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
         <div className="shead"><h2>Populärt just nu <span style={{ color: "var(--fit)", fontSize: "15px" }}>✓</span></h2><a>Visa alla →</a></div>
         <div className="prods">
           {region && products && products.length
-            ? products.slice(0, 8).map((p: any) => (
+            ? products.slice(0, 4).map((p: any) => (
                 <ProductPreview key={p.id} product={p} region={region} isFeatured />
               ))
             : null}
         </div>
       </div>
       </section>
+
+      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+        <div className="shead"><h2>Produkter på rea <span style={{ background: "var(--red)", color: "#fff", fontSize: "12px", fontWeight: 800, padding: "3px 9px", borderRadius: "999px", verticalAlign: "3px" }}>REA</span></h2><a href="/se/store">Visa alla →</a></div>
+        <div className="prods">
+          {region && products && products.length > 4
+            ? products.slice(4, 8).map((p: any) => (
+                <ProductPreview key={"rea" + p.id} product={p} region={region} isFeatured />
+              ))
+            : null}
+        </div>
+      </div></section>
+
+      {products && products.length > 8 ? (
+      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+        <div className="shead"><h2>Nyss inkommet</h2><a href="/se/store">Visa alla →</a></div>
+        <div className="prods">
+          {region
+            ? products.slice(8, 12).map((p: any) => (
+                <ProductPreview key={"ny" + p.id} product={p} region={region} isFeatured />
+              ))
+            : null}
+        </div>
+      </div></section>
+      ) : null}
 
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="repair">
