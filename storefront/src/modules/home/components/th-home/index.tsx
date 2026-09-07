@@ -1,3 +1,5 @@
+import ProductPreview from "@modules/products/components/product-preview"
+
 // Teknikhouse 2027 homepage — self-contained section (scoped under .th).
 // Rendered from app/[countryCode]/(main)/page.tsx in place of <Hero />.
 // Server component, no client JS. Real copy from teknikhouse.se editable areas.
@@ -92,7 +94,7 @@ const CSS = `
 @media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}}
 `
 
-export default function ThHome() {
+export default function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
   return (
     <div className="th">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -157,14 +159,16 @@ export default function ThHome() {
       </div></section>
 
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="shead"><h2>Passar din iPhone 13 Pro <span style={{ color: "var(--fit)", fontSize: "15px" }}>✓</span></h2><a>Visa alla →</a></div>
+        <div className="shead"><h2>Populärt just nu <span style={{ color: "var(--fit)", fontSize: "15px" }}>✓</span></h2><a>Visa alla →</a></div>
         <div className="prods">
-          <div className="p"><div className="imgw">📱<span className="fitb">✓ Passar</span><span className="disc">−20%</span></div><div className="b"><div className="brand">Teknikhouse</div><div className="name">Skärm iPhone 13 Pro (OLED, inkl. verktyg) — livstidsgaranti</div><div className="stars">★★★★★ <span className="c">(214)</span></div><div className="stock">● I lager</div><div className="foot"><div className="price">1 149 kr<span className="old">1 449</span></div><button className="add">＋</button></div></div></div>
-          <div className="p"><div className="imgw">🔋<span className="fitb">✓ Passar</span></div><div className="b"><div className="brand">Teknikhouse</div><div className="name">Batteri iPhone 13 Pro — högkapacitet, verktyg ingår</div><div className="stars">★★★★★ <span className="c">(486)</span></div><div className="stock">● I lager</div><div className="foot"><div className="price">649 kr</div><button className="add">＋</button></div></div></div>
-          <div className="p"><div className="imgw">🛡️<span className="fitb">✓ Passar</span></div><div className="b"><div className="brand">Spigen</div><div className="name">MagSafe-skal iPhone 13 Pro — Rugged Armor</div><div className="stars">★★★★☆ <span className="c">(1 032)</span></div><div className="stock">● I lager</div><div className="foot"><div className="price">249 kr</div><button className="add">＋</button></div></div></div>
-          <div className="p"><div className="imgw">🔎<span className="fitb">✓ Passar</span><span className="disc">3 för 2</span></div><div className="b"><div className="brand">Teknikhouse</div><div className="name">Skärmskydd härdat glas iPhone 13 Pro (3-pack)</div><div className="stars">★★★★★ <span className="c">(2 741)</span></div><div className="stock">● I lager</div><div className="foot"><div className="price">129 kr</div><button className="add">＋</button></div></div></div>
+          {region && products && products.length
+            ? products.slice(0, 4).map((p: any) => (
+                <ProductPreview key={p.id} product={p} region={region} isFeatured />
+              ))
+            : null}
         </div>
-      </div></section>
+      </div>
+      </section>
 
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="repair">
