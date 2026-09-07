@@ -55,6 +55,10 @@ export default function ProductActions({
       return
     }
 
+    if (product.variants.length === 1) {
+      return product.variants[0]
+    }
+
     return product.variants.find((v) => {
       const variantOptions = optionsAsKeymap(v.options)
       return isEqual(variantOptions, options)
