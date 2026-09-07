@@ -26,7 +26,7 @@ export default async function Home({
   try {
     const homeProductsRes: any = await getProductsList({
       countryCode,
-      queryParams: { limit: 4 } as any,
+      queryParams: { limit: 12 } as any,
     })
     homeProducts = homeProductsRes?.response?.products ?? []
   } catch (e) {
