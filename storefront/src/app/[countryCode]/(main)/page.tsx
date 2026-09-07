@@ -57,15 +57,7 @@ export default async function Home({
       {/* ===================================================================
         * EXAMPLE SECTION END
         * =================================================================== */}
-      <div className="py-12">
-        {hasFeaturedProducts ? (
-          <ul className="flex flex-col gap-x-6">
-            <FeaturedProducts collections={collections} region={region} />
-          </ul>
-        ) : (
-          <LatestProducts countryCode={countryCode} region={region} />
-        )}
-      </div>
+    
     </>
   )
 }
