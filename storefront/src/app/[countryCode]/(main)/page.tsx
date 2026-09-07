@@ -22,10 +22,16 @@ export default async function Home({
   const collections = await getCollectionsWithProducts(countryCode)
   const region = await getRegion(countryCode)
 
-  const homeProductsRes = region
-    ? await getProductsList({ countryCode, queryParams: { limit: 4 } as any })
-    : null
-  const homeProducts = homeProductsRes?.response?.products ?? []
+  let homeProducts: any[] = []
+  try {
+    const homeProductsRes: any = await getProductsList({
+      countryCode,
+      queryParams: { limit: 4 } as any,
+    })
+    homeProducts = homeProductsRes?.response?.products ?? []
+  } catch (e) {
+    homeProducts = []
+  }
 
   if (!collections || !region) {
     return null
