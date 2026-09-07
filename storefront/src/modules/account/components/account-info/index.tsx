@@ -72,7 +72,7 @@ const AccountInfo = ({
               data-testid="edit-button"
               data-active={state}
             >
-              {state ? "Cancel" : "Edit"}
+              {state ? "Avbryt" : "Redigera"}
             </Button>
           </div>
         )}
@@ -142,7 +142,7 @@ const AccountInfo = ({
                   type="submit"
                   data-testid="save-button"
                 >
-                  Save changes
+                  Spara ändringar
                 </Button>
               </div>
             </div>
