@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 
 import FeaturedProducts from "@modules/home/components/featured-products"
-import Hero from "@modules/home/components/hero"
+import ThHome from "@modules/home/components/th-home"
 import LatestProducts from "@modules/home/components/latest-products"
 import { getCollectionsWithProducts } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
@@ -36,12 +36,12 @@ export default async function Home({
       {/* ===================================================================
         * EXAMPLE SECTION START
         *
-        * <Hero /> is the dashed placeholder block on your homepage. To delete
-        * it: remove the <Hero /> line just below, remove its import at the top
+        * <ThHome /> is the dashed placeholder block on your homepage. To delete
+        * it: remove the <ThHome /> line just below, remove its import at the top
         * of this file, then delete the folder
         * src/modules/home/components/hero. Nothing else depends on it.
         * =================================================================== */}
-      <Hero />
+      <ThHome />
       {/* ===================================================================
         * EXAMPLE SECTION END
         * =================================================================== */}
