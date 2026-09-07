@@ -6,8 +6,8 @@ import { HttpTypes } from "@medusajs/types"
 import { getCustomer } from "@lib/data/customer"
 
 export const metadata: Metadata = {
-  title: "Cart",
-  description: "View your cart",
+  title: "Varukorg",
+  description: "Visa din varukorg",
 }
 
 const fetchCart = async () => {
