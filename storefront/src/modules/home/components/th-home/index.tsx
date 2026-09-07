@@ -1,4 +1,5 @@
 import ProductPreview from "@modules/products/components/product-preview"
+import NewsletterSignup from "./newsletter-signup"
 
 // Teknikhouse 2027 homepage — self-contained section (scoped under .th).
 // Rendered from app/[countryCode]/(main)/page.tsx in place of <Hero />.
@@ -26,7 +27,7 @@ const CSS = `
 .th .finder .flab .p{background:var(--red-t);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px}
 .th .finder .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
 .th .finder .sel{flex:1;min-width:140px;background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:13px 14px;font-size:14px;color:var(--ink);font-weight:600}
-.th .finder .go{background:var(--red);color:#fff;border:0;border-radius:11px;padding:0 22px;font-weight:800;font-size:14.5px;white-space:nowrap;cursor:pointer}
+.th .finder .go{background:var(--red);color:#fff;border:0;border-radius:11px;padding:0 22px;font-weight:800;font-size:14.5px;white-space:nowrap;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;align-self:stretch}
 .th .finder .hint{margin-top:11px;font-size:12.5px;color:var(--muted)} .th .finder .hint b{color:var(--fit)}
 .th .trustrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}
 .th .tchip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 13px;font-size:12.5px;color:#D6DBE4;font-weight:600}
@@ -46,7 +47,8 @@ const CSS = `
 .th .shead h2{font-size:clamp(21px,3vw,28px);font-weight:900}
 .th .shead a{color:var(--red);font-weight:800;font-size:14px;white-space:nowrap}
 .th .cats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
-.th .cat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 14px;text-align:center;transition:.16s}
+.th .cat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 14px;text-align:center;transition:.16s;display:block;text-decoration:none;color:inherit}
+.cat:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:var(--shadow)}
 .th .cat:hover{border-color:var(--red);transform:translateY(-3px);box-shadow:var(--shadow)}
 .th .cat .g{font-size:30px}.th .cat .t{font-weight:800;font-size:13.5px;margin-top:9px}.th .cat .s{color:var(--muted);font-size:11.5px;margin-top:2px}
 .th .prods{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
@@ -136,7 +138,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
             <div className="row">
               <div className="sel">Märke: Apple</div>
               <div className="sel">Modell: iPhone 13 Pro</div>
-              <button className="go">Visa delar →</button>
+              <a className="go" href="/se/store">Visa delar →</a>
             </div>
             <div className="hint">✓ Varje del är märkt <b>&quot;Passar din enhet&quot;</b> — verifierad kompatibilitet, inte gissning.</div>
           </div>
@@ -164,12 +166,12 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <section className="blk"><div className="wrap">
         <div className="shead"><h2>Vad letar du efter?</h2><a>Alla kategorier →</a></div>
         <div className="cats">
-          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"/></svg></div><div className="t">Mobilreservdelar</div><div className="s">Skärm · batteri · baksida</div></div>
-          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l7 3v5c0 4.2-2.9 7.3-7 8.9C7.9 18.3 5 15.2 5 11V6z"/><path d="M9 11.5l2 2 4-4"/></svg></div><div className="t">Mobiltillbehör</div><div className="s">Skal · skärmskydd</div></div>
-          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M9 2v5M15 2v5"/><path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z"/><line x1="12" y1="16" x2="12" y2="22"/></svg></div><div className="t">Kablar &amp; Laddare</div><div className="s">USB-C · MagSafe</div></div>
-          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg></div><div className="t">Batterier &amp; Powerbank</div><div className="s">Ladda överallt</div></div>
-          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M5 15v-3a7 7 0 0 1 14 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></div><div className="t">Hörlurar &amp; Högtalare</div><div className="s">Ljud &amp; bild</div></div>
-          <div className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></div><div className="t">Begagnade mobiler</div><div className="s">Testade · garanti</div></div>
+          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"/></svg></div><div className="t">Mobilreservdelar</div><div className="s">Skärm · batteri · baksida</div></a>
+          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l7 3v5c0 4.2-2.9 7.3-7 8.9C7.9 18.3 5 15.2 5 11V6z"/><path d="M9 11.5l2 2 4-4"/></svg></div><div className="t">Mobiltillbehör</div><div className="s">Skal · skärmskydd</div></a>
+          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M9 2v5M15 2v5"/><path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z"/><line x1="12" y1="16" x2="12" y2="22"/></svg></div><div className="t">Kablar &amp; Laddare</div><div className="s">USB-C · MagSafe</div></a>
+          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg></div><div className="t">Batterier &amp; Powerbank</div><div className="s">Ladda överallt</div></a>
+          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M5 15v-3a7 7 0 0 1 14 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></div><div className="t">Hörlurar &amp; Högtalare</div><div className="s">Ljud &amp; bild</div></a>
+          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></div><div className="t">Begagnade mobiler</div><div className="s">Testade · garanti</div></a>
         </div>
       </div></section>
 
@@ -280,7 +282,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <section className="blk"><div className="wrap">
         <div className="news">
           <div><h2>Få 10% på din första order</h2><p>Anmäl dig till nyhetsbrevet för guider, nyheter och exklusiva erbjudanden.</p></div>
-          <div className="newsform"><input type="email" placeholder="Din e-postadress" aria-label="E-postadress" /><button type="button">Prenumerera</button></div>
+          <NewsletterSignup />
         </div>
       </div></section>
     </div>
