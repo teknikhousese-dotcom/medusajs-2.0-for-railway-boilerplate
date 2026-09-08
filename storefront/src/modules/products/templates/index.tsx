@@ -36,17 +36,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         </div>
         <div className="flex flex-col w-full small:max-w-[420px] small:sticky small:top-24 py-8 small:py-0 gap-y-8">
           <ProductInfo product={product} />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
-          >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
+          <ProductActionsWrapper id={product.id} region={region} />
           <ProductTabs product={product} />
         </div>
       </div>
