@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-import { createProductsWorkflow } from "@medusajs/core-flows"
+import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 // Wiki -> Medusa catalog import (categories + products). Admin-authenticated.
 // POST { mode: "categories"|"products", rows: [...] }  — idempotent, resumable.
