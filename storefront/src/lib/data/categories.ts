@@ -3,20 +3,19 @@ import { HttpTypes } from "@medusajs/types"
 import { cache } from "react"
 import { getCacheDirectives } from "./cookies"
 
-// See the note in regions.ts for why these are client.fetch calls rather than
-// the sdk.store.* helpers.
-//
-// A side benefit: the helper typed its query as StoreProductCategoryListParams,
-// which declares neither `limit`/`offset` nor `handle`, so two of these calls
-// carried a @ts-ignore to get past it. client.fetch takes a plain query bag,
-// so the suppressions are gone rather than merely moved.
+// listCategories returns the full category set (up to 1000) with the fields the
+// header mega-menu needs to build the department → brand → model tree, while
+// keeping category_children for any other consumer.
 export const listCategories = cache(async function () {
   return sdk.client
     .fetch<HttpTypes.StoreProductCategoryListResponse>(
       "/store/product-categories",
       {
         method: "GET",
-        query: { fields: "+category_children" },
+        query: {
+          fields: "id,name,handle,rank,parent_category_id,+category_children",
+          limit: 1000,
+        },
         ...(await getCacheDirectives("categories")),
       }
     )
