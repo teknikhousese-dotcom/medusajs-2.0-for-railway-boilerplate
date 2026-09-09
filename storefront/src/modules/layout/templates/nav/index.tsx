@@ -1,15 +1,18 @@
 import { Suspense } from "react"
 
 import { listRegions } from "@lib/data/regions"
+import { listCategories } from "@lib/data/categories"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import CategoryMega from "@modules/layout/components/category-mega"
 import { isSearchEnabled } from "@lib/util/env"
 
 // Teknikhouse nav — own-branded. Slim trust bar + red logo. Functional cart/search/menu kept.
 export default async function Nav() {
   const regions = await listRegions().then((regions: StoreRegion[]) => regions)
+  const categories = await listCategories().catch(() => [])
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
@@ -25,7 +28,7 @@ export default async function Nav() {
         <nav className="content-container txt-xsmall-plus text-ui-fg-subtle flex items-center justify-between w-full h-full text-small-regular">
           <div className="flex-1 basis-0 h-full flex items-center">
             <div className="h-full">
-              <SideMenu regions={regions} />
+              <SideMenu regions={regions} categories={categories} />
             </div>
           </div>
 
@@ -77,6 +80,9 @@ export default async function Nav() {
           </div>
         </nav>
       </header>
+
+      {/* Category department bar with mega-menu (desktop) */}
+      <CategoryMega categories={categories as any} />
     </div>
   )
 }
