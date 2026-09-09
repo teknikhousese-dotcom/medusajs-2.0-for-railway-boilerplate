@@ -217,7 +217,7 @@ const Payment = ({
             data-testid="submit-payment-button"
           >
             {!activeSession && isStripeFunc(selectedPaymentMethod)
-              ? " Enter card details"
+              ? " Ange kortuppgifter"
               : "Fortsätt till granskning"}
           </Button>
         </div>
@@ -253,7 +253,7 @@ const Payment = ({
                   <Text>
                     {isStripeFunc(selectedPaymentMethod) && cardBrand
                       ? cardBrand
-                      : "Another step will appear"}
+                      : "Ytterligare ett steg visas"}
                   </Text>
                 </div>
               </div>
