@@ -7,6 +7,7 @@ import { Fragment } from "react"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CountrySelect from "../country-select"
+import CategoryTreeMobile from "@modules/layout/components/category-tree-mobile"
 import { HttpTypes } from "@medusajs/types"
 import { getStoreName } from "@lib/util/env"
 
@@ -18,7 +19,13 @@ const SideMenuItems = {
   Varukorg: "/cart",
 }
 
-const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
+const SideMenu = ({
+  regions,
+  categories,
+}: {
+  regions: HttpTypes.StoreRegion[] | null
+  categories?: HttpTypes.StoreProductCategory[]
+}) => {
   const toggleState = useToggleState()
 
   return (
@@ -46,18 +53,12 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                 leaveFrom="opacity-100 backdrop-blur-2xl"
                 leaveTo="opacity-0"
               >
-                {/* z-30 put the panel underneath the nav's own links. On a
-                    phone the panel is full width, so its close button landed
-                    directly on top of the cart link and tapping "close"
-                    navigated to the cart instead of closing the menu. */}
                 <Popover.Panel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[60] inset-x-0 text-sm text-ui-fg-on-color m-2 backdrop-blur-2xl">
                   <div
                     data-testid="nav-menu-popup"
-                    className="flex flex-col h-full bg-[rgba(3,7,18,0.5)] rounded-rounded justify-between p-6"
+                    className="flex flex-col h-full bg-[rgba(3,7,18,0.85)] rounded-rounded justify-between p-6 overflow-y-auto"
                   >
                     <div className="flex justify-end" id="xmark">
-                      {/* Icon-only, so without a label it is announced as
-                          just "button". */}
                       <button
                         type="button"
                         data-testid="close-menu-button"
@@ -67,23 +68,28 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                         <XMark />
                       </button>
                     </div>
-                    <ul className="flex flex-col gap-6 items-start justify-start">
-                      {Object.entries(SideMenuItems).map(([name, href]) => {
-                        return (
-                          <li key={name}>
-                            <LocalizedClientLink
-                              href={href}
-                              className="text-3xl leading-10 hover:text-ui-fg-disabled"
-                              onClick={close}
-                              data-testid={`${name.toLowerCase()}-link`}
-                            >
-                              {name}
-                            </LocalizedClientLink>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                    <div className="flex flex-col gap-y-6">
+                    <div className="flex flex-col">
+                      <ul className="flex flex-col gap-4 items-start justify-start">
+                        {Object.entries(SideMenuItems).map(([name, href]) => {
+                          return (
+                            <li key={name}>
+                              <LocalizedClientLink
+                                href={href}
+                                className="text-2xl leading-9 hover:text-ui-fg-disabled"
+                                onClick={close}
+                                data-testid={`${name.toLowerCase()}-link`}
+                              >
+                                {name}
+                              </LocalizedClientLink>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                      {categories && categories.length > 0 && (
+                        <CategoryTreeMobile categories={categories} onNavigate={close} />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-y-6 pt-6">
                       <div
                         className="flex justify-between"
                         onMouseEnter={toggleState.open}
@@ -92,7 +98,7 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                         {regions && (
                           <CountrySelect
                             toggleState={toggleState}
-                            regions={regions}
+                          regions={regions}
                           />
                         )}
                         <ArrowRightMini
