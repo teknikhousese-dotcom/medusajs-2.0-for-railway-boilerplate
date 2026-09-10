@@ -326,26 +326,36 @@ const PAGES: Record<string, Page> = {
   },
   "salj-din-enhet": {
     "title": "Sälj din enhet",
-    "intro": "Vi köper din iPhone, Samsung och MacBook. Få ett prisförslag och gör plats för något nytt.",
+    "intro": "Sälj din iPhone, MacBook, iPad, Apple Watch eller Android-mobil till Teknikhouse — marknadens högsta bud sedan 2014. Kostnadsfri och oförbindande värdering, och pengarna in på ditt konto så fort vi testat din enhet.",
     "blocks": [
-      {
-        "p": "Byt upp dig eller töm lådan — vi köper begagnade mobiler, surfplattor och datorer i olika skick. Berätta vilken modell du har och dess skick så återkommer vi med ett prisförslag."
-      },
-      {
-        "h": "Så går det till",
-        "ul": [
-          "Välj enhet och beskriv skicket.",
-          "Få ett prisförslag från oss.",
-          "Skicka in enheten — vi betalar snabbt när den kontrollerats."
-        ]
-      },
-      {
-        "h": "Kontakt",
-        "p": "Mejla info@teknikhouse.se så hjälper vi dig igång."
-      }
+      { "p": "Inget pris visas online. Du skickar in uppgifterna om din enhet — sedan går vi igenom dem och mejlar dig ett personligt prisförslag, helt utan förpliktelser. Mejla info@teknikhouse.se för att komma igång." },
+      { "h": "Så funkar det", "ul": [
+        "1. Du fyller i — svara på några snabba frågor om din enhet och bifoga gärna bilder. Vi skräddarsyr budet efter modell och skick.",
+        "2. Vi mejlar bud — du får ett personligt prisförslag på mejl, utan förpliktelser.",
+        "3. Du skickar — tacka ja och skicka in enheten. Märk paketet med 'SÄLJ' så går det extra snabbt.",
+        "4. Vi betalar — stämmer skicket får du pengarna direkt via banköverföring in på ditt konto."
+      ] },
+      { "h": "Varför sälja till Teknikhouse?", "ul": [
+        "Högsta budet på marknaden — vi väger in allt och ger dig det högsta värdet, inte ett standardpris.",
+        "Kostnadsfri värdering — gratis och helt oförbindande. Du bestämmer själv om du vill sälja.",
+        "Snabb betalning — så snart vi testat din enhet får du pengarna via banköverföring.",
+        "Säker dataradering — all din data raderas säkert och permanent."
+      ] },
+      { "h": "Vi köper alla märken och modeller", "p": "iPhone, Android, surfplatta, klocka eller dator — fungerande, trasig eller gammal. Vi köper det." },
+      { "h": "Sälj MacBook till specialister", "p": "Vi är specialister på Mac och köper alla modeller av MacBook Air och MacBook Pro, även äldre årsmodeller. Oavsett om din MacBook är i toppskick eller har ett trött batteri får du ett rättvist expertbud — ofta mer än vad inbytesprogram och marknadsplatser erbjuder." },
+      { "h": "Sälj iPhone — fungerande eller trasig", "p": "Vi köper alla iPhone-modeller, från iPhone 7 till de allra senaste. Operatörslåst, sprucken skärm, dåligt batteri eller defekt — vi ger bud ändå, eftersom vi själva reparerar och återanvänder delar. Det betyder högre bud till dig." },
+      { "h": "Sälj Samsung och Android", "p": "Vi köper alla Samsung Galaxy och andra Android-mobiler — Sony Xperia, Huawei, OnePlus, Xiaomi och fler. Du får marknadens högsta bud och snabb betalning in på ditt konto." },
+      { "h": "Vanliga frågor", "ul": [
+        "Hur snabbt får jag betalt? När din enhet kommit fram testar vi den, ofta samma dag. Stämmer skicket betalar vi ut direkt via banköverföring.",
+        "Kostar det något att få ett bud? Nej — det är helt kostnadsfritt och oförbindande.",
+        "Köper ni trasiga eller operatörslåsta enheter? Ja. Vi köper enheter med sprucken skärm, dåligt batteri, operatörslås eller andra fel.",
+        "Vad händer med min data? All data raderas säkert och permanent. Logga gärna ut från iCloud/Google och stäng av 'Hitta min' innan du skickar.",
+        "Hur får jag det högsta budet? Beskriv skicket ärligt och bifoga tydliga bilder på fram- och baksida samt laddningsport i god belysning."
+      ] },
+      { "h": "Besök oss i butiken", "p": "Hellre direkt över disk? Kom förbi så värderar vi din enhet på plats medan du väntar — och du får betalt direkt. Sveavägen 139, 113 46 Stockholm. Öppet mån–fre 10–20, lör 11–17." },
+      { "h": "Kontakt", "p": "Mejla info@teknikhouse.se så hjälper vi dig igång." }
     ]
-  },
-  "kundtjanst": {
+  },  "kundtjanst": {
     "title": "Kundtjänst",
     "intro": "Vi finns här för att hjälpa dig — före, under och efter köpet.",
     "blocks": [
