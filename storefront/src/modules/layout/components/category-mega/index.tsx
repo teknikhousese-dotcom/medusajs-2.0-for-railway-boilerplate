@@ -1,16 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Link from "next/link"
 import { HttpTypes } from "@medusajs/types"
 
 type Cat = HttpTypes.StoreProductCategory
+
+// A category's own path segment = its handle minus the parent handle prefix.
+// (Handles are the teknikhouse path joined by "-", so this is exact.)
+const seg = (child: Cat, parent?: Cat) =>
+  parent && parent.handle && child.handle
+    ? child.handle.slice(parent.handle.length + 1)
+    : child.handle || ""
 
 /**
  * teknikhouse-style category navigation.
  * Desktop: a persistent department bar; hovering a department opens a full-width
  * mega-panel with its brands (columns) and each brand's models beneath.
- * Receives the full flat category list and builds the 3-level tree itself.
+ * Links use the hierarchical teknikhouse paths, e.g. /mobilreservdelar/apple/iphone-8.
  */
 export default function CategoryMega({ categories }: { categories: Cat[] }) {
   const [openId, setOpenId] = useState<string | null>(null)
@@ -39,21 +46,22 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
           {departments.map((dep) => {
             const brands = childrenOf(dep.id)
             const isOpen = openId === dep.id
+            const depHref = `/${dep.handle}`
             return (
               <li
                 key={dep.id}
                 className="flex items-center"
                 onMouseEnter={() => setOpenId(dep.id)}
               >
-                <LocalizedClientLink
-                  href={`/categories/${dep.handle}`}
+                <Link
+                  href={depHref}
                   className={
                     "whitespace-nowrap py-3 hover:text-ui-fg-base " +
                     (isOpen ? "text-ui-fg-base font-medium" : "text-ui-fg-subtle")
                   }
                 >
                   {dep.name}
-                </LocalizedClientLink>
+                </Link>
 
                 {isOpen && brands.length > 0 && (
                   <div className="absolute left-0 right-0 top-full z-50 border-t border-b border-ui-border-base bg-white shadow-lg">
@@ -61,24 +69,25 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
                         {brands.map((brand) => {
                           const models = childrenOf(brand.id)
+                          const brandHref = `${depHref}/${seg(brand, dep)}`
                           return (
                             <div key={brand.id} className="min-w-0">
-                              <LocalizedClientLink
-                                href={`/categories/${brand.handle}`}
+                              <Link
+                                href={brandHref}
                                 className="block font-semibold text-ui-fg-base hover:text-ui-fg-interactive mb-2"
                               >
                                 {brand.name}
-                              </LocalizedClientLink>
+                              </Link>
                               {models.length > 0 && (
                                 <ul className="flex flex-col gap-y-1">
                                   {models.map((m) => (
                                     <li key={m.id}>
-                                      <LocalizedClientLink
-                                        href={`/categories/${m.handle}`}
+                                      <Link
+                                        href={`${brandHref}/${seg(m, brand)}`}
                                         className="block text-ui-fg-subtle hover:text-ui-fg-base truncate"
                                       >
                                         {m.name}
-                                      </LocalizedClientLink>
+                                      </Link>
                                     </li>
                                   ))}
                                 </ul>
