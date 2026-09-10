@@ -76,7 +76,7 @@ export const getProductsList = cache(async function ({
         limit,
         offset,
         region_id: region.id,
-        fields: "*variants.calculated_price,categories.id,categories.handle,categories.parent_category_id",
+        fields: "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id",
         ...queryParams,
       },
       ...(await getCacheDirectives("products")),
