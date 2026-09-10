@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Link from "next/link"
 import { HttpTypes } from "@medusajs/types"
 
 type Cat = HttpTypes.StoreProductCategory
@@ -9,6 +9,8 @@ type Cat = HttpTypes.StoreProductCategory
 /**
  * Mobile category tree for the "Meny" drawer — an accordion:
  * department → tap to expand brands → tap to expand models (links).
+ * Links use the hierarchical teknikhouse paths (/dept/brand/model), built by
+ * appending each category's own segment (handle minus the parent handle prefix).
  */
 export default function CategoryTreeMobile({
   categories,
@@ -33,14 +35,27 @@ export default function CategoryTreeMobile({
 
   if (!roots.length) return null
 
-  const Row = ({ cat, depth }: { cat: Cat; depth: number }) => {
+  const Row = ({
+    cat,
+    depth,
+    parentHandle,
+    parentHref,
+  }: {
+    cat: Cat
+    depth: number
+    parentHandle?: string
+    parentHref?: string
+  }) => {
     const children = kids(cat.id)
     const isOpen = !!open[cat.id]
+    const selfSeg =
+      parentHandle && cat.handle ? cat.handle.slice(parentHandle.length + 1) : cat.handle || ""
+    const href = parentHref ? `${parentHref}/${selfSeg}` : `/${cat.handle}`
     return (
       <li>
         <div className="flex items-center justify-between gap-2">
-          <LocalizedClientLink
-            href={`/categories/${cat.handle}`}
+          <Link
+            href={href}
             onClick={onNavigate}
             className={
               "block py-2 hover:text-ui-fg-disabled " +
@@ -48,7 +63,7 @@ export default function CategoryTreeMobile({
             }
           >
             {cat.name}
-          </LocalizedClientLink>
+          </Link>
           {children.length > 0 && (
             <button
               type="button"
@@ -63,7 +78,13 @@ export default function CategoryTreeMobile({
         {isOpen && children.length > 0 && (
           <ul className="flex flex-col">
             {children.map((c) => (
-              <Row key={c.id} cat={c} depth={depth + 1} />
+              <Row
+                key={c.id}
+                cat={c}
+                depth={depth + 1}
+                parentHandle={cat.handle || undefined}
+                parentHref={href}
+              />
             ))}
           </ul>
         )}
