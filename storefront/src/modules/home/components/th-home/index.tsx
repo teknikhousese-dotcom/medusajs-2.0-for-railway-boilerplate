@@ -138,7 +138,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
             <div className="row">
               <div className="sel">Märke: Apple</div>
               <div className="sel">Modell: iPhone 13 Pro</div>
-              <a className="go" href="/se/store">Visa delar →</a>
+              <a className="go" href="/mobilreservdelar">Visa delar →</a>
             </div>
             <div className="hint">✓ Varje del är märkt <b>&quot;Passar din enhet&quot;</b> — verifierad kompatibilitet, inte gissning.</div>
           </div>
@@ -166,12 +166,12 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <section className="blk"><div className="wrap">
         <div className="shead"><h2>Vad letar du efter?</h2><a>Alla kategorier →</a></div>
         <div className="cats">
-          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"/></svg></div><div className="t">Mobilreservdelar</div><div className="s">Skärm · batteri · baksida</div></a>
-          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l7 3v5c0 4.2-2.9 7.3-7 8.9C7.9 18.3 5 15.2 5 11V6z"/><path d="M9 11.5l2 2 4-4"/></svg></div><div className="t">Mobiltillbehör</div><div className="s">Skal · skärmskydd</div></a>
-          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M9 2v5M15 2v5"/><path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z"/><line x1="12" y1="16" x2="12" y2="22"/></svg></div><div className="t">Kablar &amp; Laddare</div><div className="s">USB-C · MagSafe</div></a>
-          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg></div><div className="t">Batterier &amp; Powerbank</div><div className="s">Ladda överallt</div></a>
-          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M5 15v-3a7 7 0 0 1 14 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></div><div className="t">Hörlurar &amp; Högtalare</div><div className="s">Ljud &amp; bild</div></a>
-          <a href="/se/store" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></div><div className="t">Begagnade mobiler</div><div className="s">Testade · garanti</div></a>
+          <a href="/mobilreservdelar" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"/></svg></div><div className="t">Mobilreservdelar</div><div className="s">Skärm · batteri · baksida</div></a>
+          <a href="/mobiltillbehor" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M12 3l7 3v5c0 4.2-2.9 7.3-7 8.9C7.9 18.3 5 15.2 5 11V6z"/><path d="M9 11.5l2 2 4-4"/></svg></div><div className="t">Mobiltillbehör</div><div className="s">Skal · skärmskydd</div></a>
+          <a href="/kablar-laddare" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M9 2v5M15 2v5"/><path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z"/><line x1="12" y1="16" x2="12" y2="22"/></svg></div><div className="t">Kablar &amp; Laddare</div><div className="s">USB-C · MagSafe</div></a>
+          <a href="/batterier" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><rect x="3" y="8" width="16" height="8" rx="2"/><line x1="21" y1="10.5" x2="21" y2="13.5"/><line x1="7" y1="12" x2="11" y2="12"/></svg></div><div className="t">Batterier &amp; Powerbank</div><div className="s">Ladda överallt</div></a>
+          <a href="/horlurar-hogtalare" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M5 15v-3a7 7 0 0 1 14 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></div><div className="t">Hörlurar &amp; Högtalare</div><div className="s">Ljud &amp; bild</div></a>
+          <a href="/mobiler-surfplattor" className="cat"><div className="g"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:"-.125em"}}><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></div><div className="t">Begagnade mobiler</div><div className="s">Testade · garanti</div></a>
         </div>
       </div></section>
 
@@ -188,7 +188,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       </section>
 
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="shead"><h2>Produkter på rea <span style={{ background: "var(--red)", color: "#fff", fontSize: "12px", fontWeight: 800, padding: "3px 9px", borderRadius: "999px", verticalAlign: "3px" }}>REA</span></h2><a href="/se/store">Visa alla →</a></div>
+        <div className="shead"><h2>Produkter på rea <span style={{ background: "var(--red)", color: "#fff", fontSize: "12px", fontWeight: 800, padding: "3px 9px", borderRadius: "999px", verticalAlign: "3px" }}>REA</span></h2><a href="/store">Visa alla →</a></div>
         <div className="prods">
           {region && products && products.length > 4
             ? products.slice(4, 8).map((p: any) => (
@@ -200,7 +200,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
 
       {products && products.length > 8 ? (
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="shead"><h2>Nyss inkommet</h2><a href="/se/store">Visa alla →</a></div>
+        <div className="shead"><h2>Nyss inkommet</h2><a href="/outlet-fyndvaror">Visa alla →</a></div>
         <div className="prods">
           {region
             ? products.slice(8, 12).map((p: any) => (
@@ -259,16 +259,16 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
         </div>
       </div></section>
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="shead"><h2>Handla efter märke</h2><a href="/se/store">Visa alla →</a></div>
+        <div className="shead"><h2>Handla efter märke</h2><a href="/store">Visa alla →</a></div>
         <div className="brands">
-          <a className="brand" href="/se/store">Apple</a>
-          <a className="brand" href="/se/store">Samsung</a>
-          <a className="brand" href="/se/store">Huawei</a>
-          <a className="brand" href="/se/store">Xiaomi</a>
-          <a className="brand" href="/se/store">OnePlus</a>
-          <a className="brand" href="/se/store">Sony</a>
-          <a className="brand" href="/se/store">Motorola</a>
-          <a className="brand" href="/se/store">iPad</a>
+          <a className="brand" href="/mobilreservdelar/apple">Apple</a>
+          <a className="brand" href="/mobilreservdelar/samsung">Samsung</a>
+          <a className="brand" href="/mobilreservdelar/huawei">Huawei</a>
+          <a className="brand" href="/mobilreservdelar/xiaomi">Xiaomi</a>
+          <a className="brand" href="/mobilreservdelar/oneplus">OnePlus</a>
+          <a className="brand" href="/mobilreservdelar/sony-xperia">Sony</a>
+          <a className="brand" href="/mobilreservdelar">Motorola</a>
+          <a className="brand" href="/mobilreservdelar/apple">iPad</a>
         </div>
       </div></section>
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
