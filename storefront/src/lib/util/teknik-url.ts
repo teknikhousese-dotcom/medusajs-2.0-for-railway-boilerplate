@@ -37,3 +37,5 @@ export function productHref(product: WithCats | null | undefined, map: Map<strin
   }
   return best ? "/" + best + "/" + handle : "/products/" + handle
 }
+
+// build: refresh product descriptions 2026-09-10
