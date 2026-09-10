@@ -11,7 +11,7 @@ const CSS = `
 .th .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
 .th a{text-decoration:none;color:inherit}
 .th h1,.th h2,.th h3{letter-spacing:-.02em;line-height:1.12;margin:0}
-.th .qnav{background:#fff;border-bottom:1px solid var(--line)}
+.th .qnav{display:none}
 .th .qnav .wrap{display:flex;gap:20px;height:46px;align-items:center;font-size:13.5px;font-weight:700;overflow-x:auto}
 .th .qnav a{color:var(--ink2);white-space:nowrap;display:flex;align-items:center;gap:6px}
 .th .qnav a:hover{color:var(--red)} .th .qnav a.hot{color:var(--red)}
