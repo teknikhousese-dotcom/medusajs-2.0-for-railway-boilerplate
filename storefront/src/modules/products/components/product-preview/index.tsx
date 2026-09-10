@@ -1,11 +1,13 @@
 import { Text } from "@medusajs/ui"
 
 import { getProductPrice } from "@lib/util/get-product-price"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
 import { getProductsById } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
+import Link from "next/link"
+import { listCategories } from "@lib/data/categories"
+import { buildCategoryPathMap, productHref } from "@lib/util/teknik-url"
 
 export default async function ProductPreview({
   product,
@@ -31,8 +33,11 @@ export default async function ProductPreview({
 
   const brand = (product as any)?.brand || product.collection?.title
 
+  const _catPathMap = buildCategoryPathMap((await listCategories().catch(() => [])) as any)
+  const _href = productHref(product as any, _catPathMap)
+
   return (
-    <LocalizedClientLink href={`/products/${product.handle}`} className="group block h-full" data-testid="product-wrapper">
+    <Link href={_href} className="group block h-full" data-testid="product-wrapper">
       <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-ui-border-base bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-ui-border-strong">
         <div className="relative aspect-square overflow-hidden bg-ui-bg-subtle">
           <Thumbnail
@@ -68,6 +73,6 @@ export default async function ProductPreview({
           </div>
         </div>
       </div>
-    </LocalizedClientLink>
+    </Link>
   )
 }
