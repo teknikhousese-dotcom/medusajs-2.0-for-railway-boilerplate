@@ -201,6 +201,30 @@ export async function middleware(request: NextRequest) {
   // which is what happens today anyway.
   request.cookies.set("_medusa_cache_id", cacheId)
 
+  // --- Clean URLs: no visible /se country-code prefix. Redirect any explicit
+  // /<country>/... to the clean path, and otherwise serve the localized tree
+  // internally via rewrite so the address bar stays clean. ---
+  {
+    const seg1 = request.nextUrl.pathname.split("/")[1]
+    const search = request.nextUrl.search
+    if (seg1 && regionMap.has(seg1)) {
+      const stripped = request.nextUrl.pathname.slice(seg1.length + 1) || "/"
+      return NextResponse.redirect(new URL(`${stripped}${search}`, request.url), 308)
+    }
+    const cc = countryCode || DEFAULT_REGION
+    const p = request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
+    if (cartId) {
+      const step = checkoutStep ? "" : `${search ? "&" : "?"}step=address`
+      const res = NextResponse.rewrite(new URL(`/${cc}${p}${search}${step}`, request.url))
+      if (!cacheIdCookie) res.cookies.set("_medusa_cache_id", cacheId, CACHE_ID_COOKIE_OPTIONS)
+      res.cookies.set("_medusa_cart_id", cartId, { maxAge: 60 * 60 * 24 })
+      return res
+    }
+    const res = NextResponse.rewrite(new URL(`/${cc}${p}${search}`, request.url))
+    if (!cacheIdCookie) res.cookies.set("_medusa_cache_id", cacheId, CACHE_ID_COOKIE_OPTIONS)
+    return res
+  }
+
   // check if one of the country codes is in the url
   if (urlHasCountryCode && (!cartId || cartIdCookie)) {
     const response = NextResponse.next({
