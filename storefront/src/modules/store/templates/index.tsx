@@ -22,7 +22,7 @@ const StoreTemplate = ({
     <div className="content-container py-6" data-testid="category-container">
       <div className="mb-6 flex flex-wrap gap-2">
         {["Mobilreservdelar", "Mobiltillbehör", "Batterier & Powerbank", "Kablar & Laddare", "Hörlurar & Högtalare", "Begagnade mobiler"].map((c) => (
-          <a key={c} href={`/${countryCode}/store`} className="text-sm font-medium px-4 py-2 rounded-full border border-ui-border-base bg-ui-bg-subtle hover:border-ui-fg-base hover:text-ui-fg-base transition-colors">
+          <a key={c} href={({"Mobilreservdelar":"/mobilreservdelar","Mobiltillbehör":"/mobiltillbehor","Batterier & Powerbank":"/batterier","Kablar & Laddare":"/kablar-laddare","Hörlurar & Högtalare":"/horlurar-hogtalare","Begagnade mobiler":"/mobiler-surfplattor"} as Record<string, string>)[c] || "/store"} className="text-sm font-medium px-4 py-2 rounded-full border border-ui-border-base bg-ui-bg-subtle hover:border-ui-fg-base hover:text-ui-fg-base transition-colors">
             {c}
           </a>
         ))}
