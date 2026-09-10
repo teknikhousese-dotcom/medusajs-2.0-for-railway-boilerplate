@@ -26,6 +26,45 @@ const CACHE_ID_COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === "production",
 } as const
 
+// --- Category handle cache: middleware resolves teknikhouse-style
+// /dept[/brand[/model]][/produkt-slug] paths against the live category
+// handles, refreshed hourly like the region map above. ---
+const categoryHandleCache = {
+  handles: new Set<string>(),
+  updated: 0,
+}
+
+async function getCategoryHandleSet(): Promise<Set<string>> {
+  if (
+    categoryHandleCache.handles.size > 0 &&
+    categoryHandleCache.updated > Date.now() - 3600 * 1000
+  ) {
+    return categoryHandleCache.handles
+  }
+  if (!BACKEND_URL) return categoryHandleCache.handles
+  try {
+    const data = await fetch(
+      `${BACKEND_URL}/store/product-categories?limit=1000&fields=handle`,
+      {
+        headers: { "x-publishable-api-key": PUBLISHABLE_API_KEY! },
+        next: { revalidate: 3600, tags: ["category-handles"] },
+        cache: "force-cache",
+      }
+    ).then((r) => r.json())
+    const next = new Set<string>()
+    for (const c of data?.product_categories || []) {
+      if (c?.handle) next.add(c.handle)
+    }
+    if (next.size > 0) {
+      categoryHandleCache.handles = next
+      categoryHandleCache.updated = Date.now()
+    }
+  } catch (e) {
+    // keep whatever we had cached on failure
+  }
+  return categoryHandleCache.handles
+}
+
 async function getRegionMap() {
   const { regionMap, regionMapUpdated } = regionMapCache
 
@@ -120,26 +159,27 @@ export async function middleware(request: NextRequest) {
   // cached cart. See getCacheTag in lib/data/cookies.ts.
   const cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
-  // --- Legacy teknikhouse.se URL compatibility: keep the old hierarchical
-  // /kategori/marke/modell/produkt-slug/ URLs resolving on the new site (SEO). ---
+  // --- teknikhouse.se hierarchical URL resolution (SEO): resolve
+  // /dept[/brand[/model]]/produkt-slug and /dept[/brand[/model]] against the
+  // live category handles, so every old teknikhouse URL keeps working here. ---
   {
     const legacySegs = request.nextUrl.pathname.split("/").filter(Boolean)
-    const LEGACY_CATS = [
-      "mobilreservdelar", "mobiltillbehor", "batterier", "kablar-laddare",
-      "powerbank", "horlurar-hogtalare", "datortillbehor", "gaming",
-      "mobiler-surfplattor", "hem-fritid", "mobilreparation", "verktyg",
-      "outlet-fyndvaror",
-    ]
-    if (legacySegs.length >= 1 && LEGACY_CATS.includes(legacySegs[0])) {
-      const target =
-        legacySegs.length >= 4
-          ? `/se/products/${legacySegs[legacySegs.length - 1]}`
-          : "/se/store"
-      const legacyRes = NextResponse.rewrite(new URL(target, request.url))
-      if (!cacheIdCookie) {
-        legacyRes.cookies.set("_medusa_cache_id", cacheId, CACHE_ID_COOKIE_OPTIONS)
+    if (legacySegs.length >= 1) {
+      const catHandles = await getCategoryHandleSet()
+      const joined = legacySegs.join("-")
+      let target: string | null = null
+      if (catHandles.has(joined)) {
+        target = `/se/categories/${joined}`
+      } else if (catHandles.has(legacySegs[0])) {
+        target = `/se/products/${legacySegs[legacySegs.length - 1]}`
       }
-      return legacyRes
+      if (target) {
+        const legacyRes = NextResponse.rewrite(new URL(target, request.url))
+        if (!cacheIdCookie) {
+          legacyRes.cookies.set("_medusa_cache_id", cacheId, CACHE_ID_COOKIE_OPTIONS)
+        }
+        return legacyRes
+      }
     }
   }
 
