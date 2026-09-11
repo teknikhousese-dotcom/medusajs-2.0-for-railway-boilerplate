@@ -64,7 +64,10 @@ export async function search(query: string) {
   try {
     const index = await loadIndex()
     const hits = index.filter((p) => tokens.every((tok) => p.t.includes(tok)))
-    return hits.map((p) => ({ id: p.id }))
+    // Cap the id set: the results page fetches every id in one request, so an
+    // unbounded list (a broad term like "skarm" matches hundreds) overflows the
+    // query string and crashes the page. 100 is plenty for a search result set.
+    return hits.slice(0, 100).map((p) => ({ id: p.id }))
   } catch {
     // Fallback: Medusa's plain substring search if the index build failed.
     try {
