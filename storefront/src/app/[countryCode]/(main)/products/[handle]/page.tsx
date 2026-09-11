@@ -59,12 +59,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     notFound()
   }
 
+  const _md: any = product.metadata || {}
+  const _metaTitle = (_md.meta_title && String(_md.meta_title).trim()) || `${product.title} | ${getStoreName()}`
+  const _metaDesc = (_md.meta_description && String(_md.meta_description).trim()) || product.title
+
   return {
-    title: `${product.title} | ${getStoreName()}`,
-    description: `${product.title}`,
+    title: _metaTitle,
+    description: _metaDesc,
     openGraph: {
-      title: `${product.title} | ${getStoreName()}`,
-      description: `${product.title}`,
+      title: _metaTitle,
+      description: _metaDesc,
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   }
