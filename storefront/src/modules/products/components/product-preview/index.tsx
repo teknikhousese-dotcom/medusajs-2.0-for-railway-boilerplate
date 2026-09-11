@@ -9,6 +9,12 @@ import Link from "next/link"
 import { listCategories } from "@lib/data/categories"
 import { buildCategoryPathMap, productHref } from "@lib/util/teknik-url"
 
+// teknikhouse stock snapshot lives in metadata.in_stock (false = slut).
+const isOutOfStock = (product: HttpTypes.StoreProduct) => {
+  const v = (product?.metadata as Record<string, any> | undefined)?.in_stock
+  return v === false || v === "false" || v === 0 || v === "0"
+}
+
 export default async function ProductPreview({
   product,
   isFeatured,
@@ -32,6 +38,7 @@ export default async function ProductPreview({
   })
 
   const brand = (product as any)?.brand || product.collection?.title
+  const oos = isOutOfStock(pricedProduct) || isOutOfStock(product)
 
   const _catPathMap = buildCategoryPathMap((await listCategories().catch(() => [])) as any)
   const _href = productHref(product as any, _catPathMap)
@@ -60,6 +67,13 @@ export default async function ProductPreview({
           >
             {product.title}
           </Text>
+          <span className="flex items-center gap-x-1.5 text-xs text-ui-fg-subtle">
+            <span
+              aria-hidden
+              className={`inline-block h-2 w-2 rounded-full ${oos ? "bg-gray-400" : "bg-green-500"}`}
+            />
+            {oos ? "Slut i lager" : "I lager"}
+          </span>
           <div className="mt-auto flex items-end justify-between pt-2">
             <div className="flex flex-col text-ui-fg-base">
               {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
