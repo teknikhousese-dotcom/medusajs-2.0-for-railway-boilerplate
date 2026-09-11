@@ -1,5 +1,4 @@
 import { Heading, Text } from "@medusajs/ui"
-import Link from "next/link"
 
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -27,7 +26,7 @@ const SearchResultsTemplate = ({
     <>
       <div className="flex justify-between border-b w-full py-6 px-8 small:px-14 items-center">
         <div className="flex flex-col items-start">
-          <Text className="text-ui-fg-muted">Search Results for:</Text>
+          <Text className="text-ui-fg-muted">Sökresultat för:</Text>
           <Heading>
             {decodeURI(query)} ({ids.length})
           </Heading>
@@ -36,7 +35,7 @@ const SearchResultsTemplate = ({
           href="/store"
           className="txt-medium text-ui-fg-subtle hover:text-ui-fg-base"
         >
-          Clear
+          Rensa
         </LocalizedClientLink>
       </div>
       <div className="flex flex-col small:flex-row small:items-start p-6">
@@ -57,7 +56,9 @@ const SearchResultsTemplate = ({
             </div>
           </>
         ) : (
-          <Text className="ml-8 small:ml-14 mt-3">No results.</Text>
+          <Text className="ml-8 small:ml-14 mt-3">
+            Inga träffar. Prova ett annat sökord eller bläddra i kategorierna.
+          </Text>
         )}
       </div>
     </>
