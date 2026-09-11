@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   description: "Sök i hela vårt sortiment.",
 }
 
+// Always render fresh — search results must never be served from a stale
+// per-query static cache (Railway persists .next/cache across deploys).
+export const dynamic = "force-dynamic"
+
 type Params = {
   params: Promise<{ query: string; countryCode: string }>
   searchParams: Promise<{
