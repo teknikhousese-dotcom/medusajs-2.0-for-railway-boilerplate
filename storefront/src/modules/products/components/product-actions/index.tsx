@@ -30,6 +30,14 @@ const optionsAsKeymap = (variantOptions: any) => {
   }, {})
 }
 
+// teknikhouse stock snapshot: products carry metadata.in_stock (false = slut).
+// Set by the stock import; overrides Medusa's "unmanaged inventory = always in
+// stock" default so genuinely out-of-stock products read correctly.
+const metaOutOfStock = (product: HttpTypes.StoreProduct) => {
+  const v = (product?.metadata as Record<string, any> | undefined)?.in_stock
+  return v === false || v === "false" || v === 0 || v === "0"
+}
+
 export default function ProductActions({
   product,
   region,
@@ -75,6 +83,12 @@ export default function ProductActions({
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
+    // Explicit teknikhouse stock flag wins: metadata.in_stock === false means
+    // out of stock regardless of how Medusa manages inventory.
+    if (metaOutOfStock(product)) {
+      return false
+    }
+
     // If we don't manage inventory, we can always add to cart
     if (selectedVariant && !selectedVariant.manage_inventory) {
       return true
@@ -95,7 +109,7 @@ export default function ProductActions({
 
     // Otherwise, we can't add to cart
     return false
-  }, [selectedVariant])
+  }, [selectedVariant, product])
 
   const actionsRef = useRef<HTMLDivElement>(null)
 
