@@ -59,7 +59,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                     {customer?.addresses?.length || 0}
                   </span>
                   <span className="uppercase text-base-regular text-ui-fg-subtle">
-                    Saved
+                    Sparade
                   </span>
                 </div>
               </div>
@@ -86,12 +86,12 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                         >
                           <Container className="bg-gray-50 flex justify-between items-center p-4">
                             <div className="grid grid-cols-3 grid-rows-2 text-small-regular gap-x-4 flex-1">
-                              <span className="font-semibold">Date placed</span>
+                              <span className="font-semibold">Beställningsdatum</span>
                               <span className="font-semibold">
                                 Ordernummer
                               </span>
                               <span className="font-semibold">
-                                Total amount
+                                Totalt belopp
                               </span>
                               <span data-testid="order-created-date">
                                 {new Date(order.created_at).toDateString()}
