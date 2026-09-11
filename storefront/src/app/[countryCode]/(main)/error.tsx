@@ -18,20 +18,20 @@ export default function Error({
 
   return (
     <div className="flex flex-col gap-4 items-center justify-center min-h-[calc(100vh-64px)]">
-      <h1 className="text-2xl-semi text-ui-fg-base">Something went wrong</h1>
+      <h1 className="text-2xl-semi text-ui-fg-base">Något gick fel</h1>
       <p className="text-small-regular text-ui-fg-base text-center max-w-md">
         We could not load this page. Please try again, and get in touch if it
         keeps happening.
       </p>
       {error.digest && (
         <p className="text-small-regular text-ui-fg-muted">
-          Reference: {error.digest}
+          Referens: {error.digest}
         </p>
       )}
       <Button onClick={reset} variant="secondary">
-        Try again
+        Försök igen
       </Button>
-      <InteractiveLink href="/">Go to frontpage</InteractiveLink>
+      <InteractiveLink href="/">Till startsidan</InteractiveLink>
     </div>
   )
 }
