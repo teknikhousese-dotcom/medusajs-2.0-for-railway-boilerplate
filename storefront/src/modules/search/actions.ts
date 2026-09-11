@@ -33,7 +33,7 @@ async function loadIndex(): Promise<Idx[]> {
 
   const out: Idx[] = []
   let offset = 0
-  const limit = 200
+  const limit = 100 // store API caps page size at 100; asking for more errors
   for (let i = 0; i < 200; i++) {
     const { products, count } =
       await sdk.client.fetch<HttpTypes.StoreProductListResponse>(
