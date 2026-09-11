@@ -22,16 +22,16 @@ export default function CheckoutError({
         Checkout could not continue
       </h1>
       <p className="text-small-regular text-ui-fg-base text-center max-w-md">
-        Something went wrong while loading this step. Your cart has been kept,
+        Något gick fel while loading this step. Your cart has been kept,
         so nothing has been lost and you have not been charged.
       </p>
       {error.digest && (
         <p className="text-small-regular text-ui-fg-muted">
-          Reference: {error.digest}
+          Referens: {error.digest}
         </p>
       )}
       <Button onClick={reset} variant="secondary">
-        Try again
+        Försök igen
       </Button>
       <InteractiveLink href="/cart">Back to shopping cart</InteractiveLink>
     </div>
