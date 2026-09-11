@@ -1,129 +1,93 @@
 "use client"
 
-import { InstantSearch } from "react-instantsearch"
 import { useRouter } from "next/navigation"
 import { MagnifyingGlassMini } from "@medusajs/icons"
+import { useEffect, useRef, useState } from "react"
 
-import { SEARCH_INDEX_NAME, searchClient } from "@lib/search-client"
-import Hit from "@modules/search/components/hit"
-import Hits from "@modules/search/components/hits"
-import SearchBox from "@modules/search/components/search-box"
-import { useEffect, useRef } from "react"
-
+/**
+ * Search overlay — a plain Swedish search form that submits to /results/<query>.
+ *
+ * Deliberately dependency-free: no MeiliSearch / InstantSearch. The results
+ * page searches Medusa's own product index (see modules/search/actions.ts), so
+ * search works without any extra service. Used both by the /search route and
+ * (if present) the intercepting modal route.
+ */
 export default function SearchModal() {
   const router = useRouter()
-  const searchRef = useRef(null)
-  const dialogRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [value, setValue] = useState("")
 
-  // close modal on outside click
-  const handleOutsideClick = (event: MouseEvent) => {
-    if (event.target === searchRef.current) {
-      router.back()
-    }
+  const close = () => {
+    if (window.history.length > 1) router.back()
+    else router.push("/")
   }
 
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = value.trim()
+    if (!q) return
+    router.push(`/results/${encodeURIComponent(q)}`)
+  }
+
+  // focus the input on open
   useEffect(() => {
-    window.addEventListener("click", handleOutsideClick)
-    // cleanup
-    return () => {
-      window.removeEventListener("click", handleOutsideClick)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    inputRef.current?.focus()
   }, [])
 
-  // disable scroll on body when modal is open
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.body.style.overflow = "unset"
-    }
-  }, [])
-
-  // on escape key press, close modal
+  // lock scroll + close on Escape
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        router.back()
-      }
+      if (event.key === "Escape") close()
     }
     window.addEventListener("keydown", handleEsc)
-
-    // cleanup
+    document.body.style.overflow = "hidden"
     return () => {
       window.removeEventListener("keydown", handleEsc)
+      document.body.style.overflow = "unset"
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Keep Tab inside the dialog and hand focus back to whatever opened it.
-  // Without this, tabbing walked straight out into the page behind the
-  // overlay, which is invisible but still fully interactive.
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null
-
-    const focusableSelector =
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-
-    const handleTab = (event: KeyboardEvent) => {
-      if (event.key !== "Tab" || !dialogRef.current) {
-        return
-      }
-
-      const focusable = Array.from(
-        dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector)
-      ).filter((el) => el.offsetParent !== null)
-
-      if (!focusable.length) {
-        return
-      }
-
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      const active = document.activeElement
-
-      if (event.shiftKey && (active === first || !dialogRef.current.contains(active))) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-
-    window.addEventListener("keydown", handleTab)
-
-    return () => {
-      window.removeEventListener("keydown", handleTab)
-      opener?.focus?.()
-    }
   }, [])
 
   return (
     <div className="relative z-[75]">
-      <div className="fixed inset-0 bg-opacity-75 backdrop-blur-md opacity-100 h-screen w-screen" />
+      <div
+        className="fixed inset-0 bg-opacity-75 backdrop-blur-md opacity-100 h-screen w-screen"
+        onClick={close}
+      />
       <div className="fixed inset-0 px-5 sm:p-0" ref={searchRef}>
         <div className="flex flex-col justify-start w-full h-fit transform p-5 items-center text-left align-middle transition-all max-h-[75vh] bg-transparent shadow-none">
-          <InstantSearch
-            indexName={SEARCH_INDEX_NAME}
-            searchClient={searchClient}
+          <div
+            className="flex absolute flex-col h-fit w-full sm:w-[600px] max-w-full"
+            data-testid="search-modal-container"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sök produkter"
           >
-            <div
-              className="flex absolute flex-col h-fit w-full sm:w-fit"
-              data-testid="search-modal-container"
-              ref={dialogRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Search products"
+            <form
+              onSubmit={submit}
+              className="w-full flex items-center gap-x-2 p-4 bg-[rgba(3,7,18,0.75)] text-ui-fg-on-color backdrop-blur-2xl rounded-rounded"
             >
-              <div className="w-full flex items-center gap-x-2 p-4 bg-[rgba(3,7,18,0.5)] text-ui-fg-on-color backdrop-blur-2xl rounded-rounded">
-                <MagnifyingGlassMini />
-                <SearchBox />
-              </div>
-              <div className="flex-1 mt-6">
-                <Hits hitComponent={Hit} />
-              </div>
-            </div>
-          </InstantSearch>
+              <MagnifyingGlassMini />
+              <input
+                ref={inputRef}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="Sök produkter…"
+                className="flex-1 bg-transparent outline-none text-base text-ui-fg-on-color placeholder:text-ui-fg-on-color/60"
+                aria-label="Sök"
+              />
+              <button
+                type="submit"
+                className="text-sm px-3 py-1 rounded-rounded bg-white/15 hover:bg-white/25 transition-colors"
+              >
+                Sök
+              </button>
+            </form>
+            <p className="mt-3 text-center text-ui-fg-on-color/70 text-sm">
+              Tryck Enter för att söka i hela sortimentet
+            </p>
+          </div>
         </div>
       </div>
     </div>
