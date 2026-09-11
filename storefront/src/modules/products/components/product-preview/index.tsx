@@ -40,6 +40,15 @@ export default async function ProductPreview({
   const brand = (product as any)?.brand || product.collection?.title
   const oos = isOutOfStock(pricedProduct) || isOutOfStock(product)
 
+  // "Spara X kr" — real savings from the campaign price (honest purchase driver)
+  const onSale = (cheapestPrice as any)?.price_type === "sale"
+  const savings = onSale
+    ? Math.round(
+        ((cheapestPrice as any).original_price_number || 0) -
+          ((cheapestPrice as any).calculated_price_number || 0)
+      )
+    : 0
+
   const _catPathMap = buildCategoryPathMap((await listCategories().catch(() => [])) as any)
   const _href = productHref(product as any, _catPathMap)
 
@@ -47,6 +56,11 @@ export default async function ProductPreview({
     <Link href={_href} className="group block h-full" data-testid="product-wrapper">
       <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-ui-border-base bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-ui-border-strong">
         <div className="relative aspect-square overflow-hidden bg-ui-bg-subtle">
+          {onSale && savings > 0 && (
+            <span className="absolute left-2 top-2 z-10 rounded-md bg-red-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+              Spara {savings.toLocaleString("sv-SE")} kr
+            </span>
+          )}
           <Thumbnail
             thumbnail={product.thumbnail}
             images={product.images}
