@@ -56,7 +56,14 @@ async function loadIndex(): Promise<Idx[]> {
 }
 
 export async function search(query: string) {
-  const folded = fold((query || "").trim())
+  // The dynamic route segment arrives URL-encoded (e.g. "iphone%20batteri"),
+  // so decode before tokenising — otherwise multi-word queries are one token
+  // with a literal %20 and never match.
+  let raw = query || ""
+  try {
+    raw = decodeURIComponent(raw)
+  } catch {}
+  const folded = fold(raw.trim())
   if (!folded) return []
   const tokens = folded.split(/\s+/).filter(Boolean)
   if (!tokens.length) return []
@@ -76,7 +83,7 @@ export async function search(query: string) {
           "/store/products",
           {
             method: "GET",
-            query: { q: query, limit: 100, fields: "id" },
+            query: { q: raw, limit: 100, fields: "id" },
             cache: "no-store",
           }
         )
