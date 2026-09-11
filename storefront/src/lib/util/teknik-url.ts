@@ -39,3 +39,5 @@ export function productHref(product: WithCats | null | undefined, map: Map<strin
 }
 
 // build: refresh product descriptions 2026-09-10
+
+// build: 2026-09-11 final QA pass
