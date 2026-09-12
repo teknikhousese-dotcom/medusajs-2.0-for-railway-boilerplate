@@ -1,5 +1,6 @@
 import ProductPreview from "@modules/products/components/product-preview"
 import NewsletterSignup from "./newsletter-signup"
+import RecentlyViewed from "./recently-viewed"
 
 // Teknikhouse 2027 homepage — light, warm Swedish-retail styling
 // (modelled on power.se / teknikdelar.se / 24.se). Scoped under .th.
@@ -123,7 +124,33 @@ const CSS = `
 .th .news h2{font-family:var(--round);font-size:26px;margin:0 0 6px;color:#fff;letter-spacing:-.02em}
 .th .news p{margin:0;color:#c9c2ba;font-size:15px;max-width:420px}
 
+/* section subheading */
+.th .shead .stext{display:flex;flex-direction:column;gap:3px}
+.th .ssub{color:var(--sub);font-size:14.5px;font-weight:400;font-family:system-ui,"SF Pro Text",Inter,"Segoe UI",Arial,sans-serif}
+
+/* recently viewed (Senast visade) */
+.th .rvgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.th .rvcard{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card);transition:.18s}
+.th .rvcard:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--line2)}
+.th .rvimg{aspect-ratio:1;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.th .rvimg img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.th .rvt{font-size:13px;line-height:1.35;color:var(--ink);padding:11px 12px 14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* guides banner (Guider och tips) */
+.th .guide{background:linear-gradient(120deg,#fff5f2,#ffe4dd);border:1px solid var(--line);border-radius:22px;padding:40px;display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:center;overflow:hidden;position:relative}
+.th .guide .ge{font-family:var(--round);color:var(--red-d);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.th .guide h3{font-family:var(--round);font-weight:600;font-size:clamp(22px,3.2vw,30px);letter-spacing:-.02em;margin:10px 0 8px}
+.th .guide p{color:#5f584f;font-size:15px;max-width:520px;margin-bottom:20px}
+.th .guide .gcta{display:inline-flex;background:var(--red);color:#fff;font-family:var(--round);font-weight:600;border-radius:12px;padding:13px 24px;font-size:14px}
+.th .guide .gcta:hover{background:var(--red-d)}
+.th .gicons{display:flex;flex-direction:column;gap:11px}
+.th .gtag{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 8px 24px rgba(27,23,20,.08);display:flex;gap:12px;align-items:center;font-family:var(--round);font-weight:600;font-size:13.5px;color:var(--ink)}
+.th .gtag svg{width:22px;height:22px;stroke:var(--red);stroke-width:1.7;fill:none;flex:0 0 auto}
+.th .gtag span{display:block;font-weight:400;font-size:12px;color:var(--sub);font-family:system-ui,Arial,sans-serif}
+
 @media(max-width:1000px){
+  .th .rvgrid{grid-template-columns:repeat(3,1fr)}
+  .th .guide{grid-template-columns:1fr}
   .th .hero .wrap{grid-template-columns:1fr}
   .th .cats{grid-template-columns:repeat(3,1fr)}
   .th .prods,.th .prods.four{grid-template-columns:repeat(2,1fr)}
@@ -135,7 +162,7 @@ const CSS = `
   .th .finder .row{grid-template-columns:1fr 1fr}
   .th .finder .go{grid-column:1/-1;justify-content:center;padding:13px}
 }
-@media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}}`
+@media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}.th .rvgrid{grid-template-columns:repeat(2,1fr)}}`
 
 export default function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
   const has = (n: number) => region && products && products.length > n
@@ -177,7 +204,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
 
       {/* CATEGORY TILES */}
       <section className="blk"><div className="wrap">
-        <div className="shead"><h2>Populära kategorier</h2><a href="/store">Alla kategorier →</a></div>
+        <div className="shead"><div className="stext"><h2>Populära kategorier</h2><span className="ssub">Utforska produkter efter kategorier</span></div><a href="/store">Alla kategorier →</a></div>
         <div className="cats">
           <a className="cat c1" href="/mobilreservdelar"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3" /><path d="M9 6h6" /></svg><b>MOBILRESERVDELAR</b></a>
           <a className="cat c2" href="/batterier"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="9" rx="2" /><path d="M19 11h2v3h-2" /></svg><b>BATTERIER</b></a>
@@ -229,6 +256,18 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
         </div></section>
       ) : null}
 
+      {/* NYSS INKOMMET */}
+      {has(10) ? (
+        <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+          <div className="shead"><h2>Nyss inkommet</h2><a href="/store">Visa alla →</a></div>
+          <div className="prods">
+            {products.slice(10, 15).map((p: any) => (
+              <ProductPreview key={"new" + p.id} product={p} region={region} isFeatured />
+            ))}
+          </div>
+        </div></section>
+      ) : null}
+
       {/* REPAIR BAND */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="repair">
@@ -262,6 +301,9 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
         </div>
       </div></section>
 
+      {/* SENAST VISADE (personalised, client-side) */}
+      <RecentlyViewed />
+
       {/* REVIEWS */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="shead"><h2>Vad våra kunder säger</h2><span className="r" style={{ color: "var(--star)", fontWeight: 600 }}>Trustpilot 4,9 ★</span></div>
@@ -278,6 +320,23 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
           <h3>Mobilreservdelar &amp; mobiltillbehör — Sveriges bredaste sortiment</h3>
           <p>Hos Teknikhouse hittar du marknadens bredaste sortiment av mobilreservdelar och mobiltillbehör till iPhone, Samsung, iPad och fler. Vi lagerför skärmar, batterier, baksidor, kameror och smådelar — med livstidsgaranti på skärmar, fri frakt och snabb leverans från eget lager.</p>
           <p>Teknikhouse.se ägs och drivs av Nordic Teknik House AB med säte i Stockholm. Vi hjälper både privatpersoner och företag att reparera sina enheter. Alla produkter testas av experter — och garanti ingår alltid.</p>
+        </div>
+      </div></section>
+
+      {/* GUIDER OCH TIPS — last banner */}
+      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+        <div className="guide">
+          <div>
+            <div className="ge">Kunskap &amp; inspiration</div>
+            <h3>Guider och tips</h3>
+            <p>Steg-för-steg-guider för skärm- och batteribyte, köphjälp och smarta råd som får din teknik att hålla längre — skrivet av våra tekniker.</p>
+            <a className="gcta" href="/mobilreparation">Läs våra guider →</a>
+          </div>
+          <div className="gicons">
+            <span className="gtag"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3" /><path d="M9 6h6" /></svg>Byt skärm steg-för-steg<span>Verktyg &amp; del länkade</span></span>
+            <span className="gtag"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="9" rx="2" /><path d="M19 11h2v3h-2" /><path d="M8 10l-2 3h3l-2 3" /></svg>Batteri-hälsa<span>Så håller batteriet längre</span></span>
+            <span className="gtag"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>Köpguider<span>Välj rätt del &amp; tillbehör</span></span>
+          </div>
         </div>
       </div></section>
 
