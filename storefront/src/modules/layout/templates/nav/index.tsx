@@ -48,30 +48,36 @@ export default async function Nav() {
             <div className="hidden small:flex items-center gap-x-6 h-full">
               {isSearchEnabled() && (
                 <LocalizedClientLink
-                  className="hover:text-ui-fg-base"
+                  className="flex items-center gap-2 hover:text-[#F50000]"
                   href="/search"
                   scroll={false}
                   data-testid="nav-search-link"
+                  aria-label="Sök"
                 >
-                  Sök
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
+                  <span>Sök</span>
                 </LocalizedClientLink>
               )}
               <LocalizedClientLink
-                className="hover:text-ui-fg-base"
+                className="flex items-center gap-2 hover:text-[#F50000]"
                 href="/account"
                 data-testid="nav-account-link"
+                aria-label="Konto"
               >
-                Konto
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4.2 4-6.5 8-6.5s8 2.3 8 6.5" /></svg>
+                <span>Konto</span>
               </LocalizedClientLink>
             </div>
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="hover:text-ui-fg-base flex gap-2"
+                  className="flex items-center gap-2 hover:text-[#F50000]"
                   href="/cart"
                   data-testid="nav-cart-link"
+                  aria-label="Varukorg"
                 >
-                  Varukorg (0)
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M3 4h2l2.2 11a1 1 0 001 .8h9a1 1 0 001-.8L21 8H6.5" /><circle cx="9.5" cy="20" r="1.3" /><circle cx="17.5" cy="20" r="1.3" /></svg>
+                  <span>Varukorg</span>
                 </LocalizedClientLink>
               }
             >
