@@ -302,7 +302,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       </div></section>
 
       {/* SENAST VISADE (personalised, client-side) */}
-      <RecentlyViewed />
+      <RecentlyViewed regionId={region?.id} />
 
       {/* REVIEWS */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
