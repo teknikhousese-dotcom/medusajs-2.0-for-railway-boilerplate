@@ -82,10 +82,21 @@ const CartDropdown = ({
       <Popover className="relative h-full">
         <Popover.Button className="h-full">
           <LocalizedClientLink
-            className="hover:text-ui-fg-base"
+            className="relative flex items-center gap-2 hover:text-[#F50000]"
             href="/cart"
             data-testid="nav-cart-link"
-          >{`Varukorg (${totalItems})`}</LocalizedClientLink>
+            aria-label="Varukorg"
+          >
+            <span className="relative inline-flex">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M3 4h2l2.2 11a1 1 0 001 .8h9a1 1 0 001-.8L21 8H6.5" /><circle cx="9.5" cy="20" r="1.3" /><circle cx="17.5" cy="20" r="1.3" /></svg>
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white" data-testid="nav-cart-count">
+                  {totalItems}
+                </span>
+              )}
+            </span>
+            <span className="hidden small:inline">Varukorg</span>
+          </LocalizedClientLink>
         </Popover.Button>
         <Transition
           show={cartDropdownOpen}
