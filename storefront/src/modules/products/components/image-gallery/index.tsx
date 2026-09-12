@@ -8,31 +8,32 @@ type ImageGalleryProps = {
   images: HttpTypes.StoreProductImage[]
 }
 
-// teknikhouse-style gallery: a constrained main image (shows the WHOLE product,
-// no crop, white background) with a thumbnail strip when there are several images.
+// teknikhouse gallery: a rounded main frame that shows the whole product (no
+// crop) on a soft background, with a thumbnail strip when there are several
+// images. Works for every category.
 const ImageGallery = ({ images }: ImageGalleryProps) => {
   const [active, setActive] = useState(0)
   if (!images?.length) return null
   const main = images[Math.min(active, images.length - 1)]
 
   return (
-    <div className="flex flex-col gap-4 w-full small:max-w-[560px] mx-auto">
-      <div className="relative aspect-square w-full overflow-hidden rounded-rounded border border-ui-border-base bg-white">
+    <div className="flex flex-col gap-3 w-full small:max-w-[560px] small:sticky small:top-24">
+      <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-ui-border-base bg-ui-bg-subtle">
         {!!main?.url && (
           <Image
             src={main.url}
             priority
-            className="absolute inset-0"
+            className="absolute inset-0 mix-blend-multiply"
             alt="Produktbild"
             fill
             sizes="(max-width: 768px) 100vw, 560px"
-            style={{ objectFit: "contain", padding: "12px" }}
+            style={{ objectFit: "contain", padding: "18px" }}
           />
         )}
       </div>
 
       {images.length > 1 && (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-3 flex-wrap">
           {images.map((image, i) => (
             <button
               key={image.id}
@@ -40,8 +41,10 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               onClick={() => setActive(i)}
               aria-label={`Bild ${i + 1}`}
               className={
-                "relative w-16 h-16 rounded-md overflow-hidden border bg-white " +
-                (i === active ? "border-ui-fg-base" : "border-ui-border-base hover:border-ui-fg-subtle")
+                "relative w-[74px] h-[74px] rounded-xl overflow-hidden border bg-ui-bg-subtle transition " +
+                (i === active
+                  ? "border-[#F50000] ring-2 ring-[#F50000]/15"
+                  : "border-ui-border-base hover:border-ui-border-strong")
               }
             >
               {!!image.url && (
@@ -49,8 +52,9 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
                   src={image.url}
                   alt={`Miniatyr ${i + 1}`}
                   fill
-                  sizes="64px"
-                  style={{ objectFit: "contain", padding: "4px" }}
+                  sizes="74px"
+                  className="mix-blend-multiply"
+                  style={{ objectFit: "contain", padding: "6px" }}
                 />
               )}
             </button>
