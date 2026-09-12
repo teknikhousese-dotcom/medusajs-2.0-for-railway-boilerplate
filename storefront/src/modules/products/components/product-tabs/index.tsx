@@ -12,7 +12,7 @@ type ProductTabsProps = {
 }
 
 // Styling for the imported rich-HTML description (headings, paragraphs, lists,
-// and the Produktspecifikation table) shown inside the Produktinformation tab.
+// and any Produktspecifikation table) shown inside the Produktinformation tab.
 const DESC_CSS = `
 .thdesc{color:#3f3f52;font-size:14px;line-height:1.6}
 .thdesc h1,.thdesc h2,.thdesc h3,.thdesc h4{color:#14161c;line-height:1.3;margin:18px 0 6px;font-weight:700}
@@ -29,14 +29,48 @@ const DESC_CSS = `
 .thdesc thead th{background:#14161c;color:#fff}
 .thdesc tbody tr:nth-child(odd){background:#F7F8FA}
 .thdesc td:first-child,.thdesc th:first-child{width:38%;font-weight:600;color:#14161c}
+.thspec{width:100%;border-collapse:collapse;font-size:14px}
+.thspec tr{border-bottom:1px solid #efeae5}
+.thspec td{padding:11px 0}
+.thspec td:first-child{color:#6f685f;width:42%}
+.thspec td:last-child{font-weight:600;color:#1b1714;text-align:right}
 `
 
+const m = (product: any, ...keys: string[]) => {
+  const md = product?.metadata || {}
+  for (const k of keys) {
+    if (md[k] !== undefined && md[k] !== null && String(md[k]).trim() !== "") return String(md[k])
+  }
+  return undefined
+}
+
+const buildSpecs = (product: any): [string, string][] => {
+  const v0: any = product.variants?.[0]
+  const rows: [string, string | undefined][] = [
+    ["Artikelnummer", v0?.sku || m(product, "sku", "artikelnr", "artnr")],
+    ["EAN / GTIN", v0?.barcode || m(product, "ean", "gtin", "barcode")],
+    ["Märke", (product as any)?.brand || product.collection?.title || m(product, "brand", "marke")],
+    ["Modell", m(product, "model", "modell", "kompatibilitet", "passar")],
+    ["Färg", m(product, "color", "farg", "färg")],
+    ["Material", m(product, "material")],
+    ["Vikt", product.weight ? `${product.weight} g` : undefined],
+    ["Typ", product.type?.value || m(product, "type", "typ")],
+    ["Garanti", "Ingår alltid"],
+  ]
+  return rows.filter(([, v]) => !!v) as [string, string][]
+}
+
 const ProductTabs = ({ product }: ProductTabsProps) => {
+  const specs = buildSpecs(product)
+
   const tabs = [
     {
       label: "Produktinformation",
       component: <ProductInfoTab product={product} />,
     },
+    ...(specs.length
+      ? [{ label: "Specifikationer", component: <SpecTab specs={specs} /> }]
+      : []),
     {
       label: "Frakt & Retur",
       component: <ShippingInfoTab />,
@@ -75,19 +109,26 @@ const ProductInfoTab = ({ product }: ProductTabsProps) => {
     )
   }
   return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-2 gap-x-8">
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Vikt</span>
-            <p>{product.weight ? `${product.weight} g` : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Typ</span>
-            <p>{product.type ? product.type.value : "-"}</p>
-          </div>
-        </div>
-      </div>
+    <div className="text-small-regular py-8 text-ui-fg-subtle">
+      Ingen ytterligare beskrivning tillgänglig för denna produkt.
+    </div>
+  )
+}
+
+const SpecTab = ({ specs }: { specs: [string, string][] }) => {
+  return (
+    <div className="py-6">
+      <style dangerouslySetInnerHTML={{ __html: DESC_CSS }} />
+      <table className="thspec">
+        <tbody>
+          {specs.map(([k, v]) => (
+            <tr key={k}>
+              <td>{k}</td>
+              <td>{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
