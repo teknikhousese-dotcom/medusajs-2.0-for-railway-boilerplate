@@ -17,7 +17,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
   const main = images[Math.min(active, images.length - 1)]
 
   return (
-    <div className="flex flex-col gap-3 w-full small:max-w-[560px] small:sticky small:top-24">
+    <div className="flex flex-col gap-3 w-full small:sticky small:top-24">
       <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-ui-border-base bg-ui-bg-subtle">
         {!!main?.url && (
           <Image
