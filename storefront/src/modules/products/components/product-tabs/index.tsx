@@ -1,25 +1,24 @@
 "use client"
 
-import Back from "@modules/common/icons/back"
-import FastDelivery from "@modules/common/icons/fast-delivery"
-import Refresh from "@modules/common/icons/refresh"
-
-import Accordion from "./accordion"
+import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
 
 type ProductTabsProps = {
   product: HttpTypes.StoreProduct
 }
 
-// Styling for the imported rich-HTML description (headings, paragraphs, lists,
-// and any Produktspecifikation table) shown inside the Produktinformation tab.
-const DESC_CSS = `
-.thdesc{color:#3f3f52;font-size:14px;line-height:1.6}
-.thdesc h1,.thdesc h2,.thdesc h3,.thdesc h4{color:#14161c;line-height:1.3;margin:18px 0 6px;font-weight:700}
-.thdesc h4{font-size:15px}
-.thdesc p{margin:0 0 10px}
-.thdesc ul,.thdesc ol{margin:0 0 10px;padding-left:20px}
-.thdesc li{margin:2px 0}
+const CSS = `
+.thtabs{--red:#F50000;--ink:#1b1714;--sub:#6f685f;--line:#efeae5;--round:"Poppins",ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif}
+.thtabs .bar{display:flex;gap:26px;border-bottom:1px solid var(--line);flex-wrap:wrap;margin-bottom:22px}
+.thtabs .tb{font-family:var(--round);font-weight:600;font-size:14.5px;color:var(--sub);padding:12px 2px;border:0;border-bottom:3px solid transparent;background:none;cursor:pointer}
+.thtabs .tb.active{color:var(--ink);border-color:var(--red)}
+.thtabs .body{max-width:880px}
+.thdesc{color:#3f3f52;font-size:14.5px;line-height:1.6}
+.thdesc h1,.thdesc h2,.thdesc h3,.thdesc h4{color:#14161c;line-height:1.3;margin:18px 0 6px;font-family:var(--round);font-weight:600}
+.thdesc h4{font-size:16px}
+.thdesc p{margin:0 0 12px}
+.thdesc ul,.thdesc ol{margin:0 0 12px;padding-left:20px}
+.thdesc li{margin:3px 0}
 .thdesc strong{color:#14161c}
 .thdesc a{color:#F50000;text-decoration:underline}
 .thdesc img{max-width:100%;height:auto;border-radius:8px;margin:8px 0}
@@ -29,11 +28,16 @@ const DESC_CSS = `
 .thdesc thead th{background:#14161c;color:#fff}
 .thdesc tbody tr:nth-child(odd){background:#F7F8FA}
 .thdesc td:first-child,.thdesc th:first-child{width:38%;font-weight:600;color:#14161c}
-.thspec{width:100%;border-collapse:collapse;font-size:14px}
-.thspec tr{border-bottom:1px solid #efeae5}
-.thspec td{padding:11px 0}
-.thspec td:first-child{color:#6f685f;width:42%}
-.thspec td:last-child{font-weight:600;color:#1b1714;text-align:right}
+.thspec{width:100%;border-collapse:collapse;font-size:14.5px;max-width:640px}
+.thspec tr{border-bottom:1px solid var(--line)}
+.thspec td{padding:12px 0}
+.thspec td:first-child{color:var(--sub);width:44%}
+.thspec td:last-child{font-weight:600;color:var(--ink);text-align:right}
+.thfrakt{display:flex;flex-direction:column;gap:20px;max-width:640px}
+.thfrakt .fr{display:flex;gap:12px;align-items:flex-start}
+.thfrakt .fr svg{width:24px;height:24px;stroke:var(--red);stroke-width:1.7;fill:none;flex:0 0 auto;margin-top:2px}
+.thfrakt .fr b{font-family:var(--round);font-weight:600;font-size:15px;display:block;color:var(--ink)}
+.thfrakt .fr p{margin:2px 0 0;font-size:14px;color:var(--sub)}
 `
 
 const m = (product: any, ...keys: string[]) => {
@@ -62,108 +66,83 @@ const buildSpecs = (product: any): [string, string][] => {
 
 const ProductTabs = ({ product }: ProductTabsProps) => {
   const specs = buildSpecs(product)
-
   const tabs = [
-    {
-      label: "Produktinformation",
-      component: <ProductInfoTab product={product} />,
-    },
-    ...(specs.length
-      ? [{ label: "Specifikationer", component: <SpecTab specs={specs} /> }]
-      : []),
-    {
-      label: "Frakt & Retur",
-      component: <ShippingInfoTab />,
-    },
+    { id: "desc", label: "Produktbeskrivning" },
+    ...(specs.length ? [{ id: "spec", label: "Specifikationer" }] : []),
+    { id: "frakt", label: "Frakt & Retur" },
   ]
+  const [active, setActive] = useState("desc")
 
   return (
-    <div className="w-full">
-      <Accordion type="multiple" defaultValue={["Produktinformation"]}>
-        {tabs.map((tab, i) => (
-          <Accordion.Item
-            key={i}
-            title={tab.label}
-            headingSize="medium"
-            value={tab.label}
+    <div className="thtabs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="bar" role="tablist">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={active === t.id}
+            className={"tb" + (active === t.id ? " active" : "")}
+            onClick={() => setActive(t.id)}
           >
-            {tab.component}
-          </Accordion.Item>
+            {t.label}
+          </button>
         ))}
-      </Accordion>
-    </div>
-  )
-}
-
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
-  if (product.description) {
-    return (
-      <div className="py-6">
-        <style dangerouslySetInnerHTML={{ __html: DESC_CSS }} />
-        <div
-          className="thdesc"
-          data-testid="product-description"
-          dangerouslySetInnerHTML={{ __html: product.description }}
-        />
       </div>
-    )
-  }
-  return (
-    <div className="text-small-regular py-8 text-ui-fg-subtle">
-      Ingen ytterligare beskrivning tillgänglig för denna produkt.
-    </div>
-  )
-}
 
-const SpecTab = ({ specs }: { specs: [string, string][] }) => {
-  return (
-    <div className="py-6">
-      <style dangerouslySetInnerHTML={{ __html: DESC_CSS }} />
-      <table className="thspec">
-        <tbody>
-          {specs.map(([k, v]) => (
-            <tr key={k}>
-              <td>{k}</td>
-              <td>{v}</td>
-            </tr>
+      <div className="body">
+        {active === "desc" &&
+          (product.description ? (
+            <div
+              className="thdesc"
+              data-testid="product-description"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+          ) : (
+            <p style={{ color: "#6f685f", fontSize: "14.5px" }}>
+              Ingen ytterligare beskrivning tillgänglig för denna produkt.
+            </p>
           ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
 
-const ShippingInfoTab = () => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-1 gap-y-8">
-        <div className="flex items-start gap-x-2">
-          <FastDelivery />
-          <div>
-            <span className="font-semibold">Snabb leverans</span>
-            <p className="max-w-sm">
-              Ditt paket levereras inom 1–3 arbetsdagar till ditt ombud eller hem till dörren.
-            </p>
+        {active === "spec" && (
+          <table className="thspec">
+            <tbody>
+              {specs.map(([k, v]) => (
+                <tr key={k}>
+                  <td>{k}</td>
+                  <td>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {active === "frakt" && (
+          <div className="thfrakt">
+            <div className="fr">
+              <svg viewBox="0 0 24 24"><path d="M3 13h6l2-8 3 16 2-6h5" /></svg>
+              <div>
+                <b>Snabb leverans</b>
+                <p>Ditt paket levereras inom 1–3 arbetsdagar till ditt ombud eller hem till dörren. Fri frakt över 999 kr.</p>
+              </div>
+            </div>
+            <div className="fr">
+              <svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0116 0M20 4v4h-4" /><path d="M20 16a8 8 0 01-16 0M4 20v-4h4" /></svg>
+              <div>
+                <b>30 dagars öppet köp</b>
+                <p>Ångrar du köpet? Returnera varan inom 30 dagar så betalar vi tillbaka pengarna.</p>
+              </div>
+            </div>
+            <div className="fr">
+              <svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>
+              <div>
+                <b>Garanti ingår</b>
+                <p>Garanti ingår alltid och alla produkter testas innan de skickas. Trygg e-handel.</p>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Refresh />
-          <div>
-            <span className="font-semibold">Enkla byten</span>
-            <p className="max-w-sm">
-              Passar inte varan riktigt? Ingen fara – vi byter den mot en ny.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Back />
-          <div>
-            <span className="font-semibold">Enkla returer</span>
-            <p className="max-w-sm">
-              Returnera bara varan så betalar vi tillbaka pengarna. Inga krångliga frågor – vi gör allt för att din retur ska vara smidig.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )
