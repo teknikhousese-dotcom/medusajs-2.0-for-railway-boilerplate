@@ -9,6 +9,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { HttpTypes } from "@medusajs/types"
 import { listCategories } from "@lib/data/categories"
 import ReadMore from "@modules/categories/components/read-more"
+import { niceCategoryName } from "@lib/util/category-name"
 
 type Cat = HttpTypes.StoreProductCategory
 
@@ -44,9 +45,10 @@ const pretty = (s: string) =>
 // If a child wrongly inherited its parent's name (an import glitch), derive a
 // readable name from its own handle instead.
 const displayName = (cat: Cat, byId: Record<string, Cat>) => {
+  const slug = leafSlug(cat, byId)
   const parent = cat.parent_category_id ? byId[cat.parent_category_id] : null
-  if (parent && cat.name === parent.name) return pretty(leafSlug(cat, byId))
-  return cat.name
+  const raw = parent && cat.name === parent.name ? pretty(slug) : cat.name
+  return niceCategoryName(raw, slug)
 }
 
 // Brand logos (teknikhouse /images/category), keyed by leaf slug. Used until a
