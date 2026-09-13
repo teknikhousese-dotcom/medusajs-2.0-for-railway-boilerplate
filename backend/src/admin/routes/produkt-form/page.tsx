@@ -33,7 +33,14 @@ function ProduktFormPage() {
       const urls: string[] = []
       for (const file of Array.from(files)) {
         const fd = new FormData()
-        fd.append("files", file)
+        const cleanName = (() => {
+          const n = file.name || "bild.jpg"
+          const dot = n.lastIndexOf(".")
+          const ext = dot >= 0 ? n.slice(dot).toLowerCase() : ".jpg"
+          let base = (dot >= 0 ? n.slice(0, dot) : n).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+          return (base || "bild") + ext
+        })()
+        fd.append("files", new File([file], cleanName, { type: file.type }))
         const r = await fetch("/admin/uploads", { method: "POST", credentials: "include", body: fd })
         if (!r.ok) throw new Error("Uppladdning misslyckades (" + r.status + ")")
         const d = await r.json()
