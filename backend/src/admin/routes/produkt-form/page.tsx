@@ -25,6 +25,28 @@ function ProduktFormPage() {
     metaTitle: "", metaDesc: "", h1: "",
   })
   const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }))
+  const [uploading, setUploading] = useState(false)
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files || !files.length) return
+    setUploading(true)
+    try {
+      const urls: string[] = []
+      for (const file of Array.from(files)) {
+        const fd = new FormData()
+        fd.append("files", file)
+        const r = await fetch("/admin/uploads", { method: "POST", credentials: "include", body: fd })
+        if (!r.ok) throw new Error("Uppladdning misslyckades (" + r.status + ")")
+        const d = await r.json()
+        const u = ((d.files || d.uploads || [])[0] || {}).url
+        if (u) urls.push(u)
+      }
+      if (urls.length) setF((p: any) => ({ ...p, images: [String(p.images || "").trim(), ...urls].filter(Boolean).join("\n") }))
+    } catch (e: any) {
+      alert("Kunde inte ladda upp: " + (e && e.message ? e.message : e))
+    } finally {
+      setUploading(false)
+    }
+  }
 
   useEffect(() => {
     const u = new URL(window.location.href)
@@ -181,6 +203,23 @@ function ProduktFormPage() {
 
             <label style={lbl}>Produktbilder (en URL per rad)</label>
             <textarea style={{ ...inp, height: "70px", fontFamily: "monospace" }} value={f.images} onChange={(e) => set("images", e.target.value)} placeholder="https://…/bild1.jpg" />
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px", flexWrap: "wrap" }}>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 14px", background: "#1b1714", color: "#fff", borderRadius: "8px", cursor: uploading ? "default" : "pointer", fontSize: "13px", fontWeight: 600, opacity: uploading ? 0.6 : 1 }}>
+                {uploading ? "Laddar upp…" : "⬆ Ladda upp bild från datorn"}
+                <input type="file" accept="image/*" multiple disabled={uploading} style={{ display: "none" }} onChange={(e) => { uploadFiles(e.target.files); e.currentTarget.value = "" }} />
+              </label>
+              <span style={{ fontSize: "12px", color: "#6f685f" }}>Välj en eller flera bilder — de laddas upp och läggs till automatiskt.</span>
+            </div>
+            {String(f.images || "").trim() ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
+                {f.images.split("\n").map((s: string) => s.trim()).filter(Boolean).map((url: string, i: number) => (
+                  <div key={i} style={{ position: "relative", width: "64px", height: "64px", border: "1px solid #e5e5e5", borderRadius: "8px", overflow: "hidden", background: "#faf8f6" }}>
+                    <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                    <button type="button" title="Ta bort" onClick={() => setF((p: any) => ({ ...p, images: String(p.images || "").split("\n").map((x: string) => x.trim()).filter(Boolean).filter((_: string, j: number) => j !== i).join("\n") }))} style={{ position: "absolute", top: "2px", right: "2px", width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", fontSize: "12px", lineHeight: "1" }}>×</button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
             <label style={lbl}>HTML-fält (t.ex. YouTube-embed, max bredd 400px)</label>
             <textarea style={{ ...inp, height: "50px", fontFamily: "monospace" }} value={f.htmlFalt} onChange={(e) => set("htmlFalt", e.target.value)} />
