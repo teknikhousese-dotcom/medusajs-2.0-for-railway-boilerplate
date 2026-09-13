@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { HttpTypes } from "@medusajs/types"
+import { niceCategoryName } from "@lib/util/category-name"
 
 type Cat = HttpTypes.StoreProductCategory
 
@@ -81,7 +82,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                       : "border-transparent text-ui-fg-subtle hover:text-[#F50000]")
                   }
                 >
-                  <DeptIcon name={dep.name} />
+                  <DeptIcon name={niceCategoryName(dep.name, dep.handle)} />
                   <span className="text-[12px] font-medium leading-tight text-center whitespace-nowrap">
                     {dep.name}
                   </span>
@@ -100,7 +101,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                                 href={brandHref}
                                 className="block font-semibold text-ui-fg-base hover:text-[#F50000] mb-2"
                               >
-                                {brand.name}
+                                {niceCategoryName(brand.name, seg(brand, dep))}
                               </Link>
                               {models.length > 0 && (
                                 <ul className="flex flex-col gap-y-1">
@@ -110,7 +111,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                                         href={`${brandHref}/${seg(m, brand)}`}
                                         className="block text-ui-fg-subtle hover:text-ui-fg-base truncate"
                                       >
-                                        {m.name}
+                                        {niceCategoryName(m.name, seg(m, brand))}
                                       </Link>
                                     </li>
                                   ))}
