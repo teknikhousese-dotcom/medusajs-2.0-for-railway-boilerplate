@@ -39,13 +39,13 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 
       <div className="content-container py-2 small:py-6">
         <div
-          className="flex flex-col small:flex-row small:items-start small:gap-x-10 relative small:max-w-[1000px]"
+          className="flex flex-col small:flex-row small:items-start relative"
           data-testid="product-container"
         >
-          <div className="w-full small:flex-1 relative">
+          <div className="w-full small:w-[600px] small:flex-none relative">
             <ImageGallery images={product?.images || []} />
           </div>
-          <div className="flex flex-col w-full small:w-[420px] small:flex-none small:sticky small:top-24 py-8 small:py-0 gap-y-5">
+          <div className="flex flex-col w-full small:w-[440px] small:flex-none small:ml-auto small:sticky small:top-24 py-8 small:py-0 gap-y-5">
             <ProductInfo product={product} />
             <ProductActionsWrapper id={product.id} region={region} />
           </div>
