@@ -126,6 +126,15 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
               </li>
             )
           })}
+          <li className="flex">
+            <Link
+              href="/kampanjer"
+              className="group flex flex-col items-center justify-center gap-1 min-w-[92px] px-3 py-2.5 border-b-2 border-transparent text-[#F50000] hover:text-[#D10000]"
+            >
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4v7.2L12 21l8.6-5.4z" /><path d="M12 8v5M9.5 10.5h5" /></svg>
+              <span className="text-[12px] font-semibold leading-tight text-center whitespace-nowrap">Kampanjer</span>
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
