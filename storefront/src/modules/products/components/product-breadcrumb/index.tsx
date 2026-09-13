@@ -3,10 +3,31 @@
 import { usePathname } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-const pretty = (s: string) =>
-  decodeURIComponent(s)
+const FIX: Record<string, string> = {
+  "batterier": "Batterier",
+  "datortillbehor": "Datortillbehör",
+  "gaming": "Gaming",
+  "hem-fritid": "Hem & Fritid",
+  "horlurar-hogtalare": "Hörlurar & Högtalare",
+  "kablar-laddare": "Kablar & Laddare",
+  "kablar-adaptrar": "Kablar & Adaptrar",
+  "mobiler-surfplattor": "Mobiler & Surfplattor",
+  "mobilreparation": "Mobilreparation",
+  "mobilreservdelar": "Mobilreservdelar",
+  "mobiltillbehor": "Mobiltillbehör",
+  "outlet-fyndvaror": "Outlet - Fyndvaror",
+  "powerbank": "Powerbank",
+  "sakerhet-smart-hem": "Säkerhet & Smart hem",
+  "halsa-skonhet": "Hälsa & Skönhet",
+}
+
+const pretty = (s: string) => {
+  const key = decodeURIComponent(s).toLowerCase()
+  if (FIX[key]) return FIX[key]
+  return decodeURIComponent(s)
     .replace(/-/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 /**
  * Path-based breadcrumb — works for every category since it reads the current
