@@ -47,8 +47,12 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         <div className="flex flex-col w-full small:max-w-[440px] small:sticky small:top-24 py-8 small:py-0 gap-y-6">
           <ProductInfo product={product} />
           <ProductActionsWrapper id={product.id} region={region} />
-          <ProductTabs product={product} />
         </div>
+      </div>
+
+      {/* Full-width tabs (Produktbeskrivning / Specifikationer / Frakt & Retur) */}
+      <div className="content-container" style={{ paddingTop: "8px", paddingBottom: "8px" }}>
+        <ProductTabs product={product} />
       </div>
 
       {/* USP / trygghetsband */}
