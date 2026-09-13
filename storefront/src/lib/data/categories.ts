@@ -16,7 +16,10 @@ export const listCategories = cache(async function () {
           fields: "id,name,handle,rank,parent_category_id,+category_children",
           limit: 1000,
         },
-        ...(await getCacheDirectives("categories")),
+        // Categories drive the menu order (by rank). Refresh every 10 min so
+        // reordering in the admin shows up without a redeploy.
+        cache: "force-cache",
+        next: { tags: ["categories"], revalidate: 600 },
       }
     )
     .then(({ product_categories }) => product_categories)
