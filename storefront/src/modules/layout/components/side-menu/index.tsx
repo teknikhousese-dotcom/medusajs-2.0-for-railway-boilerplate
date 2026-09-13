@@ -155,6 +155,16 @@ const SideMenu = ({
                             </li>
                           )
                         })}
+                        <li className="border-b border-ui-border-base">
+                          <LocalizedClientLink
+                            href="/kampanjer"
+                            onClick={close}
+                            className="flex items-center gap-3 px-5 py-3.5 text-[#F50000] font-semibold hover:bg-ui-bg-subtle"
+                          >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4v7.2L12 21l8.6-5.4z" /><path d="M12 8v5M9.5 10.5h5" /></svg>
+                            <span>Kampanjer</span>
+                          </LocalizedClientLink>
+                        </li>
                       </ul>
 
                       <div className="px-5 py-4 border-t border-ui-border-base">
