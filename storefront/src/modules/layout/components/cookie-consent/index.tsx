@@ -51,7 +51,7 @@ export default function CookieConsent() {
       </div>
       <p style={{ fontSize: "13.5px", lineHeight: 1.55, color: "#6f685f", margin: "0 0 14px" }}>
         Vi använder cookies för funktion på sidan, analys av data och marknadsföring.{" "}
-        <a href="/integritetspolicy" style={{ color: "#F50000", textDecoration: "underline" }}>
+        <a href="/info/integritetspolicy" style={{ color: "#F50000", textDecoration: "underline" }}>
           Läs mer
         </a>
       </p>
