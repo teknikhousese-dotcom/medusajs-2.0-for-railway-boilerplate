@@ -50,12 +50,12 @@ const displayName = (cat: Cat, byId: Record<string, Cat>) => {
 }
 
 export default async function CategoryTemplate({
-  category,
+  categories,
   sortBy,
   page,
   countryCode,
 }: {
-  category: Cat
+  categories: Cat[]
   sortBy?: SortOptions
   page?: string
   countryCode: string
@@ -63,6 +63,7 @@ export default async function CategoryTemplate({
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
+  const category = categories?.[categories.length - 1]
   if (!category || !countryCode) notFound()
 
   const all = ((await listCategories()) || []) as Cat[]
