@@ -49,6 +49,37 @@ const displayName = (cat: Cat, byId: Record<string, Cat>) => {
   return cat.name
 }
 
+// Brand logos (teknikhouse /images/category), keyed by leaf slug. Used until a
+// category's own metadata.category_image (migrated to R2) is set.
+const TH_IMG = "https://teknikhouse.se"
+const BRAND_LOGO: Record<string, string> = {
+  apple: "/images/category/apple.png",
+  samsung: "/images/category/logo_sam_1-55495.jpg",
+  "sony-xperia": "/images/category/sonyxperia.jpg",
+  lg: "/images/category/lg.png",
+  htc: "/images/category/htc-logo.jpg",
+  huawei: "/images/category/huawei.jpg",
+  nokia: "/images/category/nokia.jpg",
+  motorola: "/images/category/motorola_logo.png",
+  oneplus: "/images/category/oneplus.png",
+  asus: "/images/category/asus-logo.jpeg",
+  google: "/images/category/varugrupp-mobilreservdelar-google.jpg",
+  xiaomi: "/images/category/xiaomi-varugrupp-reservdelar.jpg",
+  "ovriga-tillverkare":
+    "/images/category/smartphone-smartmobil-reservdel-ovriga-alla-other-spare-parts-kategori-teknikhouse.jpg",
+}
+// teknikhouse popularity order (by leaf slug) for sorting subcategory tiles.
+const BRAND_PRIORITY = [
+  "apple", "samsung", "google", "huawei", "xiaomi", "oneplus",
+  "sony-xperia", "motorola", "lg", "htc", "nokia", "asus", "ovriga-tillverkare",
+]
+const tileImg = (c: Cat, byId: Record<string, Cat>): string | null => {
+  const meta: any = (c as any).metadata
+  if (meta && meta.category_image) return meta.category_image as string
+  const slug = leafSlug(c, byId)
+  return BRAND_LOGO[slug] ? TH_IMG + BRAND_LOGO[slug] : null
+}
+
 export default async function CategoryTemplate({
   categories,
   sortBy,
@@ -74,7 +105,12 @@ export default async function CategoryTemplate({
     if (!childrenByParent.has(p)) childrenByParent.set(p, [])
     childrenByParent.get(p)!.push(c)
   }
+  const prio = (c: Cat) => {
+    const i = BRAND_PRIORITY.indexOf(leafSlug(c, byId))
+    return i === -1 ? 999 : i
+  }
   const rankSort = (a: Cat, b: Cat) =>
+    prio(a) - prio(b) ||
     ((a as any).rank ?? 0) - ((b as any).rank ?? 0) ||
     a.name.localeCompare(b.name, "sv")
   const kids = (id: string | null) =>
@@ -153,7 +189,9 @@ export default async function CategoryTemplate({
             {displayName(self, byId)}
           </h1>
 
-          {self.description ? <ReadMore html={self.description as string} /> : null}
+          {(category.description || (self as any).description) ? (
+            <ReadMore html={(category.description || (self as any).description) as string} />
+          ) : null}
 
           {hasChildren ? (
             <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-4" data-testid="subcategories">
@@ -163,9 +201,17 @@ export default async function CategoryTemplate({
                     href={pathOf(c, byId)}
                     style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: "118px", padding: "18px 12px", border: "1px solid #efeae5", borderRadius: "14px", background: "#fff", gap: "10px" }}
                   >
-                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "46px", height: "46px", borderRadius: "50%", background: "#faf8f6", color: "#F50000" }}>
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 18h2" /></svg>
-                    </span>
+                    {tileImg(c, byId) ? (
+                      <img
+                        src={tileImg(c, byId) as string}
+                        alt=""
+                        style={{ width: "76px", height: "50px", objectFit: "contain" }}
+                      />
+                    ) : (
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "46px", height: "46px", borderRadius: "50%", background: "#faf8f6", color: "#F50000" }}>
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 18h2" /></svg>
+                      </span>
+                    )}
                     <span style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "14px", color: "#1b1714" }}>
                       {displayName(c, byId)}
                     </span>
