@@ -8,39 +8,65 @@ type RelatedProductsProps = {
   countryCode: string
 }
 
+/**
+ * Related products for teknikhouse. Most of our imported products have no
+ * collection/tags, so the stock Medusa logic left this section empty. We now
+ * try the product's own category first, then collection, then tags, and finally
+ * fall back to newest products — so the rail is never blank and always sells.
+ */
 export default async function RelatedProducts({
   product,
   countryCode,
 }: RelatedProductsProps) {
   const region = await getRegion(countryCode)
-
   if (!region) {
     return null
   }
 
-  // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductListParams = {}
-  queryParams.region_id = region.id
-  if (product.collection_id) {
-    queryParams.collection_id = [product.collection_id]
+  const fetchWith = async (
+    params: Partial<HttpTypes.StoreProductListParams>
+  ): Promise<HttpTypes.StoreProduct[]> => {
+    try {
+      const { response } = await getProductsList({
+        queryParams: { ...params, region_id: region.id, limit: 12 } as any,
+        countryCode,
+      })
+      return (response.products || []).filter((p) => p.id !== product.id)
+    } catch {
+      return []
+    }
   }
-  // The list endpoint filters by tag id, not by tag value.
-  const tagIds = product.tags?.map((t) => t.id).filter(Boolean) as
-    | string[]
-    | undefined
-  if (tagIds?.length) {
-    queryParams.tag_id = tagIds
-  }
-  queryParams.is_giftcard = false
 
-  const products = await getProductsList({
-    queryParams,
-    countryCode,
-  }).then(({ response }) => {
-    return response.products.filter(
-      (responseProduct) => responseProduct.id !== product.id
-    )
-  })
+  let products: HttpTypes.StoreProduct[] = []
+
+  // 1) Same category — the best match for our catalog.
+  const categoryIds =
+    (product.categories?.map((c) => c.id).filter(Boolean) as string[]) || []
+  if (categoryIds.length) {
+    products = await fetchWith({ category_id: categoryIds } as any)
+  }
+
+  // 2) Fallback: same collection.
+  if (products.length === 0 && product.collection_id) {
+    products = await fetchWith({ collection_id: [product.collection_id] })
+  }
+
+  // 3) Fallback: shared tags.
+  if (products.length === 0) {
+    const tagIds = product.tags?.map((t) => t.id).filter(Boolean) as
+      | string[]
+      | undefined
+    if (tagIds?.length) {
+      products = await fetchWith({ tag_id: tagIds } as any)
+    }
+  }
+
+  // 4) Last resort: newest products, so the section is never empty.
+  if (products.length === 0) {
+    products = await fetchWith({})
+  }
+
+  products = products.slice(0, 5)
 
   if (!products.length) {
     return null
@@ -48,19 +74,27 @@ export default async function RelatedProducts({
 
   return (
     <div className="product-page-constraint">
-      <div className="flex flex-col items-center text-center mb-16">
-        <span className="text-base-regular text-gray-600 mb-6">
-          Liknande produkter
+      <div className="flex flex-col items-center text-center mb-10">
+        <span className="text-base-regular text-gray-600 mb-2">
+          Fler produkter
         </span>
-        <p className="text-2xl-regular text-ui-fg-base max-w-lg">
-          Du kanske också vill kolla in dessa produkter.
+        <p
+          className="max-w-lg"
+          style={{
+            fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif',
+            fontWeight: 600,
+            fontSize: "22px",
+            color: "#1b1714",
+          }}
+        >
+          Du kanske också gillar
         </p>
       </div>
 
-      <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
-        {products.map((product) => (
-          <li key={product.id}>
-            {region && <Product region={region} product={product} />}
+      <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-5 gap-x-6 gap-y-8">
+        {products.map((p) => (
+          <li key={p.id}>
+            <Product region={region} product={p} />
           </li>
         ))}
       </ul>
