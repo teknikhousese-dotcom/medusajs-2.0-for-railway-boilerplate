@@ -46,7 +46,7 @@ export default async function KampanjerPage({
           offset: i * 100,
           region_id: region.id,
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*images,+metadata",
+            "thumbnail,handle,title,*variants.calculated_price,+variants.inventory_quantity,*images,+metadata",
         },
         next: { tags: ["products"], revalidate: 600 },
       } as any)
