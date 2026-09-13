@@ -13,7 +13,7 @@ export const listCategories = cache(async function () {
       {
         method: "GET",
         query: {
-          fields: "id,name,handle,rank,parent_category_id,+category_children",
+          fields: "id,name,handle,rank,parent_category_id,metadata,description,+category_children",
           limit: 1000,
         },
         // Categories drive the menu order (by rank). Refresh every 10 min so
