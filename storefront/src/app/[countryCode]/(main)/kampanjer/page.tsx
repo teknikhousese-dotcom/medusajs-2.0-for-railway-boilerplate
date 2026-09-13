@@ -15,7 +15,11 @@ export const metadata: Metadata = {
 const onSale = (product: any) => {
   try {
     const { cheapestPrice } = getProductPrice({ product })
-    return !!cheapestPrice && cheapestPrice.price_type === "sale"
+    if (!cheapestPrice) return false
+    if (cheapestPrice.price_type === "sale") return true
+    const c = (cheapestPrice as any).calculated_price_number
+    const o = (cheapestPrice as any).original_price_number
+    return typeof c === "number" && typeof o === "number" && c < o
   } catch {
     return false
   }
@@ -32,7 +36,7 @@ export default async function KampanjerPage({
 
   // Products on rea are ~45% of the catalog, so a bounded scan fills the page.
   const found: HttpTypes.StoreProduct[] = []
-  for (let i = 0; i < 4 && found.length < 60; i++) {
+  for (let i = 0; i < 12 && found.length < 60; i++) {
     let res: any
     try {
       res = await sdk.client.fetch("/store/products", {
@@ -41,7 +45,6 @@ export default async function KampanjerPage({
           limit: 100,
           offset: i * 100,
           region_id: region.id,
-          order: "-created_at",
           fields:
             "*variants.calculated_price,+variants.inventory_quantity,*images,+metadata",
         },
