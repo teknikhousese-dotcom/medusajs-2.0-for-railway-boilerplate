@@ -18,7 +18,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const kind = b.kind
   if (kind === "page-new") {
     const id = genId("epage")
-    const slug = (b.slug || b.name || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    const slug = (b.slug || b.name || "").toString().toLowerCase().replace(/[\u00e5\u00e4]/g, "a").replace(/\u00f6/g, "o").replace(/[\u00e9\u00e8]/g, "e").replace(/\u00fc/g, "u").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
     await q(pg, `INSERT INTO "editable_page" (id,name,slug,content) VALUES (?,?,?,?)`, [id, b.name || "Ny sida", slug, ""])
     const r = await q(pg, `SELECT * FROM "editable_page" WHERE id = ?`, [id]); return res.json({ page: r[0] })
   }
