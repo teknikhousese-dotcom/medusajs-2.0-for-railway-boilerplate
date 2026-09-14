@@ -1,6 +1,4 @@
 import ProductPreview from "@modules/products/components/product-preview"
-import TrustpilotBox from "@modules/home/components/th-home/trustpilot"
-import TrustpilotReviews from "@modules/home/components/th-home/trustpilot-reviews"
 import NewsletterSignup from "./newsletter-signup"
 import RecentlyViewed from "./recently-viewed"
 
@@ -309,8 +307,13 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* WHY US */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="shead"><h2>Vad våra kunder säger</h2></div>
-        <div style={{ display: "flex", justifyContent: "center", margin: "2px 0 16px" }}><div style={{ width: "100%", maxWidth: 320 }}><TrustpilotBox /></div></div>
-        <div style={{ margin: "4px 0 6px" }}><TrustpilotReviews /></div>
+        <div className="revs" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16 }}>
+          <div className="rev"><div className="stars">★★★★★</div><p>Mycket trevlig, hjälpsam &amp; kunnig personal som gav fint bemötande. Fräsch &amp; luftig lokal mitt i centrum. Fantastisk service. Rekommenderas varmt.</p><div className="who">Johanna · Trustpilot</div></div>
+          <div className="rev"><div className="stars">★★★★★</div><p>Behövde hjälp med en mikrolödning på en bilnyckel, snabbt, perfekt och trevligt. Rekommenderas.</p><div className="who">Patrik E. · Trustpilot</div></div>
+          <div className="rev"><div className="stars">★★★★★</div><p>Min vara kom snabbt och betalningen gick smidigt. Kan rekommendera och tänka mej att beställa nåt mer länge fram.</p><div className="who">Anna · Trustpilot</div></div>
+          <div className="rev"><div className="stars">★★★★<span style={{ color: "#d8d2ca" }}>★</span></div><p>Det var ett bra batteri. Annonsen kunde haft en tydligare bild av att det inte ingick batteritejp men annars var det som det ska, men det kan ni säkert ordna.</p><div className="who">David H. · Google</div></div>
+        </div>
+        <div style={{ textAlign: "center", marginTop: 18, fontSize: 14 }}><a href="https://se.trustpilot.com/review/teknikhouse.se" target="_blank" rel="noreferrer" style={{ color: "#6f685f", fontWeight: 600, textDecoration: "none", margin: "0 10px" }}>Fler omdömen på Trustpilot →</a><a href="https://www.google.com/maps/place/Teknikhouse.se" target="_blank" rel="noreferrer" style={{ color: "#6f685f", fontWeight: 600, textDecoration: "none", margin: "0 10px" }}>Google →</a></div>
       </div></section>
 
       {/* SEO INTRO */}
