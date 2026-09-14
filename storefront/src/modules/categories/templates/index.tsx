@@ -8,7 +8,6 @@ import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { listCategories } from "@lib/data/categories"
-import ReadMore from "@modules/categories/components/read-more"
 import { niceCategoryName } from "@lib/util/category-name"
 
 type Cat = HttpTypes.StoreProductCategory
@@ -82,6 +81,23 @@ const tileImg = (c: Cat, byId: Record<string, Cat>): string | null => {
   return BRAND_LOGO[slug] ? TH_IMG + BRAND_LOGO[slug] : null
 }
 
+// Split the migrated (flat <p>) category description into readable sections:
+// short lines become sub-headings, "?" lines become bold FAQ questions, and
+// "•" lines render as bullets. Matches the teknikhouse bottom content block.
+function enrichDescHtml(html: string): string {
+  return (html || "").replace(/<p>([\s\S]*?)<\/p>/gi, (_m: string, inner: string) => {
+    const text = inner.replace(/<[^>]+>/g, "").trim()
+    if (!text) return ""
+    const isBullet = text.charAt(0) === "\u2022"
+    const isQuestion = text.charAt(text.length - 1) === "?"
+    const isHeading = !isBullet && !isQuestion && text.length <= 64 && !/[.!:]$/.test(text)
+    if (isHeading) return '<h3 class="thc-h">' + inner + '</h3>'
+    if (isQuestion) return '<p class="thc-q">' + inner + '</p>'
+    if (isBullet) return '<p class="thc-b">' + inner.replace(/^\u2022\s*/, "") + '</p>'
+    return '<p>' + inner + '</p>'
+  })
+}
+
 export default async function CategoryTemplate({
   categories,
   sortBy,
@@ -124,6 +140,11 @@ export default async function CategoryTemplate({
   const children = kids(category.id)
   const hasChildren = children.length > 0
   const departments = kids(null)
+
+  const rawDesc = (((category as any).description || (self as any).description || "")) as string
+  const firstPara = (rawDesc.match(/<p[\s\S]*?<\/p>/i) || [""])[0]
+  const restDesc = firstPara ? rawDesc.slice(rawDesc.indexOf(firstPara) + firstPara.length) : rawDesc
+  const hasRest = restDesc.replace(/<[^>]+>/g, "").trim().length > 0
 
   return (
     <div className="content-container py-6" data-testid="category-container">
@@ -191,8 +212,11 @@ export default async function CategoryTemplate({
             {displayName(self, byId)}
           </h1>
 
-          {(category.description || (self as any).description) ? (
-            <ReadMore html={(category.description || (self as any).description) as string} />
+          {firstPara ? (
+            <div
+              style={{ color: "#4a4640", fontSize: "14.5px", lineHeight: 1.6, maxWidth: "820px", marginBottom: "22px" }}
+              dangerouslySetInnerHTML={{ __html: firstPara }}
+            />
           ) : null}
 
           {hasChildren ? (
@@ -236,6 +260,13 @@ export default async function CategoryTemplate({
               </Suspense>
             </>
           )}
+
+          {hasRest ? (
+            <section style={{ marginTop: "44px", paddingTop: "28px", borderTop: "1px solid #efeae5" }}>
+              <style>{`.thc{max-width:900px;color:#4a4640;font-size:15px;line-height:1.7}.thc p{margin:0 0 12px}.thc .thc-h{font-family:"Poppins",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:19px;color:#1b1714;margin:26px 0 10px}.thc .thc-q{font-weight:600;color:#1b1714;margin:16px 0 2px}.thc .thc-b{margin:4px 0 4px 18px;position:relative}.thc .thc-b:before{content:"\2022";color:#F50000;position:absolute;left:-14px}.thc a{color:#F50000;text-decoration:underline}.thc strong{color:#1b1714}`}</style>
+              <div className="thc" dangerouslySetInnerHTML={{ __html: enrichDescHtml(restDesc) }} />
+            </section>
+          ) : null}
         </div>
       </div>
     </div>
