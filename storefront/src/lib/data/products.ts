@@ -136,7 +136,7 @@ export const getProductsListWithSort = cache(async function ({
       method: "GET",
       query: {
         ...queryParams,
-        limit: 100,
+        limit: 200,
         offset: 0,
         region_id: region.id,
         fields:
