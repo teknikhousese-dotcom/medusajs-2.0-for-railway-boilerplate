@@ -383,6 +383,19 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await props.params
+  // Admin-editable override: if this page has saved HTML in "Redigerbara sidor",
+  // render that instead of the designed layout. Empty = keep the designed layout.
+  let __override = ""
+  try {
+    const __base = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
+    if (__base) {
+      const __r = await fetch(`${__base}/store/editable/${encodeURIComponent(slug)}`, {
+        next: { revalidate: 30 },
+        headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" },
+      })
+      if (__r.ok) { const __j = await __r.json(); __override = (__j && typeof __j.content === "string") ? __j.content.trim() : "" }
+    }
+  } catch {}
   const page = PAGES[slug]
   if (!page) return { title: "Information | Teknikhouse" }
   return { title: `${page.title} | Teknikhouse`, description: page.intro || page.title }
@@ -393,6 +406,17 @@ export default async function InfoPage(props: {
 }) {
   const { slug } = await props.params
   const page = PAGES[slug]
+  if (__override) {
+    const __title = (page && (page as any).title) ? (page as any).title : slug
+    return (
+      <div className="content-container py-12">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-semibold mb-6 text-ui-fg-base">{__title}</h1>
+          <div className="txt-medium text-ui-fg-subtle [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:mt-4 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: __override }} />
+        </div>
+      </div>
+    )
+  }
   if (!page) notFound()
 
   return (
