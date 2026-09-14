@@ -20,7 +20,6 @@ export const getProductsById = cache(async function ({
       method: "GET",
       query: {
         id: ids,
-        limit: ids.length,
         region_id: regionId,
         fields: "*variants.calculated_price,+variants.inventory_quantity",
       },
@@ -135,12 +134,32 @@ export const getProductsListWithSort = cache(async function ({
   if ((sortBy === "price_asc" || sortBy === "price_desc") && products.length) {
     const region = await getRegion(countryCode)
     if (region) {
-      const priced = await getProductsById({
-        ids: products.map((p) => p.id!),
-        regionId: region.id,
-      })
-      const pricedById = new Map(priced.map((p) => [p.id, p]))
-      productsToSort = products.map((p) => pricedById.get(p.id!) || p)
+      // Category-filtered list fetches don't reliably resolve calculated_price,
+      // and the cached getProductsById can serve a priceless entry. Fetch fresh
+      // prices (no-store) so the sort always has real amounts to work with.
+      try {
+        const priced = await sdk.client.fetch<HttpTypes.StoreProductListResponse>(
+          "/store/products",
+          {
+            method: "GET",
+            query: {
+              id: products.map((p) => p.id),
+              limit: products.length,
+              region_id: region.id,
+              fields: "id,*variants.calculated_price",
+            },
+            cache: "no-store",
+          } as any
+        )
+        const list = (priced as any)?.products || []
+        const pricedById = new Map(list.map((p: any) => [p.id, p]))
+        productsToSort = products.map((p) => {
+          const pr: any = pricedById.get(p.id!)
+          return pr ? { ...p, variants: pr.variants } : p
+        })
+      } catch {
+        productsToSort = products
+      }
     }
   }
 
