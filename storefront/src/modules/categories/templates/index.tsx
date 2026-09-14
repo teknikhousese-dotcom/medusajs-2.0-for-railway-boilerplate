@@ -233,7 +233,7 @@ export default async function CategoryTemplate({
               <div className="mb-4">
                 <RefinementList sortBy={sort} data-testid="sort-by-container" />
               </div>
-              <Suspense fallback={<SkeletonProductGrid />}>
+              <Suspense key={`${sort}-${pageNumber}`} fallback={<SkeletonProductGrid />}>
                 <PaginatedProducts
                   sortBy={sort}
                   page={pageNumber}
