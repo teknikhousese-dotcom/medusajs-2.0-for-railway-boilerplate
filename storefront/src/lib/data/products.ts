@@ -127,7 +127,23 @@ export const getProductsListWithSort = cache(async function ({
     countryCode,
   })
 
-  const sortedProducts = sortProducts(products, sortBy)
+  // Category-filtered list fetches don't always resolve calculated_price,
+  // which makes price sorting a no-op. Re-fetch priced versions in one call so
+  // the sort has real prices to work with (getProductsById is cached).
+  let productsToSort = products
+  if ((sortBy === "price_asc" || sortBy === "price_desc") && products.length) {
+    const region = await getRegion(countryCode)
+    if (region) {
+      const priced = await getProductsById({
+        ids: products.map((p) => p.id!),
+        regionId: region.id,
+      })
+      const pricedById = new Map(priced.map((p) => [p.id, p]))
+      productsToSort = products.map((p) => pricedById.get(p.id!) || p)
+    }
+  }
+
+  const sortedProducts = sortProducts(productsToSort, sortBy)
 
   const pageParam = (page - 1) * limit
 
