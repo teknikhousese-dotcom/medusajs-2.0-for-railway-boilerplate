@@ -1,4 +1,5 @@
 import ProductPreview from "@modules/products/components/product-preview"
+import TrustpilotBox from "@modules/home/components/th-home/trustpilot"
 import NewsletterSignup from "./newsletter-signup"
 import RecentlyViewed from "./recently-viewed"
 
@@ -307,6 +308,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* WHY US */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="shead"><h2>Därför handlar du hos oss</h2></div>
+        <div style={{ display: "flex", justifyContent: "center", margin: "2px 0 22px" }}><div style={{ width: "100%", maxWidth: 460 }}><TrustpilotBox /></div></div>
         <div className="revs">
           <div className="rev"><div className="stars" style={{ fontSize: "22px" }}>🔧</div><p>Sveriges bredaste reservdelslager — delar till iPhone, iPad och Samsung, alla märkta &quot;Passar din enhet&quot; för rätt del första gången.</p><div className="who">Rätt del, direkt</div></div>
           <div className="rev"><div className="stars" style={{ fontSize: "22px" }}>🛡️</div><p>Livstidsgaranti på skärmar och funktionstestade delar före leverans — trygg reparation utan överraskningar.</p><div className="who">Livstidsgaranti</div></div>
