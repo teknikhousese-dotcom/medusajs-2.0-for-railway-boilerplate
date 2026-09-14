@@ -94,7 +94,7 @@ export default async function CategoryTemplate({
   countryCode: string
 }) {
   const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "recommended"
 
   const category = categories?.[categories.length - 1]
   if (!category || !countryCode) notFound()
