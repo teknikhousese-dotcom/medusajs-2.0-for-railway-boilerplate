@@ -263,7 +263,7 @@ export default async function CategoryTemplate({
 
           {hasRest ? (
             <section style={{ marginTop: "44px", paddingTop: "28px", borderTop: "1px solid #efeae5" }}>
-              <style>{`.thc{max-width:900px;color:#4a4640;font-size:15px;line-height:1.7}.thc p{margin:0 0 12px}.thc .thc-h{font-family:"Poppins",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:19px;color:#1b1714;margin:26px 0 10px}.thc .thc-q{font-weight:600;color:#1b1714;margin:16px 0 2px}.thc .thc-b{margin:4px 0 4px 18px;position:relative}.thc .thc-b:before{content:"\2022";color:#F50000;position:absolute;left:-14px}.thc a{color:#F50000;text-decoration:underline}.thc strong{color:#1b1714}`}</style>
+              <style>{`.thc{max-width:900px;color:#4a4640;font-size:15px;line-height:1.7}.thc p{margin:0 0 12px}.thc .thc-h{font-family:"Poppins",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:19px;color:#1b1714;margin:26px 0 10px}.thc .thc-q{font-weight:600;color:#1b1714;margin:16px 0 2px}.thc .thc-b{margin:4px 0 4px 18px;position:relative}.thc .thc-b:before{content:"•";color:#F50000;position:absolute;left:-14px}.thc a{color:#F50000;text-decoration:underline}.thc strong{color:#1b1714}`}</style>
               <div className="thc" dangerouslySetInnerHTML={{ __html: enrichDescHtml(restDesc) }} />
             </section>
           ) : null}
