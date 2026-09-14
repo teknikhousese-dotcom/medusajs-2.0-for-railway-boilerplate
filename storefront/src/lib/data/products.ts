@@ -168,6 +168,24 @@ export const getProductsListWithSort = cache(async function ({
     }
   }
 
+  if (sortBy === "price_asc" || sortBy === "price_desc") {
+    try {
+      const _sample = (productsToSort as any[]).slice(0, 5).map((p) => ({
+        id: String(p.id || "").slice(-6),
+        v: (p.variants || []).map((v: any) => v?.calculated_price?.calculated_amount),
+      }))
+      const _resolved = (productsToSort as any[]).filter((p) =>
+        (p.variants || []).some((v: any) => (v?.calculated_price?.calculated_amount || 0) > 0)
+      ).length
+      console.error(
+        `[PRICESORT] n=${productsToSort.length} resolved=${_resolved} sample=` +
+          JSON.stringify(_sample)
+      )
+    } catch (e) {
+      console.error("[PRICESORT] dbg-error", e)
+    }
+  }
+
   const sortedProducts = sortProducts(productsToSort, sortBy)
 
   const pageParam = (page - 1) * limit
