@@ -7,7 +7,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   await ensureTables(pg)
   const pages = await q(pg, `SELECT * FROM "editable_page" WHERE deleted_at IS NULL ORDER BY name ASC`)
   const areas = await q(pg, `SELECT * FROM "editable_area" ORDER BY name ASC`)
-  res.json({ pages, areas })
+  res.json({ pages, areas: [] })
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
