@@ -8,7 +8,7 @@ import { Fragment, useState } from "react"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { getStoreName } from "@lib/util/env"
-import { niceCategoryName } from "@lib/util/category-name"
+import { niceCategoryName, categoryLabel } from "@lib/util/category-name"
 
 type Cat = HttpTypes.StoreProductCategory
 
@@ -147,7 +147,7 @@ const SideMenu = ({
                                         onClick={close}
                                         className="block pl-14 pr-5 py-2 text-ui-fg-subtle hover:text-[#F50000]"
                                       >
-                                        {niceCategoryName(k.name, seg(k, dep))}
+                                        {categoryLabel(k.name, dep.name, seg(k, dep))}
                                       </LocalizedClientLink>
                                     </li>
                                   ))}
