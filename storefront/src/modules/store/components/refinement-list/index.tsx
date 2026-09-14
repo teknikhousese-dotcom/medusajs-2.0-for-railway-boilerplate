@@ -26,7 +26,8 @@ const RefinementList = ({ sortBy, "data-testid": dataTestId }: RefinementListPro
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  const current = OPTIONS.find((o) => o.value === sortBy) || OPTIONS[0]
+  const activeValue = (searchParams.get("sortBy") as SortOptions) || sortBy || "created_at"
+  const current = OPTIONS.find((o) => o.value === activeValue) || OPTIONS[0]
 
   const setSort = useCallback(
     (value: SortOptions) => {
