@@ -45,8 +45,18 @@ export default async function PaginatedProducts({
     queryParams["id"] = productsIds
   }
 
-  if (sortBy === "created_at") {
-    queryParams["order"] = "created_at"
+  // Map the sort choice to a Store API `order`. Name and date sort natively.
+  // Price cannot be ordered server-side, so we still order by title here (which
+  // returns a fresh, price-resolved result set) and let sortProducts reorder by
+  // price afterwards.
+  const ORDER_MAP: Record<string, string> = {
+    title: "title",
+    created_at: "-created_at",
+    price_asc: "title",
+    price_desc: "title",
+  }
+  if (sortBy && ORDER_MAP[sortBy]) {
+    queryParams["order"] = ORDER_MAP[sortBy]
   }
 
   const region = await getRegion(countryCode)
