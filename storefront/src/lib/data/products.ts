@@ -145,6 +145,34 @@ export const getProductsListWithSort = cache(async function ({
     )
     products = res.products || []
     count = res.count || 0
+
+    // The category list fetch does not always resolve calculated_price via the
+    // SDK even with region_id, but the single-id product fetch reliably does
+    // (the same call ProductPreview uses to render each price). Resolve prices
+    // through it so the sort has real amounts to order by.
+    try {
+      const ids = products.map((p) => p.id!).filter(Boolean)
+      const pricedById = new Map<string, HttpTypes.StoreProduct>()
+      const CONCURRENCY = 6
+      for (let i = 0; i < ids.length; i += CONCURRENCY) {
+        const batch = ids.slice(i, i + CONCURRENCY)
+        const chunk = await Promise.all(
+          batch.map((id) =>
+            getProductsById({ ids: [id], regionId: region.id }).catch(
+              () => [] as HttpTypes.StoreProduct[]
+            )
+          )
+        )
+        for (const arr of chunk) {
+          const pr = arr?.[0]
+          if (pr?.id) pricedById.set(pr.id, pr)
+        }
+      }
+      products = products.map((p) => {
+        const pr = pricedById.get(p.id!)
+        return pr ? { ...p, variants: pr.variants } : p
+      })
+    } catch {}
   } else {
     const listed = await getProductsList({
       pageParam: 0,
