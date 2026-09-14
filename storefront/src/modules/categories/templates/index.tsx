@@ -81,23 +81,6 @@ const tileImg = (c: Cat, byId: Record<string, Cat>): string | null => {
   return BRAND_LOGO[slug] ? TH_IMG + BRAND_LOGO[slug] : null
 }
 
-// Split the migrated (flat <p>) category description into readable sections:
-// short lines become sub-headings, "?" lines become bold FAQ questions, and
-// "•" lines render as bullets. Matches the teknikhouse bottom content block.
-function enrichDescHtml(html: string): string {
-  return (html || "").replace(/<p>([\s\S]*?)<\/p>/gi, (_m: string, inner: string) => {
-    const text = inner.replace(/<[^>]+>/g, "").trim()
-    if (!text) return ""
-    const isBullet = text.charAt(0) === "\u2022"
-    const isQuestion = text.charAt(text.length - 1) === "?"
-    const isHeading = !isBullet && !isQuestion && text.length <= 64 && !/[.!:]$/.test(text)
-    if (isHeading) return '<h3 class="thc-h">' + inner + '</h3>'
-    if (isQuestion) return '<p class="thc-q">' + inner + '</p>'
-    if (isBullet) return '<p class="thc-b">' + inner.replace(/^\u2022\s*/, "") + '</p>'
-    return '<p>' + inner + '</p>'
-  })
-}
-
 export default async function CategoryTemplate({
   categories,
   sortBy,
@@ -263,8 +246,8 @@ export default async function CategoryTemplate({
 
           {hasRest ? (
             <section style={{ marginTop: "44px", paddingTop: "28px", borderTop: "1px solid #efeae5" }}>
-              <style>{`.thc{max-width:900px;color:#4a4640;font-size:15px;line-height:1.7}.thc p{margin:0 0 12px}.thc .thc-h{font-family:"Poppins",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:19px;color:#1b1714;margin:26px 0 10px}.thc .thc-q{font-weight:600;color:#1b1714;margin:16px 0 2px}.thc .thc-b{margin:4px 0 4px 18px;position:relative}.thc .thc-b:before{content:"•";color:#F50000;position:absolute;left:-14px}.thc a{color:#F50000;text-decoration:underline}.thc strong{color:#1b1714}`}</style>
-              <div className="thc" dangerouslySetInnerHTML={{ __html: enrichDescHtml(restDesc) }} />
+              <style>{`.thc{max-width:900px;color:#4a4640;font-size:15px;line-height:1.7}.thc p{margin:0 0 12px}.thc h2,.thc h3,.thc .thc-h{font-family:"Poppins",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:19px;color:#1b1714;margin:26px 0 10px}.thc h4{font-weight:600;font-size:17px;color:#1b1714;margin:22px 0 8px}.thc ul{margin:0 0 14px;padding-left:20px;list-style:disc}.thc li{margin:4px 0}.thc .thc-q{font-weight:600;color:#1b1714;margin:16px 0 2px}.thc .thc-b{margin:4px 0 4px 18px;position:relative}.thc .thc-b:before{content:"•";color:#F50000;position:absolute;left:-14px}.thc a{color:#F50000;text-decoration:underline}.thc strong{color:#1b1714}`}</style>
+              <div className="thc" dangerouslySetInnerHTML={{ __html: restDesc }} />
             </section>
           ) : null}
         </div>
