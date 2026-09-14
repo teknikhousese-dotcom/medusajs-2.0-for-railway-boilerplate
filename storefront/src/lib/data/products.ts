@@ -20,6 +20,7 @@ export const getProductsById = cache(async function ({
       method: "GET",
       query: {
         id: ids,
+        limit: ids.length,
         region_id: regionId,
         fields: "*variants.calculated_price,+variants.inventory_quantity",
       },
