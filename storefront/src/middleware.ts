@@ -167,11 +167,14 @@ export async function middleware(request: NextRequest) {
     if (legacySegs.length >= 1) {
       const catHandles = await getCategoryHandleSet()
       const joined = legacySegs.join("-")
+      // Preserve the query string (?page, ?sortBy, ...) through the rewrite —
+      // otherwise category pages never receive their pagination / sort params.
+      const legacySearch = request.nextUrl.search
       let target: string | null = null
       if (catHandles.has(joined)) {
-        target = `/se/categories/${joined}`
+        target = `/se/categories/${joined}${legacySearch}`
       } else if (catHandles.has(legacySegs[0])) {
-        target = `/se/products/${legacySegs[legacySegs.length - 1]}`
+        target = `/se/products/${legacySegs[legacySegs.length - 1]}${legacySearch}`
       }
       if (target) {
         const legacyRes = NextResponse.rewrite(new URL(target, request.url))
