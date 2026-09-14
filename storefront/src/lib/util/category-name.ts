@@ -33,3 +33,24 @@ export function niceCategoryName(name?: string | null, slug?: string | null): st
   }
   return s
 }
+
+// Prettify a slug ("resvaskor-ryggsackar" -> "Resvaskor Ryggsackar").
+function prettySlug(slug?: string | null): string {
+  return (slug || "")
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
+}
+
+// Label for a category shown under a parent. Handles the import glitch where a
+// child inherited its parent's name (derive a readable name from the slug), then
+// applies the brand/all-caps normalisation.
+export function categoryLabel(
+  name?: string | null,
+  parentName?: string | null,
+  slug?: string | null
+): string {
+  const raw = parentName && name && name === parentName ? prettySlug(slug) : name
+  return niceCategoryName(raw, slug)
+}
