@@ -16,7 +16,7 @@ const StoreTemplate = ({
   countryCode: string
 }) => {
   const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "recommended"
 
   return (
     <div className="content-container py-6" data-testid="category-container">
