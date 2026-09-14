@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { niceCategoryName, categoryLabel } from "@lib/util/category-name"
 
@@ -41,6 +42,14 @@ function DeptIcon({ name }: { name: string }) {
  */
 export default function CategoryMega({ categories }: { categories: Cat[] }) {
   const [openId, setOpenId] = useState<string | null>(null)
+
+  // Close the mega-panel when the route changes. The nav stays mounted across
+  // client-side navigations and the pointer may still be over a department, so
+  // openId would otherwise keep the panel open on top of the new page.
+  const pathname = usePathname()
+  useEffect(() => {
+    setOpenId(null)
+  }, [pathname])
 
   const byParent = new Map<string | null, Cat[]>()
   for (const c of categories) {
