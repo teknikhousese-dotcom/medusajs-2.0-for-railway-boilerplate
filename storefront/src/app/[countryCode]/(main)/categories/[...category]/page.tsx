@@ -7,10 +7,6 @@ import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { getStoreName } from "@lib/util/env"
 
-// Category pages read the sortBy search param, so they must render per request
-// rather than be statically prerendered (a static page ignores ?sortBy).
-export const dynamic = "force-dynamic"
-
 type Props = {
   params: Promise<{ category: string[]; countryCode: string }>
   searchParams: Promise<{
