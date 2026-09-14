@@ -12,9 +12,11 @@ type RefinementListProps = {
 }
 
 const OPTIONS: { value: SortOptions; label: string }[] = [
-  { value: "created_at", label: "Senaste" },
+  { value: "recommended", label: "Rekommenderad" },
+  { value: "title", label: "Namn" },
   { value: "price_asc", label: "Pris: Lågt till högt" },
   { value: "price_desc", label: "Pris: Högt till lågt" },
+  { value: "created_at", label: "Senast inlagd" },
 ]
 
 const FONT = '"Poppins",ui-rounded,system-ui,sans-serif'
@@ -26,7 +28,7 @@ const RefinementList = ({ sortBy, "data-testid": dataTestId }: RefinementListPro
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  const activeValue = (searchParams.get("sortBy") as SortOptions) || sortBy || "created_at"
+  const activeValue = (searchParams.get("sortBy") as SortOptions) || sortBy || "recommended"
   const current = OPTIONS.find((o) => o.value === activeValue) || OPTIONS[0]
 
   const setSort = useCallback(
