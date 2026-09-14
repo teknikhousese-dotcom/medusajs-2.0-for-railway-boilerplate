@@ -102,7 +102,7 @@ export const getProductsList = cache(async function ({
 export const getProductsListWithSort = cache(async function ({
   page = 0,
   queryParams,
-  sortBy = "created_at",
+  sortBy = "recommended",
   countryCode,
 }: {
   page?: number
@@ -116,18 +116,37 @@ export const getProductsListWithSort = cache(async function ({
 }> {
   const limit = queryParams?.limit || 12
 
-  const {
-    response: { products, count },
-  } = await getProductsList({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: 100,
-    },
-    countryCode,
-  })
+  const region = await getRegion(countryCode)
 
-  const sortedProducts = sortProducts(products, sortBy)
+  if (!region) {
+    return {
+      response: { products: [], count: 0 },
+      nextPage: null,
+      queryParams,
+    }
+  }
+
+  // Fetch fresh (bypassing the shared force-cache) so the order + region-priced
+  // result always reflects the current sort. Category routes were previously
+  // statically prerendered, which left their cached product fetch frozen on the
+  // default order; a per-request fetch fixes that. sortProducts then applies the
+  // price ordering the Store API cannot do server-side.
+  const { products, count } =
+    await sdk.client.fetch<HttpTypes.StoreProductListResponse>("/store/products", {
+      method: "GET",
+      query: {
+        ...queryParams,
+        limit: 100,
+        offset: 0,
+        region_id: region.id,
+        fields:
+          "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id",
+      },
+      cache: "no-store",
+      next: { revalidate: 0 },
+    } as any)
+
+  const sortedProducts = sortProducts(products || [], sortBy)
 
   const pageParam = (page - 1) * limit
 
