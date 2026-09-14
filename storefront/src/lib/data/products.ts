@@ -96,8 +96,17 @@ export const getProductsList = cache(async function ({
 })
 
 /**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Fetch up to 100 products, sort them by the sortBy parameter, then paginate.
+ *
+ * Note on price sorting: a category-filtered list fetch from the Store API does
+ * not reliably resolve variant.calculated_price (the amounts come back null),
+ * so sortProducts sees _minPrice = 0 for every product and price sort becomes a
+ * no-op. The single-id product fetch (getProductsById) DOES resolve prices
+ * reliably — it is the same path ProductPreview uses to render each card's
+ * price. So for price sorts we warm each product's price through that proven
+ * path (concurrency-limited) before sorting. Because getProductsById is
+ * React-cache() memoized, ProductPreview then reuses these exact results, so
+ * this adds almost no real network cost.
  */
 export const getProductsListWithSort = cache(async function ({
   page = 0,
@@ -127,34 +136,27 @@ export const getProductsListWithSort = cache(async function ({
     countryCode,
   })
 
-  // Category-filtered list fetches don't always resolve calculated_price,
-  // which makes price sorting a no-op. Re-fetch priced versions in one call so
-  // the sort has real prices to work with (getProductsById is cached).
   let productsToSort = products
   if ((sortBy === "price_asc" || sortBy === "price_desc") && products.length) {
     const region = await getRegion(countryCode)
     if (region) {
-      // Batch/category product fetches don't reliably resolve calculated_price
-      // (Medusa computes prices for only a limited number of products per call),
-      // so price sorting becomes a no-op. Fetch prices in small chunks (fresh),
-      // which resolve reliably, then merge them in before sorting.
       try {
         const ids = products.map((p) => p.id!).filter(Boolean)
-        const CHUNK = 20
-        const pricedById = new Map<string, any>()
-        for (let i = 0; i < ids.length; i += CHUNK) {
-          const slice = ids.slice(i, i + CHUNK)
-          const res: any = await sdk.client.fetch("/store/products", {
-            method: "GET",
-            query: {
-              id: slice,
-              limit: slice.length,
-              region_id: region.id,
-              fields: "id,*variants.calculated_price",
-            },
-            cache: "no-store",
-          } as any)
-          for (const pr of res?.products || []) pricedById.set(pr.id, pr)
+        const pricedById = new Map<string, HttpTypes.StoreProduct>()
+        const CONCURRENCY = 8
+        for (let i = 0; i < ids.length; i += CONCURRENCY) {
+          const batch = ids.slice(i, i + CONCURRENCY)
+          const results = await Promise.all(
+            batch.map((id) =>
+              getProductsById({ ids: [id], regionId: region.id }).catch(
+                () => [] as HttpTypes.StoreProduct[]
+              )
+            )
+          )
+          for (const arr of results) {
+            const pr = arr?.[0]
+            if (pr?.id) pricedById.set(pr.id, pr)
+          }
         }
         productsToSort = products.map((p) => {
           const pr = pricedById.get(p.id!)
