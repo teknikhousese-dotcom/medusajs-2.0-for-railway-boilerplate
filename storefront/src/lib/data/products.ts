@@ -134,27 +134,30 @@ export const getProductsListWithSort = cache(async function ({
   if ((sortBy === "price_asc" || sortBy === "price_desc") && products.length) {
     const region = await getRegion(countryCode)
     if (region) {
-      // Category-filtered list fetches don't reliably resolve calculated_price,
-      // and the cached getProductsById can serve a priceless entry. Fetch fresh
-      // prices (no-store) so the sort always has real amounts to work with.
+      // Batch/category product fetches don't reliably resolve calculated_price
+      // (Medusa computes prices for only a limited number of products per call),
+      // so price sorting becomes a no-op. Fetch prices in small chunks (fresh),
+      // which resolve reliably, then merge them in before sorting.
       try {
-        const priced = await sdk.client.fetch<HttpTypes.StoreProductListResponse>(
-          "/store/products",
-          {
+        const ids = products.map((p) => p.id!).filter(Boolean)
+        const CHUNK = 20
+        const pricedById = new Map<string, any>()
+        for (let i = 0; i < ids.length; i += CHUNK) {
+          const slice = ids.slice(i, i + CHUNK)
+          const res: any = await sdk.client.fetch("/store/products", {
             method: "GET",
             query: {
-              id: products.map((p) => p.id),
-              limit: products.length,
+              id: slice,
+              limit: slice.length,
               region_id: region.id,
               fields: "id,*variants.calculated_price",
             },
             cache: "no-store",
-          } as any
-        )
-        const list = (priced as any)?.products || []
-        const pricedById = new Map(list.map((p: any) => [p.id, p]))
+          } as any)
+          for (const pr of res?.products || []) pricedById.set(pr.id, pr)
+        }
         productsToSort = products.map((p) => {
-          const pr: any = pricedById.get(p.id!)
+          const pr = pricedById.get(p.id!)
           return pr ? { ...p, variants: pr.variants } : p
         })
       } catch {
