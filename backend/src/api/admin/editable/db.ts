@@ -12,18 +12,15 @@ export async function q(pg: any, sql: string, bindings: any[] = []) {
   const r = await pg.raw(sql, bindings); return (r && r.rows) ? r.rows : r
 }
 
-const AREAS: string[] = [
-  "Ansökan avtalskund", "Bekräftelse", "Kampanjer", "Kassan", "Kassan (sidhuvud)",
-  "Reklamation - nästa steg", "Retur - nästa steg", "Retur & Reklamation",
-  "Sidfot (Följ oss)", "Sidfot (Handla)", "Sidfot (Information)", "Sidfot (Kontakta oss)",
-  "Sidfot (loggor)", "Sidfot (Nyhetsbrev)", "Startsidan", "Startsidan - 1 - 1-2",
-  "Startsidan - 4 boxar", "Startsidan (Sök)", "Startsidan (USP:ar)",
-  "Toppmeny (kontakt)", "Toppmeny (USP:ar)",
-]
+const AREAS: string[] = []
 // [name, slug, protected]
 const PAGES: [string, string, boolean][] = [
   ["Integritetspolicy", "integritetspolicy", false],
   ["Om oss", "om-oss", true],
+  ["Sälj din enhet", "salj-din-enhet", true],
+  ["Kundtjänst", "kundtjanst", true],
+  ["Produktklassificering", "produktklassificering", true],
+  ["Phone Rep", "phone-rep", true],
   ["Villkor", "villkor", true],
   ["Öppet köp & Retur", "oppet-kop-retur", false],
 ]
