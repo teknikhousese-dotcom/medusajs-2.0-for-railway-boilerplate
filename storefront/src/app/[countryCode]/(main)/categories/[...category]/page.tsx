@@ -7,6 +7,8 @@ import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { getStoreName } from "@lib/util/env"
 
+// Category pages read searchParams (sortBy) and must reflect the chosen sort
+// on every request, so they render dynamically rather than being prerendered.
 export const dynamic = "force-dynamic"
 
 type Props = {
