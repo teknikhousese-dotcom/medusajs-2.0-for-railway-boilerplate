@@ -29,8 +29,13 @@ export default async function PaginatedProducts({
   productsIds?: string[]
   countryCode: string
 }) {
+  // Category pages show the whole category on one page (like teknikhouse),
+  // so sorting applies to every product, not just the current page. The store
+  // page keeps normal pagination.
+  const perPage = categoryId ? 200 : PRODUCT_LIMIT
+
   const queryParams: PaginatedProductsParams = {
-    limit: 24,
+    limit: perPage,
   }
 
   if (collectionId) {
@@ -74,7 +79,7 @@ export default async function PaginatedProducts({
     countryCode,
   })
 
-  const totalPages = Math.ceil(count / PRODUCT_LIMIT)
+  const totalPages = Math.ceil(count / perPage)
 
   return (
     <>
