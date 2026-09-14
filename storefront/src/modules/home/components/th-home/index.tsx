@@ -185,7 +185,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
             </div>
             <div className="fit">✓ Varje del är märkt <b>&quot;Passar din enhet&quot;</b> — verifierad kompatibilitet.</div>
           </div>
-          <div className="herochips"><span><span className="s">★</span> 4,9 Trustpilot</span><span>Livstidsgaranti på delar</span><span>Skickas idag</span></div>
+          <div className="herochips"><span>Fri frakt över 999 kr</span><span>Livstidsgaranti på delar</span><span>Skickas idag</span></div>
         </div>
         <div className="heroart">
           <div className="ph" />
@@ -304,13 +304,13 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* SENAST VISADE (personalised, client-side) */}
       <RecentlyViewed regionId={region?.id} />
 
-      {/* REVIEWS */}
+      {/* WHY US */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="shead"><h2>Vad våra kunder säger</h2><span className="r" style={{ color: "var(--star)", fontWeight: 600 }}>Trustpilot 4,9 ★</span></div>
+        <div className="shead"><h2>Därför handlar du hos oss</h2></div>
         <div className="revs">
-          <div className="rev"><div className="stars">★★★★★</div><p>Snabb leverans och exakt rätt skärm till min iPhone. Bytet tog 15 minuter med deras guide.</p><div className="who">Johan L. · Verifierad kund</div></div>
-          <div className="rev"><div className="stars">★★★★★</div><p>Beställde batteri och verktyg — allt fungerade perfekt. Livstidsgaranti på skärmen kändes tryggt.</p><div className="who">Sara M. · Verifierad kund</div></div>
-          <div className="rev"><div className="stars">★★★★★</div><p>Bäst i Sverige på reservdelar. Bra priser, snabb frakt och grymt kundtjänst när jag hade en fråga.</p><div className="who">Erik N. · Verifierad kund</div></div>
+          <div className="rev"><div className="stars" style={{ fontSize: "22px" }}>🔧</div><p>Sveriges bredaste reservdelslager — delar till iPhone, iPad och Samsung, alla märkta &quot;Passar din enhet&quot; för rätt del första gången.</p><div className="who">Rätt del, direkt</div></div>
+          <div className="rev"><div className="stars" style={{ fontSize: "22px" }}>🛡️</div><p>Livstidsgaranti på skärmar och funktionstestade delar före leverans — trygg reparation utan överraskningar.</p><div className="who">Livstidsgaranti</div></div>
+          <div className="rev"><div className="stars" style={{ fontSize: "22px" }}>🚚</div><p>Skickas idag vid order på vardagar, fri frakt över 999 kr och öppet köp i 30 dagar.</p><div className="who">Snabbt &amp; tryggt</div></div>
         </div>
       </div></section>
 
