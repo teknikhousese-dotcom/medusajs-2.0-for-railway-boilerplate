@@ -70,8 +70,8 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
       className="hidden small:block border-b border-ui-border-base bg-white"
       onMouseLeave={() => setOpenId(null)}
     >
-      <div className="content-container">
-        <ul className="flex items-stretch gap-x-1 overflow-x-auto">
+      <div className="content-container relative">
+        <ul className="flex flex-wrap items-stretch justify-center gap-x-1 gap-y-1">
           {departments.map((dep) => {
             const brands = childrenOf(dep.id)
             const isOpen = openId === dep.id
