@@ -40,11 +40,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const pg = getPg(req.scope)
     if (pg) {
       await ensureTables(pg)
-      const existing = await q(pg, `SELECT "id" FROM "newsletter_subscriber" WHERE "email" = $1 LIMIT 1`, [email])
+      const existing = await q(pg, `SELECT "id" FROM "newsletter_subscriber" WHERE "email" = ? LIMIT 1`, [email])
       if (existing && existing[0]) {
-        await q(pg, `UPDATE "newsletter_subscriber" SET "active" = true, "deleted_at" = NULL WHERE "id" = $1`, [existing[0].id])
+        await q(pg, `UPDATE "newsletter_subscriber" SET "active" = true, "deleted_at" = NULL WHERE "id" = ?`, [existing[0].id])
       } else {
-        await q(pg, `INSERT INTO "newsletter_subscriber" ("id","email","name","active") VALUES ($1,$2,$3,true)`, [genId(), email, name])
+        await q(pg, `INSERT INTO "newsletter_subscriber" ("id","email","name","active") VALUES (?,?,?,true)`, [genId(), email, name])
       }
     }
   } catch (e) {}
