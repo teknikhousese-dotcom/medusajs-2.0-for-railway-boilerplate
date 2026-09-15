@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { getPg, q } from "../../admin/newsletter/db"
+import { getPg, q, ensureTables } from "../../admin/newsletter/db"
 
 // Public newsletter signup — matches teknikhouse /newsletter/.
 // Writes into the same "newsletter_subscriber" table the admin newsletter tool reads.
@@ -19,6 +19,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const pg = getPg(req.scope)
     if (!pg) return res.status(500).json({ ok: false })
+    await ensureTables(pg)
     const existing = await q(pg, `SELECT "id" FROM "newsletter_subscriber" WHERE "email" = $1 LIMIT 1`, [email])
     if (existing && existing[0]) {
       await q(pg, `UPDATE "newsletter_subscriber" SET "active" = true, "deleted_at" = NULL WHERE "id" = $1`, [existing[0].id])
