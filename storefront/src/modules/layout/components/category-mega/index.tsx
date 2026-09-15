@@ -59,7 +59,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
   }
   const sortRank = (a: Cat, b: Cat) =>
     ((a as any).rank ?? 0) - ((b as any).rank ?? 0) || a.name.localeCompare(b.name, "sv")
-  const isHiddenTop = (c: any) => { const m = (c && (c as any).metadata) || {}; return m.hide_top === true || m.hide_top === "true" || m.hide_top === 1 || m.hide_top === "1" }
+  const isHiddenTop = (c: any) => { const m = (c && (c as any).metadata) || {}; const v = m.startpage_dropdown; return v === false || v === "false" || v === 0 || v === "0" }
   const departments = (byParent.get(null) || []).filter((c) => !isHiddenTop(c)).slice().sort(sortRank)
   const childrenOf = (id: string) => (byParent.get(id) || []).slice().sort(sortRank)
 
