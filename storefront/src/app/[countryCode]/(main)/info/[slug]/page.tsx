@@ -53,7 +53,7 @@ const PAGES: Record<string, Page> = {
   },
   "villkor": {
     "title": "Köpvillkor",
-    "intro": "Köp- och leveransvillkor för Teknikhouse.se (Nordic Teknik House AB). Genom att slutföra ett köp godkänner du dessa villkor.",
+    "intro": "Här är villkoren för att handla hos oss. Kort sagt: fri frakt över 999 kr, 30 dagars öppet köp och garanti på allt du köper. Vill du ha detaljerna står allt nedan.",
     "blocks": [
       {
         "h": "Köp- och leveransvillkor",
@@ -430,33 +430,71 @@ export default async function InfoPage(props: {
   }
   if (!page) notFound()
 
+  const anchor = (s: string) =>
+    s.toLowerCase().replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+  const headed = page.blocks.filter((b) => b.h)
+  const showToc = ["villkor", "integritetspolicy", "oppet-kop-retur", "produktklassificering"].includes(slug) && headed.length >= 4
+
   return (
-    <div className="content-container py-12">
-      <div className="max-w-3xl mx-auto">
-        <nav className="text-small-regular text-ui-fg-muted mb-6">
-          <LocalizedClientLink href="/" className="hover:text-ui-fg-base">Hem</LocalizedClientLink>
+    <div className="bg-white">
+      <div className="content-container pt-10 pb-4">
+        <nav className="text-sm text-gray-400 mb-6">
+          <LocalizedClientLink href="/" className="hover:text-gray-700">Hem</LocalizedClientLink>
           <span className="mx-2">/</span>
-          <span>{page.title}</span>
+          <span className="text-gray-600">{page.title}</span>
         </nav>
-        <h1 className="text-3xl-semi mb-4">{page.title}</h1>
-        {page.intro && (
-          <p className="text-large-regular text-ui-fg-subtle mb-8">{page.intro}</p>
-        )}
-        <div className="flex flex-col gap-y-6 text-base-regular text-ui-fg-subtle">
-          {page.blocks.map((b, i) => (
-            <div key={i}>
-              {b.h && <h2 className="text-xl-semi text-ui-fg-base mb-2">{b.h}</h2>}
-              {b.p && <p className="leading-7">{b.p}</p>}
-              {b.ul && (
-                <ul className="list-disc pl-5 flex flex-col gap-y-1 mt-1">
-                  {b.ul.map((li, j) => (<li key={j}>{li}</li>))}
-                </ul>
-              )}
-            </div>
-          ))}
+        <div className="max-w-3xl">
+          <h1 className="text-4xl font-semibold text-gray-900 tracking-tight mb-4">{page.title}</h1>
+          {page.intro && <p className="text-lg text-gray-600 leading-relaxed">{page.intro}</p>}
         </div>
-        <div className="mt-10 pt-6 border-t border-ui-border-base text-small-regular text-ui-fg-muted">
-          {ORG} · Org.nr {ORGNR} · {ADDR}
+      </div>
+
+      <div className="content-container pb-20">
+        <div className={showToc ? "grid lg:grid-cols-[240px_1fr] gap-10 items-start" : ""}>
+          {showToc && (
+            <nav className="hidden lg:block sticky top-24 self-start">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">På denna sida</p>
+              <ul className="space-y-2.5 text-sm">
+                {headed.map((b, i) => (
+                  <li key={i}>
+                    <a href={`#${anchor(b.h as string)}`} className="text-gray-500 hover:text-[#D10000] transition-colors">{b.h}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
+          <div className="max-w-3xl">
+            <div className="flex flex-col gap-y-8">
+              {page.blocks.map((b, i) => (
+                <section key={i} id={b.h ? anchor(b.h) : undefined} className="scroll-mt-28">
+                  {b.h && <h2 className="text-xl font-semibold text-gray-900 mb-3">{b.h}</h2>}
+                  {b.p && <p className="text-[15px] text-gray-600 leading-7">{b.p}</p>}
+                  {b.ul && (
+                    <ul className="mt-2 space-y-2.5">
+                      {b.ul.map((li, j) => (
+                        <li key={j} className="flex gap-3 text-[15px] text-gray-600 leading-7">
+                          <span className="mt-[9px] h-1.5 w-1.5 rounded-full bg-[#D10000] shrink-0" />
+                          <span>{li}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ))}
+            </div>
+
+            <div className="mt-14 rounded-2xl border border-gray-200 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-gray-900">Hittade du inte svaret?</p>
+                <p className="text-sm text-gray-600">Skriv till oss så hjälper vi dig. Vi svarar oftast redan samma dag.</p>
+              </div>
+              <LocalizedClientLink href="/contact" className="shrink-0 bg-[#D10000] text-white font-semibold rounded-xl px-6 py-3 hover:bg-[#b00000] transition text-center">
+                Kontakta oss
+              </LocalizedClientLink>
+            </div>
+
+            <div className="mt-8 text-sm text-gray-400">{ORG} · Org.nr {ORGNR} · {ADDR}</div>
+          </div>
         </div>
       </div>
     </div>
