@@ -4,9 +4,9 @@ import { getPg, q, genId } from "../../admin/editable/db"
 
 /**
  * Teknikhouse.se — customer return / reklamation submission.
- * Validates the order (metadata.wiki_order_id or display_id) + e-mail, then
- * records a return_request row (shown on the order via an admin widget) and
- * best-effort e-mails the shop. Mirrors the old butikadmin RET-<order> flow.
+ * Validates the order (metadata.wiki_order_id via JSONB text match, or display_id)
+ * + e-mail, records a return_request row (shown on the order via an admin widget)
+ * and best-effort e-mails the shop. Mirrors the old butikadmin RET-<order> flow.
  */
 export const AUTHENTICATE = false
 
@@ -26,14 +26,17 @@ async function ensure(pg: any) {
   )`, [])
 }
 
-async function findOrder(orderModule: any, num: string) {
-  let list = await orderModule.listOrders({ metadata: { wiki_order_id: num } }, { take: 1 }).catch(() => [])
-  if (list && list[0]) return list[0]
-  const asNum = parseInt(String(num), 10)
-  if (!isNaN(asNum)) {
-    list = await orderModule.listOrders({ display_id: asNum }, { take: 1 }).catch(() => [])
-    if (list && list[0]) return list[0]
-  }
+async function findOrderId(pg: any, num: string): Promise<string | null> {
+  if (!pg) return null
+  try {
+    let rows = await q(pg, `SELECT "id" FROM "order" WHERE "metadata"->>'wiki_order_id' = ? AND "deleted_at" IS NULL LIMIT 1`, [String(num)])
+    if (rows && rows[0]) return rows[0].id
+    const n = parseInt(String(num), 10)
+    if (!isNaN(n)) {
+      rows = await q(pg, `SELECT "id" FROM "order" WHERE "display_id" = ? AND "deleted_at" IS NULL LIMIT 1`, [n])
+      if (rows && rows[0]) return rows[0].id
+    }
+  } catch { /* not found */ }
   return null
 }
 
@@ -49,21 +52,22 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(400).json({ error: "Fyll i ordernummer, e-post och minst en vara." })
   }
   try {
-    const orderModule: any = req.scope.resolve(Modules.ORDER)
-    const order = await findOrder(orderModule, num)
-    if (!order || String(order.email || "").toLowerCase() !== email) {
-      return res.status(404).json({ error: "Vi hittade ingen order med den kombinationen." })
-    }
     const pg = getPg(req.scope)
     if (!pg) return res.status(500).json({ error: "Databasen är inte tillgänglig just nu." })
+    const orderId = await findOrderId(pg, num)
+    if (!orderId) return res.status(404).json({ error: "Vi hittade ingen order med det ordernumret." })
+    const orderModule: any = req.scope.resolve(Modules.ORDER)
+    const [order] = await orderModule.listOrders({ id: orderId }, { take: 1 }).catch(() => [])
+    if (!order) return res.status(404).json({ error: "Vi hittade ingen order med det ordernumret." })
+    if (String(order.email || "").toLowerCase() !== email) {
+      return res.status(403).json({ error: "E-postadressen matchar inte den här ordern." })
+    }
     await ensure(pg)
     const id = genId("ret")
     const reference = "RET-" + num
     await q(pg,
       `INSERT INTO "return_request" ("id","reference","order_id","order_display","email","type","items","message","status") VALUES (?,?,?,?,?,?,?,?,?)`,
       [id, reference, order.id, num, email, type, JSON.stringify(items), message, "pending"])
-    // Best-effort e-mail to the shop. No-op if the notification module is not
-    // configured (Resend key missing) — the return is still recorded on the order.
     try {
       const notif: any = req.scope.resolve(Modules.NOTIFICATION)
       const lines = items.map((x: any) => "- " + x.title + " x" + (x.quantity || 1) + (x.reason ? " (" + x.reason + ")" : "")).join("\n")
