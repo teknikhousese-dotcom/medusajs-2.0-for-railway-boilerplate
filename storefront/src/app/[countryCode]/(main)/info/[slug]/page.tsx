@@ -406,6 +406,17 @@ export default async function InfoPage(props: {
 }) {
   const { slug } = await props.params
   const page = PAGES[slug]
+  let __override = ""
+  try {
+    const __base = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
+    if (__base) {
+      const __r = await fetch(`${__base}/store/editable/${encodeURIComponent(slug)}`, {
+        next: { revalidate: 30 },
+        headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" },
+      })
+      if (__r.ok) { const __j = await __r.json(); __override = (__j && typeof __j.content === "string") ? __j.content.trim() : "" }
+    }
+  } catch {}
   if (__override) {
     const __title = (page && (page as any).title) ? (page as any).title : slug
     return (
