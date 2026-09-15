@@ -36,16 +36,19 @@ export default async function Footer() {
             <LocalizedClientLink href="/info/kundtjanst">Kundtjänst</LocalizedClientLink>
             <LocalizedClientLink href="/info/villkor">Köpvillkor</LocalizedClientLink>
             <LocalizedClientLink href="/info/oppet-kop-retur">Öppet köp &amp; Retur</LocalizedClientLink>
-            <LocalizedClientLink href="/retur">Anmäl retur</LocalizedClientLink>
+            <LocalizedClientLink href="/return">Anmäl retur</LocalizedClientLink>
             <LocalizedClientLink href="/info/salj-din-enhet">Sälj din enhet</LocalizedClientLink>
             <LocalizedClientLink href="/info/phone-rep">Phone Rep (Butik)</LocalizedClientLink>
+              <LocalizedClientLink href="/contact">Kontakt</LocalizedClientLink>
+              <LocalizedClientLink href="/newsletter">Nyhetsbrev</LocalizedClientLink>
+              <LocalizedClientLink href="/retail-application">Bli företagskund</LocalizedClientLink>
           </div>
           <div>
             <h5>Information</h5>
             <LocalizedClientLink href="/info/om-oss">Om oss</LocalizedClientLink>
             <LocalizedClientLink href="/info/produktklassificering">Produktklassificering</LocalizedClientLink>
             <LocalizedClientLink href="/blogg">Blogg</LocalizedClientLink>
-            <LocalizedClientLink href="/nyheter">Nyheter</LocalizedClientLink>
+            <LocalizedClientLink href="/news">Nyheter</LocalizedClientLink>
             <LocalizedClientLink href="/info/integritetspolicy">Integritetspolicy</LocalizedClientLink>
           </div>
           <div>
