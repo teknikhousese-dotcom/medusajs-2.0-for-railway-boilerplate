@@ -78,7 +78,7 @@ const PAGES: Record<string, Page> = {
       {
         "h": "Ångerrätt / Reklamation",
         "ul": [
-          "Du kan ångra ditt köp direkt via vår ångerfunktion på teknikhouse.se/return/.",
+          "Du kan ångra ditt köp direkt via vår ångerfunktion på /return.",
           "Vi följer lagen om distansavtal enligt Konsumentverkets rekommendationer. Du har rätt att returnera beställda felfria varor utan att ange någon anledning. Meddelande ska lämnas så snart som möjligt, dock senast inom fjorton (14) dagar från det att varan mottagits (gäller ej specialbeställda varor). Det är alltid garanti på produkterna du köper. Kan man påvisa fabrikationsfel får man alltid nya delar; garantin gäller dock inte vid förslitningsskador. Du betalar själv returfrakten.",
           "Har du fått en trasig eller fellevererad vara kan du kontakta oss på info@teknikhouse.se och få en frisvarsadress så att du kan returnera utan kostnad.",
           "Ångerrätten gäller inte vissa produkter vid öppnad plomberad förpackning: reservdelar, minneskort, USB-stickor, batterier, hörlurar/headset samt andra plomberade produkter.",
@@ -136,7 +136,7 @@ const PAGES: Record<string, Page> = {
   },
   "oppet-kop-retur": {
     "title": "Öppet köp & Retur",
-    "intro": "Handla tryggt online. Du har 30 dagars öppet köp från beställningsdatum. Ångra köp / anmäl retur på teknikhouse.se/return/.",
+    "intro": "Handla tryggt online. Du har 30 dagars öppet köp från beställningsdatum. Ångra köp / anmäl retur på /return.",
     "blocks": [
       {
         "h": "Öppet köp & Retur",
