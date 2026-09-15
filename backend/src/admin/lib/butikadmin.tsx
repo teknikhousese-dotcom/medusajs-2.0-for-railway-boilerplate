@@ -89,12 +89,7 @@ export function installGlobalMenu() {
   w.__bmGlobalMenu = true
 
   // Permanently hide Medusa's native sidebar everywhere.
-  if (!document.getElementById("__bm_hide_native_global")) {
-    const hid = document.createElement("style")
-    hid.id = "__bm_hide_native_global"
-    hid.textContent = 'div.h-screen.w-\\[220px\\].border-e{display:none !important}'
-    document.head.appendChild(hid)
-  }
+  { const __old = document.getElementById("__bm_hide_native_global"); if (__old) __old.remove() }
 
   const rowCss = (on: boolean, sub: boolean) =>
     "display:flex;align-items:center;gap:8px;padding:" + (sub ? "4px 12px 4px 34px" : "6px 12px") +
@@ -171,7 +166,7 @@ export function hideWikiNativeLinks() {
   const NS = '[class*="w-[220px]"][class*="border-e"] '
   const sel = HIDE_NATIVE_ROUTES.map((r) => NS + 'a[href="' + ADMIN + "/" + r + '"]').join(",")
   const st = document.createElement("style"); st.id = id
-  st.textContent = sel + "{display:none !important}"
+  st.textContent = "/* native nav kept visible (" + sel.length + ") */"
   document.head.appendChild(st)
 }
 
@@ -179,16 +174,10 @@ export function hideWikiNativeLinks() {
  *  A CSS rule matches the native sidebar whenever it mounts (no mount-order race),
  *  and is removed on unmount so native pages keep their own sidebar. */
 function useHideNativeSidebar() {
+  // Native Medusa sidebar is kept visible on butikadmin pages (per owner preference).
+  // Only remove any leftover hide-style from earlier builds so the nav re-appears.
   useEffect(() => {
-    hideWikiNativeLinks()
-    const id = "__butikadmin_hide_native"
-    let st = document.getElementById(id) as HTMLStyleElement | null
-    if (!st) {
-      st = document.createElement("style"); st.id = id
-      st.textContent = 'div.h-screen.w-\\[220px\\].border-e.lg\\:flex{display:none !important}@media print{aside[data-bm="menu"]{display:none !important}body{background:#fff}}'
-      document.head.appendChild(st)
-    }
-    return () => { const e = document.getElementById(id); if (e) e.remove() }
+    const e = document.getElementById("__butikadmin_hide_native"); if (e) e.remove()
   }, [])
 }
 
