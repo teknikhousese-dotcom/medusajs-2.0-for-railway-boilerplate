@@ -130,7 +130,7 @@ function KontrollpanelPage() {
     { emo: "🎁", lab: "Köp X betala för Y", href: `${ADMIN}/promotions` },
     { emo: "🚚", lab: "Fraktinställningar", href: `${ADMIN}/settings/locations` },
     { emo: "💳", lab: "Betalningsalternativ", href: `${ADMIN}/settings` },
-    { emo: "📄", lab: "Redigerbara sidor", section: "sidor" },
+    { emo: "📄", lab: "Redigerbara sidor", href: `${ADMIN}/redigerbara-sidor` },
     { emo: "📰", lab: "Nyheter", section: "nyheter", subs: [
       { lab: "Skapa ny nyhet", section: "nyheter" },
     ]},
@@ -169,7 +169,7 @@ function KontrollpanelPage() {
       { emo: "🚚", lab: "Fraktinställningar", href: `${ADMIN}/settings/locations` },
     ]},
     { title: "Innehåll och inställningar", tiles: [
-      { emo: "📄", lab: "Redigerbara sidor", section: "sidor" },
+      { emo: "📄", lab: "Redigerbara sidor", href: `${ADMIN}/redigerbara-sidor` },
       { emo: "📰", lab: "Nyheter", section: "nyheter" },
       { emo: "📝", lab: "Blogg", section: "blogg" },
       { emo: "🍪", lab: "Cookie control", section: "cookie" },
