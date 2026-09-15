@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import ValuationForm from "@modules/valuation/ValuationForm"
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://backend-production-c278d.up.railway.app"
+const PUBKEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "pk_59ff167578b5ec25a84af9a76d15c105da93e6f06e6b49a88a9bba24f9e02b85"
 const CANONICAL = "https://teknikhouse.se/info/salj-din-enhet/"
 const TITLE = "Sälj din mobil, iPhone, Samsung & MacBook | Teknikhouse"
 const DESC = "Sälj din iPhone, MacBook, iPad, Apple Watch eller Android-mobil till Teknikhouse och få marknadens högsta bud. Kostnadsfri värdering, snabb betalning och säker dataradering."
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 
 async function getContent(): Promise<string> {
   try {
-    const r = await fetch(`${BACKEND}/store/editable/salj-din-enhet`, { next: { revalidate: 300 } })
+    const r = await fetch(`${BACKEND}/store/editable/salj-din-enhet`, { headers: { "x-publishable-api-key": PUBKEY }, next: { revalidate: 300 } })
     if (!r.ok) return ""
     const j = await r.json()
     return String(j?.content || "")
