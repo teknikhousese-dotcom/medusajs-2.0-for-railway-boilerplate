@@ -116,16 +116,27 @@ function VarugrupperPage() {
                   {cats.filter((c) => c.id !== edit.id).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
                 <label style={{ ...lbl, display: "inline-block" }}><input type="checkbox" checked={edit.is_active} onChange={(e) => setEdit({ ...edit, is_active: e.target.checked })} /> Aktiv (visas i butiken)</label>
-                <label style={lbl}>Beskrivning</label>
+                <label style={lbl}>Beskrivning (visas överst på sidan)</label>
                 <RichText value={edit.description || ""} onChange={(html) => setEdit({ ...edit, description: html })} />
                 <label style={{ ...lbl, display: "inline-block", marginRight: "16px" }}><input type="checkbox" checked={(edit.metadata || {}).is_featured === "1"} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), is_featured: e.target.checked ? "1" : "" } })} /> Utvald varugrupp</label><label style={{ ...lbl, display: "inline-block", marginRight: "16px" }}><input type="checkbox" checked={(edit.metadata || {}).startpage_dropdown === "1"} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), startpage_dropdown: e.target.checked ? "1" : "" } })} /> Visa i menyn på startsidan</label><label style={lbl}>Kategoribild (URL)</label><input style={inp} value={(edit.metadata || {}).image || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), image: e.target.value } })} /><div style={{ fontSize: 15, fontWeight: 700, color: "#14161C", margin: "22px 0 6px", borderTop: "1px solid #ececef", paddingTop: 16 }}>Sökmotoroptimering</div>
-              <label style={lbl}>H1-tagg (max ~40 tecken, ersätter sidans rubrik)</label><input style={inp} value={(edit.metadata || {}).h1 || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), h1: e.target.value } })} /><label style={lbl}>Beskrivning 2</label><RichText value={(edit.metadata || {}).description2 || ""} onChange={(html) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), description2: html } })} /><label style={lbl}>Beskrivning 3</label><RichText value={(edit.metadata || {}).description3 || ""} onChange={(html) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), description3: html } })} /><label style={lbl}>Bannertext (liten)</label><input style={inp} value={(edit.metadata || {}).banner_small || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), banner_small: e.target.value } })} /><label style={lbl}>Bannertext (stor)</label><input style={inp} value={(edit.metadata || {}).banner_big || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), banner_big: e.target.value } })} />
+              <label style={lbl}>H1-tagg (max ~40 tecken, ersätter sidans rubrik)</label><input style={inp} value={(edit.metadata || {}).h1 || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), h1: e.target.value } })} /><label style={lbl}>Beskrivning – nedre (visas under produkterna)</label><RichText value={(edit.metadata || {}).description2 || ""} onChange={(html) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), description2: html } })} />
                 <label style={lbl}>Google produktkategori</label>
                 <input style={inp} value={(edit.metadata || {}).google_category || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), google_category: e.target.value } })} />
                 <label style={lbl}>Meta-titel (SEO)</label>
                 <input style={inp} value={(edit.metadata || {}).seo_title || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), seo_title: e.target.value } })} />
                 <label style={lbl}>Meta-beskrivning (SEO)</label>
                 <textarea style={{ ...inp, height: "50px" }} value={(edit.metadata || {}).seo_desc || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), seo_desc: e.target.value } })} />
+              <label style={lbl}>Fokus-nyckelord</label>
+              <input style={inp} value={(edit.metadata || {}).focus_keyword || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), focus_keyword: e.target.value } })} />
+              <label style={lbl}>Canonical-URL (lämna tom för standard)</label>
+              <input style={inp} value={(edit.metadata || {}).canonical || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), canonical: e.target.value } })} />
+              <label style={lbl}>OG-titel (delning i sociala medier)</label>
+              <input style={inp} value={(edit.metadata || {}).og_title || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), og_title: e.target.value } })} />
+              <label style={lbl}>OG-beskrivning</label>
+              <input style={inp} value={(edit.metadata || {}).og_desc || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), og_desc: e.target.value } })} />
+              <label style={lbl}>OG-bild (URL)</label>
+              <input style={inp} value={(edit.metadata || {}).og_image || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), og_image: e.target.value } })} />
+              <label style={{ ...lbl, display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}><input type="checkbox" checked={(edit.metadata || {}).noindex !== "1"} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), noindex: e.target.checked ? "" : "1" } })} /> Tillåt indexering i sökmotorer (av = noindex)</label>
                 <div style={{ marginTop: "10px" }}><button style={{ ...btn, background: "#2e7d32" }} onClick={spara}>Spara ändringar</button><a style={{ ...lnk, marginLeft: "10px" }} onClick={() => setEdit(null)}>Avbryt</a></div>
               </div>
               </div>
