@@ -52,7 +52,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       await ensureTable(pg)
       await q(
         pg,
-        `INSERT INTO "contact_message" ("id","kind","name","email","phone","subject","message","payload") VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        `INSERT INTO "contact_message" ("id","kind","name","email","phone","subject","message","payload") VALUES (?,?,?,?,?,?,?,?)`,
         [genId(), kind, name, email, phone, subject, message, JSON.stringify(b)]
       )
     }
