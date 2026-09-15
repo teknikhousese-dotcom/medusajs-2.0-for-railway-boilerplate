@@ -126,8 +126,8 @@ export default async function CategoryTemplate({
 
   const rawDesc = (((category as any).description || (self as any).description || "")) as string
   const nedre = (((category as any).metadata || {}).description2 || "") as string
-  const firstPara = nedre ? rawDesc : (rawDesc.match(/<p[\s\S]*?<\/p>/i) || [""])[0]
-  const restDesc = nedre ? nedre : (firstPara ? rawDesc.slice(rawDesc.indexOf(firstPara) + firstPara.length) : rawDesc)
+  const firstPara = rawDesc
+  const restDesc = nedre
   const hasRest = restDesc.replace(/<[^>]+>/g, "").trim().length > 0
 
   return (
