@@ -88,6 +88,32 @@ export function installGlobalMenu() {
   if (w.__bmGlobalMenu) return
   w.__bmGlobalMenu = true
 
+  // Owner toggle: a floating button to hide/show the native Medusa sidebar.
+  // Default = shown; the choice is remembered in localStorage.
+  try {
+    const NAVSEL = "div.h-screen.w-\\[220px\\].border-e"
+    const applyHide = (hide: boolean) => {
+      let s = document.getElementById("__bm_nav_toggle") as HTMLStyleElement | null
+      if (hide) {
+        if (!s) { s = document.createElement("style"); s.id = "__bm_nav_toggle"; document.head.appendChild(s) }
+        s.textContent = NAVSEL + "{display:none !important}"
+      } else if (s) { s.textContent = "" }
+    }
+    const KEY = "__bm_hide_nav"
+    let hidden = false
+    try { hidden = localStorage.getItem(KEY) === "1" } catch {}
+    applyHide(hidden)
+    if (!document.getElementById("__bm_nav_toggle_btn")) {
+      const b = document.createElement("button")
+      b.id = "__bm_nav_toggle_btn"
+      b.style.cssText = "position:fixed;left:10px;bottom:10px;z-index:99999;font:12px Verdana,sans-serif;padding:6px 12px;border:1px solid #999;border-radius:6px;background:#fff;color:#111;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)"
+      const label = () => { b.textContent = hidden ? "\u2630 Visa Medusa-meny" : "\u2630 D\u00f6lj Medusa-meny" }
+      label()
+      b.onclick = () => { hidden = !hidden; try { localStorage.setItem(KEY, hidden ? "1" : "0") } catch {}; applyHide(hidden); label() }
+      document.body.appendChild(b)
+    }
+  } catch {}
+
   // Permanently hide Medusa's native sidebar everywhere.
   { const __old = document.getElementById("__bm_hide_native_global"); if (__old) __old.remove() }
 
