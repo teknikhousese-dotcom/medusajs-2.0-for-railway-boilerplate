@@ -9,6 +9,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { HttpTypes } from "@medusajs/types"
 import { listCategories } from "@lib/data/categories"
 import { niceCategoryName } from "@lib/util/category-name"
+import ReadMore from "@modules/categories/components/read-more"
 
 type Cat = HttpTypes.StoreProductCategory
 
@@ -196,12 +197,7 @@ export default async function CategoryTemplate({
             {displayName(self, byId)}
           </h1>
 
-          {firstPara ? (
-            <div
-              style={{ color: "#4a4640", fontSize: "14.5px", lineHeight: 1.6, maxWidth: "820px", marginBottom: "22px" }}
-              dangerouslySetInnerHTML={{ __html: firstPara }}
-            />
-          ) : null}
+          {firstPara ? <ReadMore html={firstPara} /> : null}
 
           {hasChildren ? (
             <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-4" data-testid="subcategories">
