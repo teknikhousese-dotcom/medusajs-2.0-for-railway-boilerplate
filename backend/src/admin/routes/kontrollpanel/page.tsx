@@ -86,8 +86,8 @@ function KontrollpanelPage() {
     }) as HTMLElement | undefined
     const el = findNav()
     const prev = el ? el.style.display : ""
-    if (el) el.style.display = "none"
-    return () => { if (el) el.style.display = prev }
+    /* native Medusa nav kept visible per owner preference */
+    return () => {}
   }, [])
 
   const sek = (n: number) => new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 0 }).format(n)
