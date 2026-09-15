@@ -53,17 +53,6 @@ const nextConfig = {
       { source: "/mina-sidor", destination: "/account", permanent: true },
     ]
   },
-  async rewrites() {
-    // Bridge old Wikinggruppen uploads (/userfiles/files/*.pdf etc.) so every
-    // legacy link keeps working on the new domain. beforeFiles runs before the
-    // filesystem/dynamic routes. Repoint the destination to permanent storage
-    // (R2/public) once the old site is decommissioned.
-    return {
-      beforeFiles: [
-        { source: "/userfiles/:path*", destination: "https://teknikhouse.se/userfiles/:path*" },
-      ],
-    }
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
