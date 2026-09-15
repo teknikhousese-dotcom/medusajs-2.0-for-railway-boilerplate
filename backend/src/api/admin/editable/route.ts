@@ -43,3 +43,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
   res.status(400).json({ message: "unknown kind" })
 }
+
+export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
+  const pg = getPg(req.scope)
+  if (!pg) return res.status(500).json({ message: "no pg" })
+  const id = String((req.query as any)?.id || (req.body as any)?.id || "")
+  if (!id) return res.status(400).json({ message: "id required" })
+  await q(pg, `UPDATE "editable_page" SET "deleted_at" = now() WHERE "id" = ?`, [id])
+  return res.json({ deleted: id })
+}
