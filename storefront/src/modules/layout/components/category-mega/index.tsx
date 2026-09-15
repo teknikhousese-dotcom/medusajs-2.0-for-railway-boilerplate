@@ -59,8 +59,8 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
   }
   const sortRank = (a: Cat, b: Cat) =>
     ((a as any).rank ?? 0) - ((b as any).rank ?? 0) || a.name.localeCompare(b.name, "sv")
-  const isHiddenTop = (c: any) => { const m = (c && (c as any).metadata) || {}; const v = m.startpage_dropdown; return v === false || v === "false" || v === 0 || v === "0" }
-  const departments = (byParent.get(null) || []).filter((c) => !isHiddenTop(c)).slice().sort(sortRank)
+  const inTopMenu = (c: any) => { const m = (c && (c as any).metadata) || {}; return m.startpage_dropdown === "1" || m.startpage_dropdown === 1 || m.startpage_dropdown === true }
+  const departments = (byParent.get(null) || []).filter(inTopMenu).slice().sort(sortRank)
   const childrenOf = (id: string) => (byParent.get(id) || []).slice().sort(sortRank)
 
   if (!departments.length) return null
