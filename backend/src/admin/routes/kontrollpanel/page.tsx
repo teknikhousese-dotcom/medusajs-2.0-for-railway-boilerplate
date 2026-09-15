@@ -43,26 +43,36 @@ function initialView(): string {
 function KontrollpanelPage() {
   const [view, setView] = useState<string>(initialView)
   const [menuOpen, setMenuOpen] = useState<boolean>(true)
-  const [s, setS] = useState({ orders: 0, ordersYear: 0, salesYear: 0, customers: 0, products: 0, categories: 0, loading: true })
+  const [s, setS] = useState({ orders: 0, ordersYear: 0, salesYear: 0, customers: 0, products: 0, categories: 0, loading: true, salesLoading: true })
 
   useEffect(() => {
     let alive = true
     ;(async () => {
       const year = new Date().getFullYear()
-      const [orders, customers, products, categories] = await Promise.all([
-        count("/admin/orders?limit=1"), count("/admin/customers?limit=1"),
-        count("/admin/products?limit=1"), count("/admin/product-categories?limit=1"),
+      const yearStart = year + "-01-01T00:00:00.000Z"
+      const enc = encodeURIComponent(yearStart)
+      // Fast, exact counts (each is a single limit=1 call that returns a count).
+      const [orders, ordersYear, customers, products, categories] = await Promise.all([
+        count("/admin/orders?limit=1"),
+        count("/admin/orders?limit=1&created_at[$gte]=" + enc),
+        count("/admin/customers?limit=1"),
+        count("/admin/products?limit=1"),
+        count("/admin/product-categories?limit=1"),
       ])
-      let ordersYear = 0, salesYear = 0, offset = 0
+      if (alive) setS((p) => ({ ...p, orders, ordersYear, customers, products, categories, loading: false }))
+      // Sum THIS YEAR's order totals only — a small slice of the full history,
+      // so a few pages instead of scanning all orders. Runs in the background
+      // and never blocks the counts above.
+      let salesYear = 0, offset = 0
       try {
-        for (let i = 0; i < 50; i++) {
-          const r = await fetch(`/admin/orders?limit=200&offset=${offset}&fields=id,total,created_at`, { credentials: "include" })
+        for (let i = 0; i < 100; i++) {
+          const r = await fetch("/admin/orders?limit=200&offset=" + offset + "&created_at[$gte]=" + enc + "&fields=id,total", { credentials: "include" })
           const d = await r.json(); const list = d.orders || []
-          for (const o of list) { if (o.created_at && new Date(o.created_at).getFullYear() === year) { ordersYear++; salesYear += Number(o.total || 0) } }
+          for (const o of list) salesYear += Number(o.total || 0)
           if (list.length < 200) break; offset += 200
         }
       } catch { /* ignore */ }
-      if (alive) setS({ orders, ordersYear, salesYear, customers, products, categories, loading: false })
+      if (alive) setS((p) => ({ ...p, salesYear, salesLoading: false }))
     })()
     return () => { alive = false }
   }, [])
@@ -252,9 +262,9 @@ function KontrollpanelPage() {
   }
 
   const kpis = [
-    { k: "Sälj i år", v: s.loading ? "…" : sek(s.salesYear) },
+    { k: "Sälj i år", v: s.salesLoading ? "…" : sek(s.salesYear) },
     { k: "Ordrar i år", v: s.loading ? "…" : String(s.ordersYear) },
-    { k: "Snittorder", v: s.loading ? "…" : sek(aov) },
+    { k: "Snittorder", v: s.salesLoading ? "…" : sek(aov) },
     { k: "Kunder", v: s.loading ? "…" : String(s.customers) },
     { k: "Produkter", v: s.loading ? "…" : String(s.products) },
     { k: "Varugrupper", v: s.loading ? "…" : String(s.categories) },
@@ -320,9 +330,9 @@ function KontrollpanelPage() {
           {sec.key === "statistik" && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-ui-border-base rounded-lg overflow-hidden border mb-6">
               {[
-                { k: "Försäljning i år", v: s.loading ? "…" : sek(s.salesYear) },
+                { k: "Försäljning i år", v: s.salesLoading ? "…" : sek(s.salesYear) },
                 { k: "Antal ordrar i år", v: s.loading ? "…" : String(s.ordersYear) },
-                { k: "Snittordervärde", v: s.loading ? "…" : sek(aov) },
+                { k: "Snittordervärde", v: s.salesLoading ? "…" : sek(aov) },
                 { k: "Ordrar totalt", v: s.loading ? "…" : String(s.orders) },
                 { k: "Kunder totalt", v: s.loading ? "…" : String(s.customers) },
                 { k: "Produkter i katalog", v: s.loading ? "…" : String(s.products) },
