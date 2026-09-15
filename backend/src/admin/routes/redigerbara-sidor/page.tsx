@@ -1,6 +1,7 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
 import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
+import RichText from "../../components/RichText"
 
 /**
  * Teknikhouse.se — Redigerbara sidor (1:1 mirror of Wikinggruppen editable_areas.php)
@@ -82,8 +83,8 @@ function RedigerbaraSidorPage() {
                 <tr><td style={{ ...td, border: "none", textAlign: "right", paddingRight: "10px" }}>Visas under "Övrigt"</td><td style={{ ...td, border: "none" }}><input type="checkbox" checked={!!edit.show_in_footer} onChange={(e) => setEdit({ ...edit, show_in_footer: e.target.checked })} /></td></tr>
               </tbody></table>
             )}
-            <div style={{ fontSize: "12px", fontWeight: 700, margin: "4px 0" }}>Innehåll (HTML)</div>
-            <textarea style={{ ...inp, width: "100%", height: "320px", boxSizing: "border-box", fontFamily: "Menlo, Consolas, monospace" }} value={edit.content || ""} onChange={(e) => setEdit({ ...edit, content: e.target.value })} />
+            <div style={{ fontSize: "12px", fontWeight: 700, margin: "4px 0" }}>Innehåll</div>
+            <RichText value={edit.content || ""} onChange={(html) => setEdit({ ...edit, content: html })} minHeight={340} />
             <div style={{ marginTop: "10px" }}>
               <button style={btn} onClick={() => edit.type === "page" ? savePage() : saveArea()}>Spara</button>
               <button style={{ ...btn, marginLeft: "8px", background: "#fff" }} onClick={() => { setEdit(null); setNote("") }}>Avbryt</button>
