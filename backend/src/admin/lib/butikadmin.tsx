@@ -28,6 +28,7 @@ export const MENU: MenuItem[] = [
   },
   { emo: "📱", lab: "SMS-utskick", href: `${ADMIN}/sms-utskick` },
   { emo: "🤝", lab: "Avtalskunder", href: `${ADMIN}/avtalskunder` },
+  { emo: "💰", lab: "Sälj din enhet", href: `${ADMIN}/varderingar` },
   {
     emo: "🛍", lab: "Hantera produkter", href: `${ADMIN}/hantera-produkter`, children: [
       { lab: "Lägg in ny produkt", href: `${ADMIN}/produkt-form` },
