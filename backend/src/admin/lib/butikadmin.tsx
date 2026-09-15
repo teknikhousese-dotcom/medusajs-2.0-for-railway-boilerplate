@@ -94,10 +94,9 @@ export function installGlobalMenu() {
     const NAVSEL = "div.h-screen.w-\\[220px\\].border-e"
     const applyHide = (hide: boolean) => {
       let s = document.getElementById("__bm_nav_toggle") as HTMLStyleElement | null
-      if (hide) {
-        if (!s) { s = document.createElement("style"); s.id = "__bm_nav_toggle"; document.head.appendChild(s) }
-        s.textContent = NAVSEL + "{display:none !important}"
-      } else if (s) { s.textContent = "" }
+      if (!s) { s = document.createElement("style"); s.id = "__bm_nav_toggle"; document.head.appendChild(s) }
+      // Force with !important so it overrides any per-page inline display:none.
+      s.textContent = NAVSEL + (hide ? "{display:none !important}" : "{display:flex !important}")
     }
     const KEY = "__bm_hide_nav"
     let hidden = false
