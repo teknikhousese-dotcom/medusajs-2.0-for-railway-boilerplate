@@ -30,8 +30,8 @@ function RedigerbaraSidorPage() {
       return c.includes("w-[220px]") && c.includes("lg:flex") && c.includes("border-e")
     }) as HTMLElement | undefined
     const prev = el ? el.style.display : ""
-    if (el) el.style.display = "none"
-    return () => { if (el) el.style.display = prev }
+    /* native Medusa nav kept visible per owner preference */
+    return () => {}
   }, [])
   const load = async () => {
     try { const o = await jget("/admin/orders?limit=1"); setMeta((s) => ({ ...s, unread: o.count || 0 })) } catch {}
