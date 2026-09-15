@@ -125,8 +125,9 @@ export default async function CategoryTemplate({
   const departments = kids(null)
 
   const rawDesc = (((category as any).description || (self as any).description || "")) as string
-  const firstPara = (rawDesc.match(/<p[\s\S]*?<\/p>/i) || [""])[0]
-  const restDesc = firstPara ? rawDesc.slice(rawDesc.indexOf(firstPara) + firstPara.length) : rawDesc
+  const nedre = (((category as any).metadata || {}).description2 || "") as string
+  const firstPara = nedre ? rawDesc : (rawDesc.match(/<p[\s\S]*?<\/p>/i) || [""])[0]
+  const restDesc = nedre ? nedre : (firstPara ? rawDesc.slice(rawDesc.indexOf(firstPara) + firstPara.length) : rawDesc)
   const hasRest = restDesc.replace(/<[^>]+>/g, "").trim().length > 0
 
   return (
