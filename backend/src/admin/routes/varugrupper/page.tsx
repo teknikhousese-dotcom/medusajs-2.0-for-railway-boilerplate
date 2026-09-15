@@ -102,7 +102,8 @@ function VarugrupperPage() {
             </table>
 
             {edit && (
-              <div style={{ marginTop: "16px", border: "1px solid #ddd", borderRadius: "4px", padding: "12px", background: "#fafafa" }}>
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 9998, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "30px 16px" }} onClick={(e) => { if (e.target === e.currentTarget) setEdit(null) }}>
+              <div style={{ border: "1px solid #ddd", borderRadius: "6px", padding: "16px", background: "#fff", width: "100%", maxWidth: "640px", boxShadow: "0 10px 40px rgba(0,0,0,.25)" }}>
                 <div style={{ fontWeight: 700, fontSize: "13px", marginBottom: "4px" }}>Redigera: {edit.name}</div>
                 <label style={lbl}>Namn</label>
                 <input style={inp} value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
@@ -124,6 +125,7 @@ function VarugrupperPage() {
                 <label style={lbl}>Meta-beskrivning (SEO)</label>
                 <textarea style={{ ...inp, height: "50px" }} value={(edit.metadata || {}).seo_desc || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), seo_desc: e.target.value } })} />
                 <div style={{ marginTop: "10px" }}><button style={{ ...btn, background: "#2e7d32" }} onClick={spara}>Spara ändringar</button><a style={{ ...lnk, marginLeft: "10px" }} onClick={() => setEdit(null)}>Avbryt</a></div>
+              </div>
               </div>
             )}
           </div>
