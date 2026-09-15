@@ -1,6 +1,7 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
 import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
+import RichText from "../../components/RichText"
 
 const BoxIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -204,7 +205,7 @@ function ProduktFormPage() {
             {f.bestallningsvara && (<><label style={lbl}>Text som visas när varan är slut i lager</label><input style={inp} value={f.emptyStockText} onChange={(e) => set("emptyStockText", e.target.value)} placeholder="t.ex. Beställningsvara – leverans 5–7 dagar" /></>)}
 
             <label style={lbl}>Produktbeskrivning</label>
-            <textarea style={{ ...inp, height: "150px" }} value={f.beskrivning} onChange={(e) => set("beskrivning", e.target.value)} />
+            <RichText value={f.beskrivning} onChange={(html) => set("beskrivning", html)} minHeight={180} />
 
             <div style={sect}>Valfria fält</div>
 
