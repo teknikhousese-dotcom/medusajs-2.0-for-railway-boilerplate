@@ -88,6 +88,27 @@ export function installGlobalMenu() {
   if (w.__bmGlobalMenu) return
   w.__bmGlobalMenu = true
 
+  // Honest failures: if any /admin call comes back 401 (session expired), send
+  // the user to the login page instead of letting a click fail with a vague error.
+  try {
+    if (!w.__bmFetchWrap) {
+      w.__bmFetchWrap = true
+      const orig = w.fetch.bind(w)
+      w.fetch = async (...a: any[]) => {
+        const resp = await orig(...a)
+        try {
+          const u = typeof a[0] === "string" ? a[0] : (a[0] && a[0].url) || ""
+          if (resp && resp.status === 401 && u.indexOf("/admin/") !== -1 && u.indexOf("/auth/") === -1 && !w.__bm401) {
+            w.__bm401 = true
+            try { alert("Du har blivit utloggad. Du skickas till inloggningen \u2013 logga in och f\u00f6rs\u00f6k igen.") } catch {}
+            window.location.href = "/app/login"
+          }
+        } catch {}
+        return resp
+      }
+    }
+  } catch {}
+
   // Owner toggle: a floating button to hide/show the native Medusa sidebar.
   // Default = shown; the choice is remembered in localStorage.
   try {
