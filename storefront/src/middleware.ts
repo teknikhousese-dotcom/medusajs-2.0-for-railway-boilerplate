@@ -291,6 +291,6 @@ export const config = {
   // both. Verified by fetching it: without this entry the route answers 307 to
   // /gb/opengraph-image and every shared link loses its preview card.
   matcher: [
-    "/((?!api|_next/static|favicon.ico|sitemap.xml|robots.txt|opengraph-image|.*\\.png|.*\\.jpg|.*\\.gif|.*\\.svg).*)",
+    "/((?!api|_next/static|favicon.ico|sitemap.xml|robots.txt|opengraph-image|userfiles|.*\\.png|.*\\.jpg|.*\\.gif|.*\\.svg).*)",
   ],
 }
