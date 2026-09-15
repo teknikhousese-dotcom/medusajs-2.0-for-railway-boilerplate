@@ -29,13 +29,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       product_categories[product_categories.length - 1].description ??
       `${title} category.`
 
+    const __md: any = (() => { const a: any = product_categories; const c = Array.isArray(a) ? a[a.length - 1] : a; return (c && (c as any).metadata) || {} })()
     return {
       title: `${title} | ${getStoreName()}`,
       description,
       alternates: {
         canonical: `${category.join("/")}`,
       },
-    }
+    , ...(__md.seo_title ? { title: __md.seo_title } : {}), ...(__md.seo_desc ? { description: __md.seo_desc } : {}), ...(__md.canonical ? { alternates: { canonical: __md.canonical } } : {}), ...((__md.og_title || __md.og_desc || __md.og_image) ? { openGraph: { title: __md.og_title || undefined, description: __md.og_desc || undefined, images: __md.og_image ? [__md.og_image] : undefined } } : {}), ...(__md.noindex === "1" ? { robots: { index: false, follow: false } } : {}), }
   } catch (error) {
     notFound()
   }
