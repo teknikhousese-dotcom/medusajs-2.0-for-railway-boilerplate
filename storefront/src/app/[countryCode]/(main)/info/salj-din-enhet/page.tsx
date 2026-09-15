@@ -79,7 +79,7 @@ export default async function SaljDinEnhetPage() {
   return (
     <div className="content-container py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <article className="prose prose-neutral max-w-3xl mx-auto prose-headings:font-semibold prose-a:text-[#F50000]">
+      <article style={{ maxWidth: 980, margin: "0 auto" }}>
         <div dangerouslySetInnerHTML={{ __html: before }} />
         {content.includes("[FORMULAR]") && <ValuationForm />}
         {after && <div dangerouslySetInnerHTML={{ __html: after }} />}
