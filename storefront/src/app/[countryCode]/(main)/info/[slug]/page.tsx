@@ -418,16 +418,60 @@ export default async function InfoPage(props: {
     }
   } catch {}
   if (__override) {
-    const __title = (page && (page as any).title) ? (page as any).title : slug
+    const __title = (page as any)?.title || slug
+    const __anchor = (s: string) =>
+      s.toLowerCase().replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    const __heads = [...__override.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) => m[1].replace(/<[^>]+>/g, "").trim())
+    const __html = __override.replace(
+      /<h2([^>]*)>([\s\S]*?)<\/h2>/g,
+      (_m, a, t) => `<h2 id="${__anchor(t.replace(/<[^>]+>/g, "").trim())}"${a}>${t}</h2>`
+    )
+    const __showToc = ["villkor", "integritetspolicy", "oppet-kop-retur", "produktklassificering"].includes(slug) && __heads.length >= 4
     return (
-      <div className="content-container py-12">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-6 text-ui-fg-base">{__title}</h1>
-          <div className="txt-medium text-ui-fg-subtle [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:mt-4 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: __override }} />
+      <div className="bg-white">
+        <div className="content-container pt-10 pb-4">
+          <nav className="text-sm text-gray-400 mb-6">
+            <LocalizedClientLink href="/" className="hover:text-gray-700">Hem</LocalizedClientLink>
+            <span className="mx-2">/</span>
+            <span className="text-gray-600">{__title}</span>
+          </nav>
+          <h1 className="text-4xl font-semibold text-gray-900 tracking-tight max-w-3xl">{__title}</h1>
+        </div>
+        <div className="content-container pb-20">
+          <div className={__showToc ? "grid lg:grid-cols-[240px_1fr] gap-10 items-start" : ""}>
+            {__showToc && (
+              <nav className="hidden lg:block sticky top-24 self-start">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">På denna sida</p>
+                <ul className="space-y-2.5 text-sm">
+                  {__heads.map((h, i) => (
+                    <li key={i}>
+                      <a href={`#${__anchor(h)}`} className="text-gray-500 hover:text-[#D10000] transition-colors">{h}</a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
+            <div className="max-w-3xl">
+              <div
+                className="text-[15px] text-gray-600 leading-7 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h2]:mt-10 [&_h2]:mb-3 [&_h2]:scroll-mt-28 [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-3 [&_ul]:my-3 [&_ul]:space-y-2 [&_li]:list-disc [&_li]:ml-5 [&_li]:pl-1 [&_a]:text-[#D10000] [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: __html }}
+              />
+              <div className="mt-14 rounded-2xl border border-gray-200 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-gray-900">Hittade du inte svaret?</p>
+                  <p className="text-sm text-gray-600">Skriv till oss så hjälper vi dig. Vi svarar oftast redan samma dag.</p>
+                </div>
+                <LocalizedClientLink href="/contact" className="shrink-0 bg-[#D10000] text-white font-semibold rounded-xl px-6 py-3 hover:bg-[#b00000] transition text-center">
+                  Kontakta oss
+                </LocalizedClientLink>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
   }
+
   if (!page) notFound()
 
   const anchor = (s: string) =>
