@@ -421,10 +421,11 @@ export default async function InfoPage(props: {
     const __title = (page as any)?.title || slug
     const __anchor = (s: string) =>
       s.toLowerCase().replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-    const __heads = [...__override.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) => m[1].replace(/<[^>]+>/g, "").trim())
+    const __decode = (s: string) => s.replace(/&#x([0-9a-fA-F]+);/g,(_m,h)=>String.fromCodePoint(parseInt(h,16))).replace(/&#(\d+);/g,(_m,d)=>String.fromCodePoint(parseInt(d,10))).replace(/&aring;/g,"å").replace(/&Aring;/g,"Å").replace(/&auml;/g,"ä").replace(/&Auml;/g,"Ä").replace(/&ouml;/g,"ö").replace(/&Ouml;/g,"Ö").replace(/&eacute;/g,"é").replace(/&bull;/g,"•").replace(/&nbsp;/g," ").replace(/&quot;/g,'"').replace(/&amp;/g,"&")
+    const __heads = [...__override.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) => __decode(m[1].replace(/<[^>]+>/g, "").trim()))
     const __html = __override.replace(
       /<h2([^>]*)>([\s\S]*?)<\/h2>/g,
-      (_m, a, t) => `<h2 id="${__anchor(t.replace(/<[^>]+>/g, "").trim())}"${a}>${t}</h2>`
+      (_m, a, t) => `<h2 id="${__anchor(__decode(t.replace(/<[^>]+>/g, "").trim()))}"${a}>${t}</h2>`
     )
     const __showToc = ["villkor", "integritetspolicy", "oppet-kop-retur", "produktklassificering"].includes(slug) && __heads.length >= 4
     return (
