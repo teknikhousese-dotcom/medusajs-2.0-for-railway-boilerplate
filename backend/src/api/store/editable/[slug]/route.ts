@@ -1,38 +1,27 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { getPg, q, ensureTables } from "../../../admin/editable/db"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { getPg, q } from "../../../admin/editable/db"
 
-// Public reader for editable page content. No cache so admin edits show immediately.
 export const AUTHENTICATE = false
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const slug = String((req.params as any)?.slug || "")
+  const dbg: any = {}
   let content = ""
   try {
-    let pg: any = null
-    try {
-      pg = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
-    } catch {}
-    if (!pg) {
-      try {
-        pg = req.scope.resolve("__pg_connection__")
-      } catch {}
-    }
-    if (!pg) {
-      try {
-        pg = getPg(req.scope)
-      } catch {}
-    }
+    const pg = getPg(req.scope)
+    dbg.pg = pg ? "yes" : "no"
     if (pg) {
-      await ensureTables(pg)
       const rows = await q(
         pg,
         `SELECT "content" FROM "editable_page" WHERE "slug" = $1 AND "deleted_at" IS NULL ORDER BY "updated_at" DESC LIMIT 1`,
         [slug]
       )
+      dbg.rows = Array.isArray(rows) ? rows.length : String(typeof rows)
       content = rows && rows[0] && rows[0].content ? String(rows[0].content) : ""
     }
-  } catch (e) {}
+  } catch (e) {
+    dbg.err = String(e).slice(0, 140)
+  }
   res.setHeader("Cache-Control", "no-store")
-  return res.json({ slug, content })
+  return res.json({ slug, content, _dbg: dbg })
 }
