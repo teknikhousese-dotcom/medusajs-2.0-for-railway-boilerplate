@@ -51,7 +51,6 @@ const nextConfig = {
       { source: "/nyheter/:path*", destination: "/news/:path*", permanent: true },
       { source: "/customer-login", destination: "/account", permanent: true },
       { source: "/mina-sidor", destination: "/account", permanent: true },
-      { source: "/wishlist/:path*", destination: "/wishlist", permanent: false },
     ]
   },
   eslint: {
