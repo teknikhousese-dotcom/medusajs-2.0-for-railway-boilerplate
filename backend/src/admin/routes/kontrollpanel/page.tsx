@@ -115,6 +115,7 @@ function KontrollpanelPage() {
     ]},
     { emo: "📱", lab: "SMS-utskick", section: "sms" },
     { emo: "🤝", lab: "Avtalskunder", href: `${ADMIN}/customer-groups` },
+    { emo: "💰", lab: "Sälj din enhet", href: `${ADMIN}/varderingar` },
     { emo: "🧰", lab: "Hantera produkter", href: `${ADMIN}/products`, subs: [
       { lab: "Lägg in ny produkt", href: `${ADMIN}/products/create` },
       { lab: "Kopiera produkt", href: `${ADMIN}/products/create` },
@@ -154,6 +155,7 @@ function KontrollpanelPage() {
       { emo: "📦", lab: "Inköp / Lager", section: "lager" },
       { emo: "📇", lab: "Kunddatabas", href: `${ADMIN}/customers` },
       { emo: "🤝", lab: "Avtalskunder", href: `${ADMIN}/customer-groups` },
+      { emo: "💰", lab: "Sälj din enhet", href: `${ADMIN}/varderingar` },
       { emo: "🛒", lab: "Kampanjutskick", section: "kampanjutskick" },
       { emo: "✉️", lab: "Nyhetsbrev", section: "nyhetsbrev" },
       { emo: "📱", lab: "SMS-utskick", section: "sms" },
