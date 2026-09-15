@@ -41,6 +41,19 @@ const remotePattern = (value) => {
  */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      { source: "/retur", destination: "/return", permanent: true },
+      { source: "/retur/:path*", destination: "/return/:path*", permanent: true },
+      { source: "/kampanjer", destination: "/campaigns", permanent: true },
+      { source: "/kampanjer/:path*", destination: "/campaigns/:path*", permanent: true },
+      { source: "/nyheter", destination: "/news", permanent: true },
+      { source: "/nyheter/:path*", destination: "/news/:path*", permanent: true },
+      { source: "/customer-login", destination: "/account", permanent: true },
+      { source: "/mina-sidor", destination: "/account", permanent: true },
+      { source: "/wishlist/:path*", destination: "/wishlist", permanent: false },
+    ]
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
