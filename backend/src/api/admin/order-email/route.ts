@@ -41,6 +41,7 @@ function placeholders(order: any): Record<string, string> {
     .filter(Boolean).join("<br/>")
   return {
     "{{kundnamn}}": namn || "kund",
+    "%firstName%": sa.first_name || "", "%lastName%": sa.last_name || "", "%customerName%": namn || "kund", "%name%": namn || "kund", "%orderID%": String(m.wiki_order_id || order.display_id || ""), "%orderNumber%": String(m.wiki_order_id || order.display_id || ""), "%address%": adress, "%deliveryAddress%": adress, "%email%": order.email || "", "%shopName%": "Teknikhouse.se", "%shopURL%": "https://teknikhouse.se", "%productName%": items[0] ? String(items[0].title) : "", "%trackingID%": String(m.tracking_number || m.sparnummer || ""), "%trackingURL%": String(m.tracking_url || m.sparlank || ""), "%password%": "", "%orderRows%": rader, "%orderTotal%": kr(order.total),
     "{{epost}}": order.email || "",
     "{{ordernummer}}": String(m.wiki_order_id || order.display_id || ""),
     "{{orderrader}}": rader,
