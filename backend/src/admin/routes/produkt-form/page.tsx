@@ -149,7 +149,7 @@ function ProduktFormPage() {
             <label style={lbl}>Momssats</label>
             <div>{radio("momssats", "0", f.momssats, "Momsfritt")}{radio("momssats", "6", f.momssats, "6%")}{radio("momssats", "12", f.momssats, "12%")}{radio("momssats", "25", f.momssats, "25%")}</div>
 
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "block" }}>
               <div style={{ flex: 1 }}>
                 <label style={lbl}>Inpris (SEK, exkl. moms)</label>
                 <input style={inp} value={f.inpris} onChange={(e) => set("inpris", e.target.value)} />
@@ -163,7 +163,7 @@ function ProduktFormPage() {
             <label style={{ ...lbl, fontWeight: 400 }}><input type="checkbox" checked={f.kampanj} onChange={(e) => set("kampanj", e.target.checked)} /> Aktivera kampanj</label>
             {f.kampanj && (
               <div style={{ border: "1px solid #f0c36d", background: "#fffdf5", borderRadius: "4px", padding: "10px 12px", margin: "4px 0 8px" }}>
-                <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ display: "block" }}>
                   <div style={{ flex: 1 }}>
                     <label style={lbl}>Kampanjpris (SEK, inkl. moms)</label>
                     <input style={inp} value={f.kampanjpris} onChange={(e) => set("kampanjpris", e.target.value)} placeholder="Lägre än utpris" />
@@ -181,7 +181,7 @@ function ProduktFormPage() {
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "12px", alignItems: "flex-end" }}>
+            <div style={{ display: "block", alignItems: "flex-end" }}>
               <div style={{ flex: 1 }}>
                 <label style={lbl}>Antal i lagret</label>
                 <input style={inp} value={f.antal} onChange={(e) => set("antal", e.target.value)} disabled={f.oandligt} />
@@ -193,7 +193,7 @@ function ProduktFormPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "12px", alignItems: "flex-end" }}>
+            <div style={{ display: "block", alignItems: "flex-end" }}>
               <div style={{ flex: 1 }}>
                 <label style={lbl}>Vikt (gram)</label>
                 <input style={inp} value={f.weight} onChange={(e) => set("weight", e.target.value)} />
@@ -235,7 +235,7 @@ function ProduktFormPage() {
             <label style={lbl}>Egen text (visas på produktsidan)</label>
             <textarea style={{ ...inp, height: "60px" }} value={f.customText} onChange={(e) => set("customText", e.target.value)} />
 
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "block" }}>
               <div style={{ flex: 1 }}>
                 <label style={lbl}>Lagerplats</label>
                 <input style={inp} value={f.lagerplats} onChange={(e) => set("lagerplats", e.target.value)} />
@@ -249,7 +249,7 @@ function ProduktFormPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "block" }}>
               <div style={{ flex: 1 }}>
                 <label style={lbl}>Tillverkare / varumärke</label>
                 <input style={inp} value={f.tillverkare} onChange={(e) => set("tillverkare", e.target.value)} />
