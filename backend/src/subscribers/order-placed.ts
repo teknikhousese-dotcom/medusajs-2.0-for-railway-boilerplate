@@ -40,11 +40,11 @@ export default async function orderPlacedHandler({
           // fallback, so the reply-to was empty on every deploy configured
           // with RESEND_FROM, which is what the Railway template sets.
           replyTo: process.env.ORDER_REPLY_TO_EMAIL || RESEND_FROM_EMAIL,
-          subject: 'Your order has been placed'
+          subject: 'Din order är bekräftad – Teknikhouse.se'
         },
         order,
         shippingAddress,
-        preview: 'Thank you for your order!'
+        preview: 'Tack för din beställning hos Teknikhouse!'
       }
     })
   } catch (error) {
