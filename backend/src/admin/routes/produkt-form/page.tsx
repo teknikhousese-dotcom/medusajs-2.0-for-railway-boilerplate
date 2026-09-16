@@ -73,7 +73,7 @@ function ProduktFormPage() {
           images: (p.images || []).join("\n"), skick: m.skick || "Nyskick", momssats: m.momssats || "25",
           inpris: m.inpris || "", leverantor: m.leverantor || "", tillverkare: m.tillverkare || "",
           modell: m.modell || "", lagerplats: m.lagerplats || "", sokord: m.sokord || "",
-          antal: m.antal || "", oandligt: m.oandligt === true || m.oandligt === "true",
+          antal: m.antal || "", oandligt: m.oandligt === true || m.oandligt === "true", lagervarning: m.lagervarning || "", skrymmande: m.skrymmande === true || m.skrymmande === "true",
           visning: m.visning || "show", metaTitle: m.seo_title || "", metaDesc: m.seo_desc || "", h1: m.h1 || "",
           kampanj: m.kampanj === true || m.kampanj === "true", kampanjpris: m.kampanjpris || "", kampanjStart: m.kampanj_start || "", kampanjSlut: m.kampanj_slut || "", htmlFalt: m.html_falt || "", bestallningsvara: m.bestallningsvara === true || m.bestallningsvara === "true", emptyStockText: m.empty_stock_text || "", customText: m.custom_text || "",
         }))
