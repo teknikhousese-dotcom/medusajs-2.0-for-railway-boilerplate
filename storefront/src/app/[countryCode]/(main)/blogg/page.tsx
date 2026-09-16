@@ -8,11 +8,11 @@ const CANONICAL = "https://teknikhouse.se/blogg/"
 export const revalidate = 300
 
 export const metadata: Metadata = {
-  title: "Blogg – Guider & tips om mobil, batteri och skärmbyte | Teknikhouse",
+  title: "Teknikhouse Blogg | Mobilreservdelar, reparation & sälj din mobil",
   description:
-    "Expertguider om att laga, ladda och skydda din mobil: skärmbyte, batteribyte, köpa begagnat och mer. Skrivet av Teknikhouses tekniker.",
+    "Eget lager och grossist. Guider om mobilreparation och reservdelar — och hur du säljer din iPhone, Samsung eller MacBook till oss, tryggt och till ett rättvist pris.",
   alternates: { canonical: CANONICAL },
-  openGraph: { title: "Teknikhouse Blogg", description: "Guider, tips och artiklar om mobilreparation och tillbehör.", url: CANONICAL, type: "website", siteName: "Teknikhouse", locale: "sv_SE" },
+  openGraph: { title: "Teknikhouse Blogg", description: "Guider om mobilreparation, reservdelar och att sälja din enhet.", url: CANONICAL, type: "website", siteName: "Teknikhouse", locale: "sv_SE" },
   robots: { index: true, follow: true },
 }
 
@@ -41,6 +41,8 @@ function Cover({ src, alt, className }: { src?: string; alt: string; className?:
   )
 }
 
+const PILL = "rounded-full border border-ui-border-base bg-white px-4 py-2 text-sm font-medium text-[#14161C] hover:border-[#F50000] hover:text-[#F50000] transition-colors"
+
 export default async function BloggPage() {
   const posts = await getPosts()
   const featured = posts[0]
@@ -49,11 +51,18 @@ export default async function BloggPage() {
   return (
     <div className="content-container py-10 small:py-14">
       <div className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#F50000] mb-3">Teknikhouse Guider</p>
-        <h1 className="text-4xl small:text-5xl font-semibold tracking-tight text-[#14161C]">Bloggen</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#F50000] mb-3">Teknikhouse Blogg</p>
+        <h1 className="text-4xl small:text-5xl font-semibold tracking-tight text-[#14161C]">Störst i Sverige på mobilreservdelar, tillbehör &amp; verktyg</h1>
         <p className="mt-4 text-ui-fg-subtle text-lg leading-relaxed">
-          Skärmbyte, batteribyte, köpa begagnat tryggt och allt däremellan — praktiska guider skrivna av våra tekniker.
+          Eget lager och grossist. Här delar vi guider om mobilreparation och reservdelar – och visar hur du säljer din iPhone, Samsung eller MacBook till oss, tryggt och till ett rättvist pris.
         </p>
+        <div className="mt-6 flex flex-wrap gap-2.5">
+          <Link href="/mobilreservdelar" className={PILL}>Mobilreservdelar</Link>
+          <Link href="/mobiltillbehor" className={PILL}>Mobiltillbehör</Link>
+          <Link href="/verktyg" className={PILL}>Verktyg</Link>
+          <Link href="/mobiler-surfplattor" className={PILL}>Mobiltelefoner</Link>
+          <Link href="/info/salj-din-enhet" className="rounded-full bg-[#F50000] px-4 py-2 text-sm font-semibold text-white hover:bg-[#C90000] transition-colors">Sälj din enhet →</Link>
+        </div>
       </div>
 
       {posts.length === 0 ? (
