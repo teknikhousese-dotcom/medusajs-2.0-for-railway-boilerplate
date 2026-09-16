@@ -78,7 +78,7 @@ const deviceOf = (o: any): string => { const v = (o.metadata?.ordered_via || "")
 function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   const [rows, setRows] = useState<any[]>([])
   const [count, setCount] = useState(0)
-  const [counts, setCounts] = useState({ nya: 0, makulerade: 0, arkiverade: 0 })
+  const [counts, setCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState("")
   const [submittedQ, setSubmittedQ] = useState("")
@@ -89,6 +89,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   const [busy, setBusy] = useState("")
   const [showTips, setShowTips] = useState(false)
   const PAGE = 50
+  const [fliks, setFliks] = useState<any[]>([{ key: "nya", label: "Nya" }, { key: "makulerade", label: "Makulerade" }, { key: "arkiverade", label: "Arkiverade" }])
 
   const FIELDS = "id,display_id,email,total,currency_code,created_at,payment_status,fulfillment_status,status,*shipping_address,+metadata"
   const load = async () => {
@@ -103,12 +104,11 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
       if (term) {
         // Server-side sök över ALLA ordrar (inte bara den laddade sidan).
         p.set("q", term)
-      } else if (tab === "makulerade") {
-        p.append("status[]", "canceled")
-      } else if (tab === "arkiverade") {
-        p.append("status[]", "archived")
       }
-      const r = await fetch(`/admin/orders?${p.toString()}`, { credentials: "include" })
+      const url = term
+        ? `/admin/orders?${p.toString()}`
+        : `/admin/order-fliks?flik=${encodeURIComponent(tab)}&limit=${PAGE}&offset=${(page - 1) * PAGE}`
+      const r = await fetch(url, { credentials: "include" })
       const d = await r.json()
       setRows(d.orders || [])
       setCount(typeof d.count === "number" ? d.count : (d.orders || []).length)
@@ -124,8 +124,9 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
       try { const r = await fetch(`/admin/orders?limit=1${extra}`, { credentials: "include" }); const d = await r.json(); return d.count || 0 } catch { return 0 }
     }
     ;(async () => {
-      const [nya, makulerade, arkiverade] = await Promise.all([cnt(""), cnt("&status[]=canceled"), cnt("&status[]=archived")])
-      if (alive) setCounts({ nya, makulerade, arkiverade })
+      void cnt
+      const fd = await fetch("/admin/order-fliks", { credentials: "include" }).then((r) => r.json()).catch(() => ({ fliks: [] }))
+      if (alive) { setFliks(fd.fliks || []); const cm: any = {}; (fd.fliks || []).forEach((f: any) => { cm[f.key] = f.count }); setCounts(cm) }
     })()
     return () => { alive = false }
   }, [])
@@ -167,7 +168,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "6px" }}>
         <div>
-          {[["nya", "Nya"], ["makulerade", "Makulerade"], ["arkiverade", "Arkiverade"]].map(([k, lab]) => (
+          {fliks.map((fl: any) => [fl.key, fl.label]).map(([k, lab]: any) => (
             <span key={k} style={tabStyle(tab === k)} onClick={() => { setTab(k); setPage(1); setSel({}); setQ(""); setSubmittedQ("") }}>{lab}{counts[k as keyof typeof counts] ? ` (${counts[k as keyof typeof counts]})` : ""}</span>
           ))}
         </div>
@@ -175,7 +176,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { setSubmittedQ(q.trim()); setPage(1) } }} placeholder="Sök order, e-post, namn…"
             style={{ fontSize: "12px", padding: "3px 6px", border: "1px solid #bbb", width: "180px", fontFamily: WF }} />
           <button style={toolBtn} onClick={() => { setSubmittedQ(q.trim()); setPage(1) }}>SÖK</button>
-          <button style={toolBtn} onClick={opna}>ÖPPNA</button>
+          <button style={toolBtn} onClick={opna}>ÖPPNA</button><button style={toolBtn} onClick={async () => { const name = prompt("Namn på ny flik?"); if (!name || !name.trim()) return; await fetch("/admin/order-fliks", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "create", name: name.trim() }) }); const fd = await fetch("/admin/order-fliks", { credentials: "include" }).then((r) => r.json()); setFliks(fd.fliks || []) }}>＋ Ny flik</button>
         </div>
       </div>
 
@@ -185,7 +186,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
         <button style={toolBtn} onClick={() => window.print()}>Skriv ut</button>
         <button style={toolBtn} onClick={() => { const mails = rows.filter((o) => sel[o.id] && o.email).map((o) => o.email); if (!mails.length) { setBusy("Kryssa i minst en order först."); return; } window.location.href = `mailto:?bcc=${encodeURIComponent(mails.join(","))}&subject=${encodeURIComponent("Uppföljning av din order hos Teknikhouse.se")}&body=${encodeURIComponent("Hej,\n\nTack för din order hos Teknikhouse.se! Vi hoppas att allt är till belåtenhet. Hör gärna av dig om du har några frågor.\n\nMed vänliga hälsningar\nTeknikhouse.se")}`; }}>Skicka uppföljningsmail</button>
         <select value={moveTo} onChange={(e) => setMoveTo(e.target.value)} style={{ fontSize: "11px", fontFamily: WF, padding: "2px", border: "1px solid #bbb" }}>
-          <option value="">Flytta till…</option><option value="nya">Nya</option><option value="makulerade">Makulerade</option><option value="arkiverade">Arkiverade</option>
+          <option value="">Flytta till…</option>{fliks.map((fl: any) => <option key={fl.key} value={fl.key}>{fl.label}</option>)}
         </select>
         <button style={toolBtn} onClick={flytta} disabled={!moveTo || selIds.length === 0}>Flytta</button>
         {busy && <span style={{ color: "#161" }}>{busy}</span>}
