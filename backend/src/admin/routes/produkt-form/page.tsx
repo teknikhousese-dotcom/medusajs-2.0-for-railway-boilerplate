@@ -71,10 +71,10 @@ function ProduktFormPage() {
           ...prev, artnr: p.artnr, namn: p.namn, googleNamn: p.googleNamn, beskrivning: p.beskrivning,
           ean: p.ean, weight: p.weight, utpris: p.utpris, category_ids: p.category_ids || [],
           images: (p.images || []).join("\n"), skick: m.skick || "Nyskick", momssats: m.momssats || "25",
-          inpris: m.inpris || "", leverantor: m.leverantor || "", tillverkare: m.tillverkare || "",
+          inpris: m.inpris || "", leverantor: m.leverantor || "", tillverkare: m.tillverkare || m.producer || "",
           modell: m.modell || "", lagerplats: m.lagerplats || "", sokord: m.sokord || "",
-          antal: m.antal || "", oandligt: m.oandligt === true || m.oandligt === "true", lagervarning: m.lagervarning || "", skrymmande: m.skrymmande === true || m.skrymmande === "true",
-          visning: m.visning || "show", metaTitle: m.seo_title || "", metaDesc: m.seo_desc || "", h1: m.h1 || "",
+          antal: m.antal || m.stock || "", oandligt: m.oandligt === true || m.oandligt === "true", lagervarning: m.lagervarning || "", skrymmande: m.skrymmande === true || m.skrymmande === "true",
+          visning: m.visning || "show", metaTitle: m.seo_title || m.meta_title || "", metaDesc: m.seo_desc || m.meta_description || "", h1: m.h1 || "",
           kampanj: m.kampanj === true || m.kampanj === "true", kampanjpris: m.kampanjpris || "", kampanjStart: m.kampanj_start || "", kampanjSlut: m.kampanj_slut || "", htmlFalt: m.html_falt || "", bestallningsvara: m.bestallningsvara === true || m.bestallningsvara === "true", emptyStockText: m.empty_stock_text || "", customText: m.custom_text || "",
         }))
       }).catch(() => {})
