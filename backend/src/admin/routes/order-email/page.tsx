@@ -102,7 +102,7 @@ function OrderEmailPage() {
                 <label style={lbl}>E-postmall</label>
                 <select style={{ ...inp, cursor: "pointer" }} value={tplId} onChange={(e) => pickTemplate(e.target.value)}>
                   <option value="">– Välj mall (fyller ämne &amp; innehåll) –</option>
-                  {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  {["Leveransnotis","DHL Freight - Spåra / Kolli-ID","Godkänd retur","Hämtning","Kolli-ID  Postnord","Makulering","Omdöme - köpupplevelsen","Postnord - Nytt Kolli-ID","Reparation","Retur info","Uppdatering om din beställning Från Teknikhouse.se"].map((n) => templates.find((t) => t.name === n)).filter(Boolean).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
 
                 <label style={lbl}>Ämnesrad</label>
