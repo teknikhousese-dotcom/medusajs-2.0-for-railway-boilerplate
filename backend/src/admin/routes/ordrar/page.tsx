@@ -1,5 +1,5 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
 
 /**
@@ -77,8 +77,11 @@ const deviceOf = (o: any): string => { const v = (o.metadata?.ordered_via || "")
 
 function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   const [rows, setRows] = useState<any[]>([])
+  const [count, setCount] = useState(0)
+  const [counts, setCounts] = useState({ nya: 0, makulerade: 0, arkiverade: 0 })
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState("")
+  const [submittedQ, setSubmittedQ] = useState("")
   const [tab, setTab] = useState("nya")
   const [page, setPage] = useState(1)
   const [sel, setSel] = useState<Record<string, boolean>>({})
@@ -87,32 +90,48 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   const [showTips, setShowTips] = useState(false)
   const PAGE = 50
 
+  const FIELDS = "id,display_id,email,total,currency_code,created_at,payment_status,fulfillment_status,status,*shipping_address,+metadata"
   const load = async () => {
     setLoading(true)
     try {
-      const r = await fetch(`/admin/orders?limit=500&order=-display_id&fields=id,display_id,email,total,currency_code,created_at,payment_status,fulfillment_status,*shipping_address,+metadata`, { credentials: "include" })
-      const d = await r.json(); setRows(d.orders || [])
+      const p = new URLSearchParams()
+      p.set("order", "-display_id")
+      p.set("fields", FIELDS)
+      p.set("limit", String(PAGE))
+      p.set("offset", String((page - 1) * PAGE))
+      const term = submittedQ.trim()
+      if (term) {
+        // Server-side sök över ALLA ordrar (inte bara den laddade sidan).
+        p.set("q", term)
+      } else if (tab === "makulerade") {
+        p.append("status[]", "canceled")
+      } else if (tab === "arkiverade") {
+        p.append("status[]", "archived")
+      }
+      const r = await fetch(`/admin/orders?${p.toString()}`, { credentials: "include" })
+      const d = await r.json()
+      setRows(d.orders || [])
+      setCount(typeof d.count === "number" ? d.count : (d.orders || []).length)
     } catch { /* ignore */ }
     setLoading(false)
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [tab, page, submittedQ])
 
-  const inTab = useMemo(() => rows.filter((o) => flikOf(o) === tab), [rows, tab])
-  const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase(); if (!t) return inTab
-    return inTab.filter((o) => {
-      const nm = o.shipping_address ? `${o.shipping_address.first_name || ""} ${o.shipping_address.last_name || ""}` : ""
-      return String(o.display_id).includes(t) || String(o.metadata?.wiki_order_id || "").includes(t) || (o.email || "").toLowerCase().includes(t) || nm.toLowerCase().includes(t) || (o.metadata?.internal_comment || "").toLowerCase().includes(t)
-    })
-  }, [inTab, q])
-  const pages = Math.max(1, Math.ceil(filtered.length / PAGE))
-  const pageRows = filtered.slice((page - 1) * PAGE, page * PAGE)
+  // Antal per flik (server-side count).
+  useEffect(() => {
+    let alive = true
+    const cnt = async (extra: string) => {
+      try { const r = await fetch(`/admin/orders?limit=1${extra}`, { credentials: "include" }); const d = await r.json(); return d.count || 0 } catch { return 0 }
+    }
+    ;(async () => {
+      const [nya, makulerade, arkiverade] = await Promise.all([cnt(""), cnt("&status[]=canceled"), cnt("&status[]=archived")])
+      if (alive) setCounts({ nya, makulerade, arkiverade })
+    })()
+    return () => { alive = false }
+  }, [])
 
-  const counts = useMemo(() => ({
-    nya: rows.filter((o) => flikOf(o) === "nya").length,
-    makulerade: rows.filter((o) => flikOf(o) === "makulerade").length,
-    arkiverade: rows.filter((o) => flikOf(o) === "arkiverade").length,
-  }), [rows])
+  const pageRows = rows
+  const pages = Math.max(1, Math.ceil(count / PAGE))
 
   const selIds = Object.keys(sel).filter((k) => sel[k])
   const flytta = async () => {
@@ -149,13 +168,13 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "6px" }}>
         <div>
           {[["nya", "Nya"], ["makulerade", "Makulerade"], ["arkiverade", "Arkiverade"]].map(([k, lab]) => (
-            <span key={k} style={tabStyle(tab === k)} onClick={() => { setTab(k); setPage(1); setSel({}) }}>{lab}{k === "nya" && counts.nya ? ` (${counts.nya})` : ""}</span>
+            <span key={k} style={tabStyle(tab === k)} onClick={() => { setTab(k); setPage(1); setSel({}); setQ(""); setSubmittedQ("") }}>{lab}{counts[k as keyof typeof counts] ? ` (${counts[k as keyof typeof counts]})` : ""}</span>
           ))}
         </div>
         <div>
-          <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1) }} placeholder="Sök…"
-            style={{ fontSize: "12px", padding: "3px 6px", border: "1px solid #bbb", width: "160px", fontFamily: WF }} />
-          <button style={toolBtn} onClick={() => setPage(1)}>SÖK</button>
+          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { setSubmittedQ(q.trim()); setPage(1) } }} placeholder="Sök order, e-post, namn…"
+            style={{ fontSize: "12px", padding: "3px 6px", border: "1px solid #bbb", width: "180px", fontFamily: WF }} />
+          <button style={toolBtn} onClick={() => { setSubmittedQ(q.trim()); setPage(1) }}>SÖK</button>
           <button style={toolBtn} onClick={opna}>ÖPPNA</button>
         </div>
       </div>
@@ -238,7 +257,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
           <span key={p} onClick={() => setPage(p)} style={{ cursor: "pointer", padding: "2px 6px", margin: "0 1px", border: "1px solid #bbb", background: p === page ? "#666" : "#fafafa", color: p === page ? "#fff" : "#06c", borderRadius: "3px" }}>{p}</span>
         ))}
         {page < pages && <span onClick={() => setPage(page + 1)} style={{ cursor: "pointer", padding: "2px 6px", marginLeft: "4px", color: "#06c" }}>Nästa »</span>}
-        <span style={{ marginLeft: "10px", color: "#666" }}>{loading ? "Laddar…" : `${filtered.length} ordrar`}</span>
+        <span style={{ marginLeft: "10px", color: "#666" }}>{loading ? "Laddar…" : `${count} ordrar${submittedQ ? " (sökresultat)" : ""}`}</span>
       </div>
 
       {showTips && (
