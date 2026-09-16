@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import { WF, Snabbmeny } from "../../lib/butikadmin"
 
-const WRAP: any = { fontFamily: WF, fontSize: "13px", color: "#333", maxWidth: 760, margin: "0 auto", padding: "0 12px 60px" }
+const OUTER: any = { display: "flex", minHeight: "600px", background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden" }
+const INNER: any = { flex: 1, fontFamily: WF, fontSize: "13px", color: "#333", padding: "16px 22px 60px", minWidth: 0 }
 const BAR: any = { background: "#e6e6e6", border: "1px solid #bbb", borderBottom: "none", fontWeight: 700, fontSize: "14px", padding: "8px 12px", marginTop: 22 }
 const BOX: any = { border: "1px solid #bbb", background: "#fff", padding: "14px 16px" }
 const ROW: any = { padding: "10px 0", borderBottom: "1px solid #eee" }
@@ -56,8 +57,9 @@ const Page = () => {
   )
 
   return (
-    <div style={WRAP}>
+    <div style={OUTER}>
       <Snabbmeny active="Grundinställningar" />
+      <div style={INNER}>
       <h1 style={{ fontSize: "20px", fontWeight: 700, margin: "16px 0 4px" }}>Inställningar för e-postutskick (SMTP)</h1>
       <p style={{ margin: "0 0 8px" }}><a href="/app/grundinstallningar" style={LINK}>« Tillbaka till Grundinställningar</a></p>
 
@@ -96,6 +98,7 @@ const Page = () => {
         <button onClick={save} style={{ background: "#c00", color: "#fff", border: "none", padding: "10px 22px", fontWeight: 700, borderRadius: 3, cursor: "pointer", fontFamily: WF }}>Spara SMTP-inställningar</button>
         <button onClick={test} style={{ background: "#eee", color: "#333", border: "1px solid #bbb", padding: "10px 18px", fontWeight: 700, borderRadius: 3, cursor: "pointer", fontFamily: WF }}>Skicka test</button>
         {msg ? <span style={{ color: "#127b12", fontWeight: 700 }}>{msg}</span> : null}
+      </div>
       </div>
     </div>
   )
