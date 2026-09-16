@@ -8,7 +8,8 @@ const CogIcon = () => (
   </svg>
 )
 
-const WRAP: any = { fontFamily: WF, fontSize: "13px", color: "#333", maxWidth: 900, margin: "0 auto", padding: "0 12px 60px" }
+const OUTER: any = { display: "flex", minHeight: "600px", background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden" }
+const INNER: any = { flex: 1, fontFamily: WF, fontSize: "13px", color: "#333", padding: "16px 22px 60px", minWidth: 0 }
 const BAR: any = { background: "#e6e6e6", border: "1px solid #bbb", borderBottom: "none", fontWeight: 700, fontSize: "14px", padding: "8px 12px", marginTop: 22 }
 const BOX: any = { border: "1px solid #bbb", background: "#fff", padding: "14px 16px" }
 const ROW: any = { padding: "10px 0", borderBottom: "1px solid #eee" }
@@ -67,8 +68,9 @@ const Page = () => {
   const JaNej = (name: string, label: string, hint?: string) => Radio(name, label, [["1", "Ja"], ["0", "Nej"]], hint)
 
   return (
-    <div style={WRAP}>
+    <div style={OUTER}>
       <Snabbmeny active="Grundinställningar" />
+      <div style={INNER}>
       <h1 style={{ fontSize: "20px", fontWeight: 700, margin: "16px 0 4px" }}>Grundinställningar</h1>
       <p style={{ color: "#777", margin: "0 0 8px" }}>Butikens grundinställningar – motsvarar Wikinggruppens config.</p>
 
@@ -145,6 +147,7 @@ const Page = () => {
       <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 14 }}>
         <button onClick={save} style={{ background: "#c00", color: "#fff", border: "none", padding: "10px 22px", fontWeight: 700, borderRadius: 3, cursor: "pointer", fontFamily: WF }}>Spara inställningar</button>
         {msg ? <span style={{ color: "#127b12", fontWeight: 700 }}>{msg}</span> : null}
+      </div>
       </div>
     </div>
   )
