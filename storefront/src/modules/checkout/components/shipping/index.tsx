@@ -1,7 +1,7 @@
 "use client"
 
 import { RadioGroup } from "@headlessui/react"
-import { CheckCircleSolid } from "@medusajs/icons"
+import { CheckCircleSolid, Spinner } from "@medusajs/icons"
 import { Button, Heading, Text, clx } from "@medusajs/ui"
 
 import Divider from "@modules/common/components/divider"
@@ -54,6 +54,9 @@ const Shipping: React.FC<ShippingProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Optimistic selection: highlight the clicked option instantly while the
+  // server round-trip (which recomputes totals) happens in the background.
+  const [pendingId, setPendingId] = useState<string | undefined>(undefined)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -63,8 +66,10 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const shippingMethods = dedupeMethods(availableShippingMethods)
 
+  const cartSelectedId = cart.shipping_methods?.at(-1)?.shipping_option_id
+  const activeId = pendingId ?? cartSelectedId
   const selectedShippingMethod = shippingMethods.find(
-    (method) => method.id === cart.shipping_methods?.at(-1)?.shipping_option_id
+    (method) => method.id === activeId
   )
 
   const handleEdit = () => {
@@ -76,15 +81,25 @@ const Shipping: React.FC<ShippingProps> = ({
   }
 
   const set = async (id: string) => {
+    setPendingId(id)
     setIsLoading(true)
+    setError(null)
     await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
       .catch((err) => {
         setError(err.message)
+        setPendingId(undefined)
       })
       .finally(() => {
         setIsLoading(false)
       })
   }
+
+  // Once the cart catches up with the optimistic choice, drop the override.
+  useEffect(() => {
+    if (pendingId && cartSelectedId === pendingId) {
+      setPendingId(undefined)
+    }
+  }, [cartSelectedId, pendingId])
 
   useEffect(() => {
     setError(null)
@@ -126,8 +141,9 @@ const Shipping: React.FC<ShippingProps> = ({
       {isOpen ? (
         <div data-testid="delivery-options-container">
           <div className="pb-8">
-            <RadioGroup value={selectedShippingMethod?.id} onChange={set}>
+            <RadioGroup value={activeId} onChange={set}>
               {shippingMethods.map((option) => {
+                const isSelected = option.id === activeId
                 return (
                   <RadioGroup.Option
                     key={option.id}
@@ -136,15 +152,12 @@ const Shipping: React.FC<ShippingProps> = ({
                     className={clx(
                       "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active",
                       {
-                        "border-ui-border-interactive":
-                          option.id === selectedShippingMethod?.id,
+                        "border-ui-border-interactive": isSelected,
                       }
                     )}
                   >
                     <div className="flex items-center gap-x-4">
-                      <Radio
-                        checked={option.id === selectedShippingMethod?.id}
-                      />
+                      <Radio checked={isSelected} />
                       <div className="flex flex-col">
                         <span className="text-base-regular">{option.name}</span>
                         <span className="text-ui-fg-subtle text-small-regular">
@@ -152,7 +165,10 @@ const Shipping: React.FC<ShippingProps> = ({
                         </span>
                       </div>
                     </div>
-                    <span className="justify-self-end text-ui-fg-base">
+                    <span className="justify-self-end text-ui-fg-base flex items-center gap-x-2">
+                      {isSelected && isLoading && (
+                        <Spinner className="animate-spin text-ui-fg-muted" />
+                      )}
                       {option.amount == null
                         ? "29 kr"
                         : option.amount === 0
