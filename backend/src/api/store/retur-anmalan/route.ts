@@ -30,11 +30,11 @@ async function ensure(pg: any) {
 async function findOrderId(pg: any, num: string): Promise<string | null> {
   if (!pg) return null
   try {
-    let rows = await q(pg, `SELECT "id" FROM "order" WHERE "metadata"->>'wiki_order_id' = ? AND "deleted_at" IS NULL LIMIT 1`, [String(num)])
+    let rows = await q(pg, `SELECT "id" FROM "order" WHERE metadata @> ?::jsonb LIMIT 1`, [JSON.stringify({ wiki_order_id: String(num) })])
     if (rows && rows[0]) return rows[0].id
     const n = parseInt(String(num), 10)
     if (!isNaN(n)) {
-      rows = await q(pg, `SELECT "id" FROM "order" WHERE "display_id" = ? AND "deleted_at" IS NULL LIMIT 1`, [n])
+      rows = await q(pg, `SELECT "id" FROM "order" WHERE "display_id" = ? LIMIT 1`, [n])
       if (rows && rows[0]) return rows[0].id
     }
   } catch { /* not found */ }
