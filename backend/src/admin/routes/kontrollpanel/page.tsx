@@ -132,9 +132,6 @@ function KontrollpanelPage() {
     { emo: "🚚", lab: "Fraktinställningar", href: `${ADMIN}/settings/locations` },
     { emo: "💳", lab: "Betalningsalternativ", href: `${ADMIN}/settings` },
     { emo: "📄", lab: "Redigerbara sidor", href: `${ADMIN}/redigerbara-sidor` },
-    { emo: "📰", lab: "Nyheter", section: "nyheter", subs: [
-      { lab: "Skapa ny nyhet", section: "nyheter" },
-    ]},
     { emo: "🔀", lab: "Import / Export", href: `${ADMIN}/products` },
     { emo: "⭐", lab: "Recensioner / Betyg", section: "recensioner" },
     { emo: "🖼️", lab: "Bildspel på 1:a sidan", section: "bildspel" },
@@ -171,7 +168,6 @@ function KontrollpanelPage() {
     ]},
     { title: "Innehåll och inställningar", tiles: [
       { emo: "📄", lab: "Redigerbara sidor", href: `${ADMIN}/redigerbara-sidor` },
-      { emo: "📰", lab: "Nyheter", section: "nyheter" },
       { emo: "📝", lab: "Blogg", section: "blogg" },
       { emo: "🍪", lab: "Cookie control", section: "cookie" },
       { emo: "🔀", lab: "Import / Export", href: `${ADMIN}/products` },
@@ -220,9 +216,6 @@ function KontrollpanelPage() {
     sidor: { key: "sidor", emo: "📄", title: "Redigerbara sidor", status: "planering",
       intro: "CMS-sidor du kan redigera själv – t.ex. Om oss, Frakt & retur, och Sälj din enhet (trade-in-sidan).",
       wiki: "Motsvarar Redigerbara sidor. Trade-in-sidan (område 69) migreras hit." },
-    nyheter: { key: "nyheter", emo: "📰", title: "Nyheter", status: "planering",
-      intro: "Publicera nyheter och meddelanden på butiken (kampanjer, driftinfo, öppettider).",
-      wiki: "Motsvarar Nyheter + Skapa ny nyhet." },
     blogg: { key: "blogg", emo: "📝", title: "Blogg", status: "planering",
       intro: "Bloggmodul för SEO-innehåll (guider: byta iPhone-skärm, sälj din mobil, m.m.).",
       wiki: "Motsvarar Blogg." },
