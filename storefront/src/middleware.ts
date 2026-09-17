@@ -147,7 +147,46 @@ async function getCountryCode(
 /**
  * Middleware to handle region selection.
  */
+// --- Admin-managed 301 redirects (Wiki 301tool parity). Rules edited in /app/url301. ---
+let __u301Cache: { at: number; rules: any[] } = { at: 0, rules: [] }
+async function getUrl301Rules(): Promise<any[]> {
+  const now = Date.now()
+  if (now - __u301Cache.at < 60000) return __u301Cache.rules
+  try {
+    const r = await fetch(BACKEND_URL + "/url301", { headers: { accept: "application/json" } })
+    if (r.ok) {
+      const d = await r.json()
+      __u301Cache = { at: now, rules: Array.isArray(d.rules) ? d.rules : [] }
+    } else {
+      __u301Cache = { at: now, rules: __u301Cache.rules }
+    }
+  } catch (e) {
+    __u301Cache = { at: now, rules: __u301Cache.rules }
+  }
+  return __u301Cache.rules
+}
+function __u301IsAbs(u: string): boolean {
+  const l = (u || "").toLowerCase()
+  return l.indexOf("http://") === 0 || l.indexOf("https://") === 0
+}
+
 export async function middleware(request: NextRequest) {
+  // Admin-managed 301 redirects run first so explicit rules win.
+  try {
+    let __p301 = request.nextUrl.pathname
+    while (__p301.length > 1 && __p301.charAt(__p301.length - 1) === "/") __p301 = __p301.slice(0, -1)
+    const __full301 = __p301 + (request.nextUrl.search || "")
+    const __rules301 = await getUrl301Rules()
+    for (const __r301 of __rules301) {
+      if (__r301 && (__r301.from === __full301 || __r301.from === __p301)) {
+        const __to301 = __r301.to
+        if (__to301) {
+          const __dest301 = __u301IsAbs(__to301) ? __to301 : new URL(__to301, request.url).toString()
+          return NextResponse.redirect(__dest301, 301)
+        }
+      }
+    }
+  } catch (e301) {}
   const searchParams = request.nextUrl.searchParams
   const cartId = searchParams.get("cart_id")
   const checkoutStep = searchParams.get("step")
