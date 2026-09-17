@@ -145,7 +145,7 @@ const Page = () => {
         <Section title="Sökmotoroptimering">
           <div style={ROW}>
             <div style={LBL}>Meta-data</div>
-            <div><a href={ADMIN + "/redigerbara-sidor"} style={LINK}>Redigera meta-data för statiska sidor »</a></div>
+            <div><a href={ADMIN + "/metatags"} style={LINK}>Redigera meta-data för statiska sidor »</a></div>
           </div>
         </Section>
 
