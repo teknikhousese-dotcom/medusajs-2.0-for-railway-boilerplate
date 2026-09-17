@@ -1,7 +1,5 @@
 import { AbstractFulfillmentProviderService } from "@medusajs/framework/utils"
 
-type Opt = { threshold?: number; b2bThreshold?: number; standardPrice?: number }
-
 /**
  * Teknikhouse.se — calculated fulfillment provider.
  * Drives the "Standard" shipping option: free (0 kr) when the cart subtotal
@@ -9,15 +7,12 @@ type Opt = { threshold?: number; b2bThreshold?: number; standardPrice?: number }
  * otherwise the normal 29 kr. Safe default: if the subtotal can't be read from
  * context, it charges the base price (never wrongly free).
  */
+const BASE = 29
+const THRESHOLD = 1000
+const B2B_THRESHOLD = 2000
+
 class TeknikFulfillmentService extends AbstractFulfillmentProviderService {
   static identifier = "teknik"
-
-  protected options_: Opt
-
-  constructor(_container: any, options: Opt) {
-    super()
-    this.options_ = options || {}
-  }
 
   async getFulfillmentOptions(): Promise<any[]> {
     return [{ id: "teknik-standard", name: "Standard" }]
@@ -57,12 +52,9 @@ class TeknikFulfillmentService extends AbstractFulfillmentProviderService {
   }
 
   async calculatePrice(_optionData: any, _data: any, context: any): Promise<any> {
-    const base = this.options_.standardPrice != null ? this.options_.standardPrice : 29
-    const threshold = this.isB2B(context)
-      ? (this.options_.b2bThreshold != null ? this.options_.b2bThreshold : 2000)
-      : (this.options_.threshold != null ? this.options_.threshold : 1000)
+    const threshold = this.isB2B(context) ? B2B_THRESHOLD : THRESHOLD
     const subtotal = this.subtotalFrom(context)
-    const amount = subtotal >= threshold && threshold > 0 ? 0 : base
+    const amount = subtotal >= threshold ? 0 : BASE
     return { calculated_amount: amount, is_calculated_price_tax_inclusive: false }
   }
 
