@@ -47,7 +47,6 @@ export default async function Footer() {
             <LocalizedClientLink href="/info/om-oss">Om oss</LocalizedClientLink>
             <LocalizedClientLink href="/info/produktklassificering">Produktklassificering</LocalizedClientLink>
             <LocalizedClientLink href="/blogg">Blogg</LocalizedClientLink>
-            <LocalizedClientLink href="/news">Nyheter</LocalizedClientLink>
             <LocalizedClientLink href="/info/integritetspolicy">Integritetspolicy</LocalizedClientLink>
           </div>
           <div>
