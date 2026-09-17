@@ -79,6 +79,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         number: num,
         display_id: order.display_id,
         created_at: order.created_at,
+        items,
       },
       items,
     })
