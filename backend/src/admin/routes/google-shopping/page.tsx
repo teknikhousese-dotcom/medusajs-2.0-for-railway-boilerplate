@@ -1,97 +1,108 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
-import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
+import { WF, Snabbmeny } from "../../lib/butikadmin"
 
-const TagIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" />
+const BagIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" />
   </svg>
 )
 
-function GoogleShoppingPage() {
-  const [mode, setMode] = useState(0)
-  const [cat, setCat] = useState("")
-  const [feedUrl, setFeedUrl] = useState("")
-  const [invUrl, setInvUrl] = useState("")
-  const [msg, setMsg] = useState("")
+const OUTER: any = { display: "flex", minHeight: "600px", background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden" }
+const INNER: any = { flex: 1, fontFamily: WF, fontSize: "12px", color: "#222", padding: "0 0 60px", minWidth: 0 }
+const HEAD: any = { display: "flex", alignItems: "center", gap: 9, padding: "16px 18px 2px" }
+const BAR: any = { background: "#dddddd", padding: "5px 14px", fontWeight: 700, fontSize: "12.5px", color: "#000", marginTop: 16, borderTop: "1px solid #cfcfcf", borderBottom: "1px solid #cfcfcf" }
+const BODY: any = { padding: "10px 18px" }
+const INP: any = { flex: 1, minWidth: 0, padding: "7px 9px", border: "1px solid #bcbcbc", borderRadius: 4, fontFamily: "monospace", fontSize: "12px", background: "#f7f8fa", color: "#111" }
+const BTN: any = { background: "#c00", color: "#fff", border: "none", padding: "8px 16px", fontWeight: 700, borderRadius: 4, cursor: "pointer", fontFamily: WF, fontSize: "12px", whiteSpace: "nowrap" }
+const BTN2: any = { background: "#f3f3f3", color: "#2b6cb0", border: "1px solid #cbd5e1", padding: "8px 16px", fontWeight: 700, borderRadius: 4, cursor: "pointer", fontFamily: WF, fontSize: "12px", textDecoration: "none", whiteSpace: "nowrap" }
+const STAT: any = { border: "1px solid #eee", borderRadius: 6, padding: "12px 14px", background: "#fafbfc", minWidth: 120 }
+const CHECK: any = { color: "#127b12", fontWeight: 800, marginRight: 7 }
 
-  const load = async () => {
-    const j = await fetch("/admin/google-feed", { credentials: "include" }).then((x) => x.json()).catch(() => null)
-    if (j) {
-      setMode(Number(j.settings?.feed_mode) || 0)
-      setCat(j.settings?.universal_category || "")
-      setFeedUrl(j.feed_url || "")
-      setInvUrl(j.inventory_feed_url || "")
-    }
-  }
-  useEffect(() => { load() }, [])
+const ATTRS: any[] = [
+  ["id", "Unikt produkt-ID (SKU)"],
+  ["title", "Titel – varumärke + modell (max 150 tecken)"],
+  ["description", "Ren beskrivning (HTML borttaget, max 5000 tecken)"],
+  ["link / mobile_link", "Direktlänk till produktsidan"],
+  ["image_link", "Huvudbild"],
+  ["additional_image_link", "Upp till 10 extra produktbilder"],
+  ["availability", "Lagerstatus (in_stock / out_of_stock)"],
+  ["price", "Ordinarie pris i SEK, inkl. moms"],
+  ["sale_price", "Reapris – sätts automatiskt när produkten är på REA"],
+  ["brand", "Varumärke (Apple, Samsung, …)"],
+  ["condition", "Skick (new / used / refurbished)"],
+  ["gtin", "EAN/UPC när streckkod finns"],
+  ["mpn", "Tillverkarens artikelnummer / SKU"],
+  ["identifier_exists", "Sätts till 'no' när varken GTIN eller MPN finns"],
+  ["google_product_category", "Googles produktkategori (auto-mappad från titel)"],
+  ["product_type", "Din egen kategoristig"],
+  ["custom_label_0-2", "Varumärke, REA-flagga och kategori – för kampanjstyrning"],
+]
 
-  const save = async () => {
-    setMsg("Sparar…")
-    await fetch("/admin/google-feed", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ feed_mode: mode, universal_category: cat }) })
-    setMsg("Inställningarna sparades.")
-  }
+function Section(props: any) {
+  return (<div><div style={BAR}>{props.title}</div><div style={BODY}>{props.children}</div></div>)
+}
 
-  const inp: any = { padding: "5px 7px", border: "1px solid #bbb", borderRadius: "3px", fontSize: "12px", fontFamily: WF }
-  const btn: any = { padding: "6px 14px", background: "#4a90d9", color: "#fff", border: "none", borderRadius: "3px", cursor: "pointer", fontSize: "12px" }
-  const h2: any = { fontSize: "13px", fontWeight: 700, margin: "18px 0 6px", borderBottom: "1px solid #eee", paddingBottom: "4px" }
-  const p: any = { fontSize: "12px", color: "#444", lineHeight: 1.6, margin: "0 0 8px" }
-  const urlBox: any = { display: "block", background: "#f4f4f4", border: "1px solid #ddd", borderRadius: "3px", padding: "7px 9px", fontSize: "12px", fontFamily: "monospace", color: "#036", wordBreak: "break-all", margin: "4px 0 8px" }
+const Page = () => {
+  const [count, setCount] = useState<number | null>(null)
+  const [copied, setCopied] = useState(false)
+  const feedUrl = (typeof window !== "undefined" ? window.location.origin : "") + "/google-feed"
+  useEffect(() => {
+    fetch("/admin/products?limit=1&status[]=published", { credentials: "include" }).then((r) => r.json()).then((j) => setCount(j.count)).catch(() => {})
+  }, [])
+  const copy = () => { try { navigator.clipboard.writeText(feedUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch (e) {} }
 
   return (
-    <div style={{ display: "flex", fontFamily: WF }}>
+    <div style={OUTER}>
       <Snabbmeny active="Google Shopping" />
-      <div style={{ flex: 1 }}>
-        <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden", margin: "0 0 12px" }}>
-          <div style={{ background: "#f4f4f4", borderBottom: "1px solid #ddd", padding: "10px 16px", fontWeight: 700, fontSize: "14px" }}>🛍️ Google Produktfeed</div>
-          <div style={{ padding: "16px", maxWidth: "760px" }}>
-
-            <div style={h2}>Allmän information</div>
-            <p style={p}>Butiksystemet tillhandahåller en produktlista (produktfeed) som kan användas bland annat i Google Shopping, Facebook och andra nätverk för att bli klickbara annonser där.</p>
-            <p style={p}>I detta feed finns vissa attribut som inte används på andra ställen i butiken, såsom Googles produktkategori. Även om inte alla attribut är obligatoriska så är det rekommenderat att ge så mycket information som möjligt för bättre visning i annonserna/resultatet.</p>
-            <p style={p}>De flesta attributen plockas automatiskt från produkterna i butiken. Ni kan ange Googles produktkategori när ni redigerar en varugrupp, så kommer alla produkter i den gruppen använda angiven kategori. Det går även att ange produktkategori för enskilda produkter.</p>
-            <p style={p}>Använd masshanteringen under <a href={`${ADMIN}/hantera-produkter`} style={{ color: "#06c" }}>Hantera produkter</a> för att ställa in parametrarna för Googles produktfeed. För mer information om vad de olika fälten betyder, se följande länkar:</p>
-            <ul style={{ fontSize: "12px", lineHeight: 1.8, margin: "0 0 8px 18px" }}>
-              <li><a href="https://support.google.com/merchants/answer/188494?hl=sv" target="_blank" rel="noreferrer" style={{ color: "#06c" }}>Specifikation för produktfeed</a></li>
-              <li><a href="https://support.google.com/merchants/answer/188484" target="_blank" rel="noreferrer" style={{ color: "#06c" }}>Googles policy för produktdata</a></li>
-              <li><a href="https://www.google.com/basepages/producttype/taxonomy.en-US.txt" target="_blank" rel="noreferrer" style={{ color: "#06c" }}>Fullständig lista av produktkategorier</a></li>
-            </ul>
-
-            <div style={h2}>Vilka produkter ska kopplas?</div>
-            <label style={{ display: "block", fontSize: "12px", margin: "4px 0", cursor: "pointer" }}>
-              <input type="radio" name="mode" checked={mode === 0} onChange={() => setMode(0)} /> Alla med angiven Google produktkategori
-            </label>
-            <label style={{ display: "block", fontSize: "12px", margin: "4px 0", cursor: "pointer" }}>
-              <input type="radio" name="mode" checked={mode === 1} onChange={() => setMode(1)} /> Alla, även om Google produktkategori saknas
-            </label>
-
-            <div style={h2}>Universell Google produktkategori</div>
-            <p style={p}>Värdet du anger här kommer gälla i de fall angiven produktkategori saknas för en varugrupp eller produkt.</p>
-            <input style={{ ...inp, width: "100%", boxSizing: "border-box", maxWidth: "480px" }} value={cat} onChange={(e) => setCat(e.target.value)} placeholder="t.ex. Electronics > Communications > Telephony > Mobile Phones" />
-
-            <div style={{ margin: "16px 0" }}>
-              <button style={btn} onClick={save}>Spara inställningar</button>
-              {msg && <span style={{ marginLeft: "10px", fontSize: "12px", color: "#036" }}>{msg}</span>}
-            </div>
-
-            <div style={h2}>Adress till produktfeed</div>
-            <p style={p}>Denna adress ska kopplas in i Google Merchant Center:</p>
-            <code style={urlBox}>{feedUrl || "—"}</code>
-
-            <div style={h2}>Feed för uppdatering av lager/pris</div>
-            <p style={p}>Google kan läsa ett extra feed som bara innehåller id, lagerstatus och pris. Då skapar ni ett extra feed i Merchant Center med typen "Lageruppdatering – onlineprodukter" och anger följande adress:</p>
-            <code style={urlBox}>{invUrl || "—"}</code>
-
-            <div style={h2}>Status för kopplade produkter</div>
-            <p style={p}>Genom att logga in på Google Merchant Center kan ni se status för produkterna i feedet samt eventuell anledning till att vissa produkter blivit nekade.</p>
-
-          </div>
+      <div style={INNER}>
+        <div style={HEAD}>
+          <img src="https://www.google.com/favicon.ico" width={22} height={22} alt="Google" style={{ display: "block" }} onError={(e: any) => { e.currentTarget.style.display = "none" }} />
+          <h1 style={{ fontSize: "18px", fontWeight: 700, margin: 0 }}>Google Shopping – Produktflöde</h1>
         </div>
-        <div style={{ textAlign: "center", fontSize: "12px" }}><a href={`${ADMIN}/kontrollpanel`} style={{ color: "#06c" }}>◄ Till kontrollpanelen</a></div>
+        <p style={{ color: "#666", margin: 0, padding: "4px 18px 0", fontSize: "12.5px" }}>Ett komplett, modernt produktflöde (RSS 2.0) enligt Googles senaste produktdataspecifikation – redo att skickas till Google Merchant Center för Shopping-annonser och gratis produktlistningar.</p>
+
+        <Section title="Feed-URL">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <input readOnly value={feedUrl} style={INP} onFocus={(e: any) => e.target.select()} />
+            <button style={BTN} onClick={copy}>{copied ? "Kopierat!" : "Kopiera"}</button>
+            <a style={BTN2} href={feedUrl} target="_blank" rel="noreferrer">Öppna feed »</a>
+          </div>
+          <p style={{ color: "#888", fontSize: "11.5px", marginTop: 8 }}>Klistra in denna URL i Google Merchant Center → Produkter → Datakällor → Lägg till → Schemalagd hämtning (rekommenderat: daglig). Feeden uppdateras automatiskt varje timme.</p>
+        </Section>
+
+        <Section title="Innehåll">
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div style={STAT}><div style={{ fontSize: "22px", fontWeight: 800, color: "#c00" }}>{count == null ? "…" : count.toLocaleString("sv-SE")}</div><div style={{ color: "#777" }}>publicerade produkter</div></div>
+            <div style={STAT}><div style={{ fontSize: "22px", fontWeight: 800 }}>SEK</div><div style={{ color: "#777" }}>valuta, inkl. moms</div></div>
+            <div style={STAT}><div style={{ fontSize: "22px", fontWeight: 800 }}>Sverige</div><div style={{ color: "#777" }}>målland</div></div>
+            <div style={STAT}><div style={{ fontSize: "22px", fontWeight: 800 }}>RSS 2.0</div><div style={{ color: "#777" }}>XML-format (g:-namespace)</div></div>
+          </div>
+        </Section>
+
+        <Section title="Attribut som ingår i varje produkt">
+          <div style={{ columnWidth: 330, columnGap: 26 }}>
+            {ATTRS.map((a: any) => (
+              <div key={a[0]} style={{ breakInside: "avoid", padding: "3px 0", fontSize: "12px" }}>
+                <span style={CHECK}>✓</span><code style={{ background: "#eef2f7", padding: "1px 5px", borderRadius: 3, color: "#2b4a6f" }}>{a[0]}</code> <span style={{ color: "#555" }}>{a[1]}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Så här kopplar du feeden i Google Merchant Center">
+          <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 1.7, color: "#444" }}>
+            <li>Öppna Google Merchant Center och verifiera domänen teknikhouse.se.</li>
+            <li>Gå till Produkter → Datakällor → Lägg till produktdatakälla.</li>
+            <li>Välj “Schemalagd hämtning” och klistra in feed-URL:en ovan.</li>
+            <li>Ställ in hämtning till daglig och land = Sverige, valuta = SEK.</li>
+            <li>Spara – Google läser in alla produkter automatiskt.</li>
+          </ol>
+        </Section>
       </div>
     </div>
   )
 }
 
-export const config = defineRouteConfig({ label: "Google Shopping", icon: TagIcon })
-export default GoogleShoppingPage
+export const config = defineRouteConfig({ label: "Google Shopping", icon: BagIcon })
+export default Page
