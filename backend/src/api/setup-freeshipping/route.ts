@@ -3,10 +3,11 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createShippingOptionsWorkflow } from "@medusajs/medusa/core-flows"
 
 /**
- * Teknikhouse.se — one-time setup for the free-shipping-over-1000 calculated option.
+ * Teknikhouse.se one-time setup for the free-shipping-over-1000 calculated option.
  * Links the "teknik" fulfillment provider to the stock location (bypasses the admin
  * endpoint that no-ops on an existing DB) and creates the calculated "Standard" option.
- * Token-guarded, idempotent-ish; safe to call more than once.
+ * Token-guarded, idempotent-ish; safe to call more than once for the debug action only.
+ * POST {token, action:"debug"} returns the last calculatePrice context snapshot.
  */
 const TOKEN = "thmigrate-2026-shipping"
 const SLOC = "sloc_01M1QG8WKE5DEY8SHWMN2TT4W6"
@@ -19,6 +20,11 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   if (b.token !== TOKEN) {
     return res.status(401).json({ error: "bad token" })
   }
+
+  if (b.action === "debug") {
+    return res.json({ ok: true, ctx: (globalThis as any).__teknikCtx || null })
+  }
+
   const steps: any = {}
 
   // 1. Link the fulfillment provider to the stock location via the Link module.
