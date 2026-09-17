@@ -52,6 +52,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         "items.id",
         "items.title",
         "items.quantity",
+        "items.raw_quantity",
         "items.variant_sku",
         "items.metadata",
       ],
@@ -68,7 +69,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       id: it.id,
       title: it.title,
       sku: (it.metadata && it.metadata.sku) || it.variant_sku || "",
-      quantity: it.quantity,
+      quantity: Number((it.raw_quantity && it.raw_quantity.value) != null ? it.raw_quantity.value : (it.quantity != null ? it.quantity : 1)),
     }))
     return res.json({
       ok: true,
