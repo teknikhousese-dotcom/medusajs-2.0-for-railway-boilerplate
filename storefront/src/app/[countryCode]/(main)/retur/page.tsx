@@ -64,7 +64,7 @@ export default function ReturPage() {
     setSubmitStatus("submitting")
     try {
       const body = { order: order.trim(), email: email.trim(), type, message, items: chosen.map((x) => ({ title: x.it.title, sku: x.it.sku, quantity: x.p.qty, reason: x.p.reason })) }
-      const r = await fetch(BACKEND + "/store/returns", { method: "POST", headers: { "Content-Type": "application/json", "x-publishable-api-key": PUBKEY }, body: JSON.stringify(body) })
+      const r = await fetch(BACKEND + "/store/retur-anmalan", { method: "POST", headers: { "Content-Type": "application/json", "x-publishable-api-key": PUBKEY }, body: JSON.stringify(body) })
       const j = await r.json()
       if (!r.ok || !j.ok) { setSubmitStatus("error"); setSubmitError(j.error || "Kunde inte skicka returbegäran."); return }
       setReference(j.reference || "RET")
