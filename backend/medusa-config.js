@@ -141,22 +141,31 @@ const medusaConfig = {
         ]
       }
     }] : []),
-    ...(STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET ? [{
+    {
       key: Modules.PAYMENT,
       resolve: '@medusajs/payment',
       options: {
         providers: [
           {
+            resolve: './src/modules/klarna',
+            id: 'klarna',
+            options: {
+              username: process.env.KLARNA_USERNAME,
+              password: process.env.KLARNA_PASSWORD,
+              apiBase: process.env.KLARNA_API_BASE,
+            },
+          },
+          ...(STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET ? [{
             resolve: '@medusajs/payment-stripe',
             id: 'stripe',
             options: {
               apiKey: STRIPE_API_KEY,
               webhookSecret: STRIPE_WEBHOOK_SECRET,
             },
-          },
+          }] : []),
         ],
       },
-    }] : []),
+    },
     // Medusa 2.19 introduced its own Search Module, and it owns the indexing:
     // it creates and migrates the indexes, seeds them, and keeps them current
     // from catalog events. The Meilisearch plugin is only the engine behind it.
