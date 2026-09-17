@@ -14,7 +14,7 @@ async function getStore(scope: any) {
   return (stores && stores[0]) || null
 }
 
-const GROUPS = ["config", "shipping", "payment", "languages", "smtp"]
+const GROUPS = ["config", "shipping", "payment", "languages", "smtp", "metatags"]
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
