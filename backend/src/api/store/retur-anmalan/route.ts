@@ -27,15 +27,15 @@ async function ensure(pg: any) {
   )`, [])
 }
 
-async function findOrderId(pg: any, num: string): Promise<string | null> {
+async function findOrder(pg: any, num: string): Promise<{ id: string; email: string } | null> {
   if (!pg) return null
   try {
-    let rows = await q(pg, `SELECT "id" FROM "order" WHERE metadata @> ?::jsonb LIMIT 1`, [JSON.stringify({ wiki_order_id: String(num) })])
-    if (rows && rows[0]) return rows[0].id
+    let rows = await q(pg, `SELECT "id", "email" FROM "order" WHERE metadata @> ?::jsonb LIMIT 1`, [JSON.stringify({ wiki_order_id: String(num) })])
+    if (rows && rows[0]) return { id: rows[0].id, email: rows[0].email }
     const n = parseInt(String(num), 10)
     if (!isNaN(n)) {
-      rows = await q(pg, `SELECT "id" FROM "order" WHERE "display_id" = ? LIMIT 1`, [n])
-      if (rows && rows[0]) return rows[0].id
+      rows = await q(pg, `SELECT "id", "email" FROM "order" WHERE "display_id" = ? LIMIT 1`, [n])
+      if (rows && rows[0]) return { id: rows[0].id, email: rows[0].email }
     }
   } catch { /* not found */ }
   return null
@@ -55,10 +55,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const pg = getPg(req.scope)
     if (!pg) return res.status(500).json({ error: "Databasen är inte tillgänglig just nu." })
-    const orderId = await findOrderId(pg, num)
-    if (!orderId) return res.status(404).json({ error: "Vi hittade ingen order med det ordernumret." })
-    const orderModule: any = req.scope.resolve(Modules.ORDER)
-    const [order] = await orderModule.listOrders({ id: orderId }, { take: 1 }).catch(() => [])
+    const order = await findOrder(pg, num)
     if (!order) return res.status(404).json({ error: "Vi hittade ingen order med det ordernumret." })
     if (String(order.email || "").toLowerCase() !== email) {
       return res.status(403).json({ error: "E-postadressen matchar inte den här ordern." })
