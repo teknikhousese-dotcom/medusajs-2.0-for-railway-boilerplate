@@ -147,7 +147,9 @@ const Shipping: React.FC<ShippingProps> = ({
                       </div>
                     </div>
                     <span className="justify-self-end text-ui-fg-base">
-                      {option.amount === 0
+                      {option.amount == null
+                        ? "Fri över 1\u00a0000 kr, annars 29 kr"
+                        : option.amount === 0
                         ? "Fri frakt"
                         : convertToLocale({
                             amount: option.amount!,
