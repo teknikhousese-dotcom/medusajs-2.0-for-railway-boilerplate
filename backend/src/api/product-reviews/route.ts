@@ -79,7 +79,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         const rating = clampRating(rv && rv.rating)
         let created = String((rv && rv.date) || "").trim()
         if (!created) created = new Date().toISOString().slice(0, 10)
-        await q(pg, 'INSERT INTO "product_review" ("id","product_id","product_title","author","rating","comment","is_read","created_at") VALUES (?,?,?,?,?,?,?,?)', [genId(), productId, productTitle, author, rating, comment, true, created])
+        await q(pg, 'INSERT INTO "product_review" ("id","product_id","product_title","author","rating","comment","is_read","created_at") VALUES (?,?,?,?,?,?,?,?)', [genId("prev"), productId, productTitle, author, rating, comment, true, created])
         report.reviewsInserted++
       } catch (e) {}
     }
