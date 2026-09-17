@@ -14,10 +14,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const DOMAIN = (process.env.GOOGLE_FEED_DOMAIN || "https://teknikhouse.se").replace(/\/$/, "")
+  const SHIPPING = process.env.GOOGLE_FEED_SHIPPING || ""
 
   const esc = (s: any) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;")
   const strip = (s: any) => String(s == null ? "" : s).replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim()
   const money = (n: any) => Number(n).toFixed(2) + " SEK"
+  const iso = (d: any) => { try { return new Date(d).toISOString().replace(/\.\d{3}Z$/, "+00:00") } catch (e) { return "" } }
   const catFor = (title: string) => {
     const t = (title || "").toLowerCase()
     if (/hörlur|headphone|earphone|earbud|headset/.test(t)) return "Electronics > Audio > Audio Components > Headphones"
@@ -27,11 +29,20 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     if (/smartphone|mobiltelefon/.test(t)) return "Electronics > Communications > Telephony > Mobile Phones"
     return "Electronics > Communications > Telephony > Mobile Phone Accessories"
   }
+  const COLORS: any[] = [["svart", "Svart"], ["vit", "Vit"], ["blå", "Blå"], ["röd", "Röd"], ["grön", "Grön"], ["guld", "Guld"], ["silver", "Silver"], ["rosa", "Rosa"], ["lila", "Lila"], ["grå", "Grå"], ["gul", "Gul"], ["orange", "Orange"], ["brun", "Brun"], ["turkos", "Turkos"], ["roséguld", "Roséguld"], ["rose gold", "Roséguld"], ["space gray", "Rymdgrå"], ["gold", "Guld"], ["black", "Svart"], ["white", "Vit"], ["blue", "Blå"], ["red", "Röd"], ["green", "Grön"], ["pink", "Rosa"], ["gray", "Grå"], ["grey", "Grå"]]
+  const colorOf = (title: string) => { const t = (title || "").toLowerCase(); for (const c of COLORS) { if (t.includes(c[0])) return c[1] } return "" }
 
   const regionRes = await query.graph({ entity: "region", fields: ["id", "currency_code"] })
   const regions = regionRes.data || []
   const se = regions.find((r: any) => r.currency_code === "sek") || regions[0]
   const regionId = se && se.id
+
+  let saleEffective = process.env.GOOGLE_FEED_SALE_EFFECTIVE || ""
+  try {
+    const plRes = await query.graph({ entity: "price_list", fields: ["id", "type", "status", "starts_at", "ends_at"] })
+    const sale = (plRes.data || []).find((p: any) => p.type === "sale" && p.status === "active")
+    if (sale && sale.starts_at && sale.ends_at) saleEffective = iso(sale.starts_at) + "/" + iso(sale.ends_at)
+  } catch (e) {}
 
   const items: string[] = []
   let skip = 0
@@ -41,7 +52,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     try {
       const r = await query.graph({
         entity: "product",
-        fields: ["id", "title", "handle", "description", "subtitle", "status", "metadata", "images.url", "categories.name", "variants.id", "variants.sku", "variants.ean", "variants.barcode", "variants.upc", "variants.manage_inventory", "variants.calculated_price.*"],
+        fields: ["id", "title", "handle", "description", "subtitle", "status", "metadata", "images.url", "categories.name", "variants.id", "variants.sku", "variants.ean", "variants.barcode", "variants.upc", "variants.weight", "variants.manage_inventory", "variants.calculated_price.*"],
         filters: { status: "published" },
         context: { variants: { calculated_price: QueryContext({ region_id: regionId, currency_code: "sek" }) } },
         pagination: { skip, take },
@@ -72,6 +83,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const link = DOMAIN + "/products/" + p.handle
       const desc = strip(p.description || meta.meta_description || p.subtitle || p.title).slice(0, 4900)
       const onSale = calc != null && calc < orig
+      const color = String(meta.color || meta.farg || meta["färg"] || colorOf(p.title) || "").slice(0, 40)
+      const weight = Number(v.weight || 0)
       let it = "<item>"
       it += "<g:id>" + esc(v.sku || v.id) + "</g:id>"
       if ((p.variants || []).length > 1) it += "<g:item_group_id>" + esc(p.id) + "</g:item_group_id>"
@@ -83,12 +96,18 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       imgs.slice(1, 11).forEach((u: string) => { it += "<g:additional_image_link>" + esc(u) + "</g:additional_image_link>" })
       it += "<g:availability>" + (inStock ? "in_stock" : "out_of_stock") + "</g:availability>"
       it += "<g:price>" + money(orig) + "</g:price>"
-      if (onSale) it += "<g:sale_price>" + money(calc) + "</g:sale_price>"
+      if (onSale) {
+        it += "<g:sale_price>" + money(calc) + "</g:sale_price>"
+        if (saleEffective) it += "<g:sale_price_effective_date>" + esc(saleEffective) + "</g:sale_price_effective_date>"
+      }
       it += "<g:brand>" + esc(String(brand).slice(0, 70)) + "</g:brand>"
       it += "<g:condition>" + condition + "</g:condition>"
       if (gtin) it += "<g:gtin>" + gtin + "</g:gtin>"
       if (mpn) it += "<g:mpn>" + esc(mpn.slice(0, 70)) + "</g:mpn>"
       if (!gtin && !mpn) it += "<g:identifier_exists>no</g:identifier_exists>"
+      if (color) it += "<g:color>" + esc(color) + "</g:color>"
+      if (weight > 0) it += "<g:shipping_weight>" + weight + " g</g:shipping_weight>"
+      if (SHIPPING) it += "<g:shipping><g:country>SE</g:country><g:price>" + esc(SHIPPING) + "</g:price></g:shipping>"
       it += "<g:google_product_category>" + esc(catFor(p.title)) + "</g:google_product_category>"
       if (cats.length) it += "<g:product_type>" + esc(cats.slice(0, 3).join(" > ")) + "</g:product_type>"
       it += "<g:custom_label_0>" + esc(String(brand).slice(0, 100)) + "</g:custom_label_0>"
