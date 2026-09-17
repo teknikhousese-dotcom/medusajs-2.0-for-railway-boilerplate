@@ -5,6 +5,7 @@ import ProductActions from "@modules/products/components/product-actions"
 import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
+import ProductReviews from "@modules/products/components/product-reviews"
 import ProductBreadcrumb from "@modules/products/components/product-breadcrumb"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
@@ -56,6 +57,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       <div className="content-container" style={{ paddingTop: "8px", paddingBottom: "8px" }}>
         <ProductTabs product={product} />
       </div>
+
+        <ProductReviews productId={product.id} productTitle={product.title} />
 
       {/* USP / trygghetsband */}
       <div style={{ background: "#faf8f6", borderTop: "1px solid #efeae5", borderBottom: "1px solid #efeae5", marginTop: "28px" }}>
