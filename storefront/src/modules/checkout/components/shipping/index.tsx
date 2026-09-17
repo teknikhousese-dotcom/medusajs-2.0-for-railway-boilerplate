@@ -18,6 +18,18 @@ type ShippingProps = {
   availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
 }
 
+// Short delivery description shown under each shipping option name.
+const shippingDesc = (name?: string): string => {
+  const n = (name || "").toLowerCase()
+  if (n.includes("hämta") || n.includes("hamta") || n.includes("butik"))
+    return "Hämta i vår butik – oftast klart samma dag"
+  if (n.includes("ombud")) return "Hämta hos ditt närmaste PostNord-ombud, 2–4 arbetsdagar"
+  if (n.includes("express")) return "Expressleverans med PostNord, 1–2 arbetsdagar"
+  if (n.includes("hem")) return "Hemleverans till dörren, 2–5 arbetsdagar"
+  if (n.includes("standard")) return "Leverans till ombud, 2–4 arbetsdagar"
+  return "Leverans med PostNord"
+}
+
 const Shipping: React.FC<ShippingProps> = ({
   cart,
   availableShippingMethods,
@@ -94,6 +106,19 @@ const Shipping: React.FC<ShippingProps> = ({
       </div>
       {isOpen ? (
         <div data-testid="delivery-options-container">
+          <div className="flex items-center gap-x-3 mb-4 py-3 px-4 rounded-rounded bg-ui-bg-subtle border border-ui-border-base">
+            <img
+              src="/userfiles/image/postnord.png"
+              alt="PostNord"
+              className="h-6 w-auto shrink-0"
+            />
+            <Text className="txt-small text-ui-fg-subtle">
+              Alla paket skickas med PostNord.{" "}
+              <span className="text-ui-fg-base font-medium">
+                Fri frakt över 1&nbsp;000 kr.
+              </span>
+            </Text>
+          </div>
           <div className="pb-8">
             <RadioGroup value={selectedShippingMethod?.id} onChange={set}>
               {availableShippingMethods?.map((option) => {
@@ -114,13 +139,20 @@ const Shipping: React.FC<ShippingProps> = ({
                       <Radio
                         checked={option.id === selectedShippingMethod?.id}
                       />
-                      <span className="text-base-regular">{option.name}</span>
+                      <div className="flex flex-col">
+                        <span className="text-base-regular">{option.name}</span>
+                        <span className="text-ui-fg-subtle text-small-regular">
+                          {shippingDesc(option.name)}
+                        </span>
+                      </div>
                     </div>
                     <span className="justify-self-end text-ui-fg-base">
-                      {convertToLocale({
-                        amount: option.amount!,
-                        currency_code: cart?.currency_code,
-                      })}
+                      {option.amount === 0
+                        ? "Fri frakt"
+                        : convertToLocale({
+                            amount: option.amount!,
+                            currency_code: cart?.currency_code,
+                          })}
                     </span>
                   </RadioGroup.Option>
                 )
