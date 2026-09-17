@@ -22,7 +22,7 @@ function ProduktFormPage() {
     skick: "Nyskick", momssats: "25", inpris: "", utpris: "", kampanj: false, kampanjpris: "", kampanjStart: "", kampanjSlut: "",
     antal: "", oandligt: false, lagervarning: "", weight: "", skrymmande: false, bestallningsvara: false, emptyStockText: "", customText: "",
     beskrivning: "", images: "", htmlFalt: "", lagerplats: "", leverantor: "",
-    tillverkare: "", ean: "", modell: "", sokord: "", visning: "show",
+    tillverkare: "", color: "", ean: "", modell: "", sokord: "", visning: "show",
     metaTitle: "", metaDesc: "", h1: "",
   })
   const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }))
@@ -71,7 +71,7 @@ function ProduktFormPage() {
           ...prev, artnr: p.artnr, namn: p.namn, googleNamn: p.googleNamn, beskrivning: p.beskrivning,
           ean: p.ean, weight: p.weight, utpris: p.utpris, category_ids: p.category_ids || [],
           images: (p.images || []).join("\n"), skick: m.skick || "Nyskick", momssats: m.momssats || "25",
-          inpris: m.inpris || "", leverantor: m.leverantor || "", tillverkare: m.tillverkare || m.producer || "",
+          inpris: m.inpris || "", leverantor: m.leverantor || "", tillverkare: m.tillverkare || m.producer || "", color: m.color || "",
           modell: m.modell || "", lagerplats: m.lagerplats || "", sokord: m.sokord || "",
           antal: m.antal || m.stock || "", oandligt: m.oandligt === true || m.oandligt === "true", lagervarning: m.lagervarning || "", skrymmande: m.skrymmande === true || m.skrymmande === "true",
           visning: m.visning || "show", metaTitle: m.seo_title || m.meta_title || "", metaDesc: m.seo_desc || m.meta_description || "", h1: m.h1 || "",
@@ -253,6 +253,10 @@ function ProduktFormPage() {
               <div style={{ flex: 1 }}>
                 <label style={lbl}>Tillverkare / varumärke</label>
                 <input style={inp} value={f.tillverkare} onChange={(e) => set("tillverkare", e.target.value)} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={lbl}>Färg (Google Shopping)</label>
+                <input style={inp} value={f.color} onChange={(e) => set("color", e.target.value)} placeholder="t.ex. Svart, Vit, Blå" />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={lbl}>EAN-kod</label>
