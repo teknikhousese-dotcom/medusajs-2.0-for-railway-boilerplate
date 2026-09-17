@@ -54,7 +54,6 @@ export const MENU: MenuItem[] = [
       { lab: "Skapa ny nyhet", href: `${ADMIN}/nyheter?new=1` },
     ],
   },
-  { emo: "🔗", lab: "Länkar", href: `${ADMIN}/lankar` },
   { emo: "🔀", lab: "Import / Export", href: `${ADMIN}/products` },
   { emo: "⭐", lab: "Recensioner / Betyg", href: `${ADMIN}/recensioner` },
   { emo: "🖼️", lab: "Bildspel på 1:a sidan", href: `${ADMIN}/bildspel` },
