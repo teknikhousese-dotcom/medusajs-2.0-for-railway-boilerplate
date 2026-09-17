@@ -1,94 +1,126 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
-import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
+import { WF, Snabbmeny } from "../../lib/butikadmin"
+import RichText from "../../components/RichText"
 
 const MailIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-10 5L2 7" />
   </svg>
 )
 
-function EpostmallarPage() {
+const OUTER: any = { display: "flex", minHeight: "600px", background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden" }
+const INNER: any = { flex: 1, fontFamily: WF, fontSize: "12px", color: "#222", padding: "0 0 60px", minWidth: 0 }
+const HEAD: any = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px 8px", flexWrap: "wrap", gap: 10 }
+const BAR: any = { background: "#dddddd", padding: "5px 14px", fontWeight: 700, fontSize: "12.5px", color: "#000", marginTop: 12, borderTop: "1px solid #cfcfcf", borderBottom: "1px solid #cfcfcf" }
+const BODY: any = { padding: "0 18px" }
+const TABLE: any = { width: "100%", borderCollapse: "collapse", fontSize: "12px" }
+const TH: any = { textAlign: "left", padding: "7px 10px", background: "#f4f4f4", borderBottom: "1px solid #e0e0e0", fontWeight: 700, color: "#555" }
+const TD: any = { padding: "7px 10px", borderBottom: "1px solid #f0f0f0" }
+const AEDIT: any = { color: "#2b6cb0", textDecoration: "none", cursor: "pointer", fontWeight: 600 }
+const ADEL: any = { color: "#c00", textDecoration: "none", cursor: "pointer" }
+const INP: any = { width: "100%", maxWidth: 560, padding: "5px 8px", border: "1px solid #bcbcbc", borderRadius: 2, fontFamily: WF, fontSize: "12px", boxSizing: "border-box", background: "#fff", color: "#111" }
+const BTN: any = { background: "#c00", color: "#fff", border: "none", padding: "9px 22px", fontWeight: 700, borderRadius: 3, cursor: "pointer", fontFamily: WF, fontSize: "12px" }
+const BTN2: any = { background: "#f3f3f3", color: "#333", border: "1px solid #bbb", padding: "7px 16px", fontWeight: 700, borderRadius: 3, cursor: "pointer", fontFamily: WF, fontSize: "12px" }
+const CHIP: any = { display: "inline-block", background: "#eef2f7", border: "1px solid #d6dfea", borderRadius: 3, padding: "2px 6px", margin: "0 5px 5px 0", fontFamily: "monospace", fontSize: "11px", color: "#2b4a6f", cursor: "pointer" }
+const LBL: any = { display: "block", fontWeight: 700, margin: "14px 0 5px" }
+const LINK: any = { color: "#2b6cb0", textDecoration: "none", cursor: "pointer" }
+
+const VARS = ["%orderID%", "%orderNumber%", "%firstName%", "%lastName%", "%customerName%", "%order%", "%orderRows%", "%orderTotal%", "%email%", "%address%", "%deliveryAddress%", "%trackingID%", "%shopName%", "%shopURL%"]
+
+function Section(props: any) {
+  return (<div><div style={BAR}>{props.title}</div><div style={BODY}>{props.children}</div></div>)
+}
+
+const Page = () => {
   const [rows, setRows] = useState<any[]>([])
-  const [edit, setEdit] = useState<any>(null)
-  const [nyNamn, setNyNamn] = useState("")
+  const [sel, setSel] = useState<any>(null)
+  const [subject, setSubject] = useState("")
+  const [html, setHtml] = useState("")
   const [msg, setMsg] = useState("")
-
-  const load = async () => {
-    const r = await fetch("/admin/email-templates", { credentials: "include" }).then((x) => x.json()).catch(() => ({ templates: [] }))
-    setRows(r.templates || [])
-  }
+  const load = () => fetch("/admin/email-templates", { credentials: "include" }).then((r) => r.json()).then((j) => setRows(j.templates || [])).catch(() => {})
   useEffect(() => { load() }, [])
-
-  const post = async (payload: any) => {
-    await fetch("/admin/email-templates", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+  const post = (b: any) => fetch("/admin/email-templates", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) })
+  const openEdit = (t: any) => { setSel(t); setSubject(t.subject || ""); setHtml(t.body_html || ""); setMsg("") }
+  const back = () => { setSel(null); load() }
+  const save = async () => {
+    setMsg("Sparar...")
+    const r = await post({ kind: "update", id: sel.id, subject, body_html: html })
+    setMsg(r.ok ? "Mallen sparades." : "Kunde inte spara.")
+    setTimeout(() => setMsg(""), 3000)
   }
-  const save = async () => { await post({ kind: "update", id: edit.id, subject: edit.subject, body_html: edit.body_html }); setMsg("Mallen sparad."); setEdit(null); await load() }
-  const skapa = async () => { const n = nyNamn.trim(); if (!n) return; await post({ kind: "new", name: n }); setNyNamn(""); await load() }
-  const remove = async (id: string) => { if (!confirm("Ta bort mallen?")) return; await post({ kind: "delete", id }); await load() }
+  const del = async (t: any) => {
+    if (!window.confirm("Ta bort mallen: " + t.name + " ?")) return
+    await post({ kind: "delete", id: t.id }); load()
+  }
+  const addNew = async () => {
+    const name = window.prompt("Namn på ny mall:")
+    if (!name) return
+    const j = await post({ kind: "new", name }).then((r) => r.json())
+    await load()
+    if (j && j.id) openEdit({ id: j.id, name, subject: "", body_html: "", is_system: false })
+  }
 
-  const th: any = { textAlign: "left", padding: "6px 10px", borderBottom: "2px solid #ccc", fontSize: "12px" }
-  const td: any = { padding: "6px 10px", borderBottom: "1px solid #eee", fontSize: "12px" }
-  const inp: any = { padding: "5px 7px", border: "1px solid #bbb", borderRadius: "3px", fontSize: "12px", fontFamily: WF }
-  const btn: any = { padding: "5px 12px", background: "#4a90d9", color: "#fff", border: "none", borderRadius: "3px", cursor: "pointer", fontSize: "12px" }
-  const lnk: any = { color: "#06c", cursor: "pointer", marginRight: "10px" }
+  if (!sel) {
+    const sys = rows.filter((t) => t.is_system)
+    const custom = rows.filter((t) => !t.is_system)
+    const rowEl = (t: any) => (
+      <tr key={t.id}>
+        <td style={TD}>{t.name}</td>
+        <td style={{ ...TD, width: 90 }}><a style={AEDIT} onClick={() => openEdit(t)}>Ändra</a></td>
+        <td style={{ ...TD, width: 90 }}>{t.is_system ? <span style={{ color: "#bbb" }}>—</span> : <a style={ADEL} onClick={() => del(t)}>Ta bort</a>}</td>
+      </tr>
+    )
+    return (
+      <div style={OUTER}>
+        <Snabbmeny active="E-postmallar" />
+        <div style={INNER}>
+          <div style={HEAD}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}><MailIcon /><h1 style={{ fontSize: "17px", fontWeight: 700, margin: 0 }}>E-postmallar</h1></div>
+            <button style={BTN} onClick={addNew}>+ Ny mall</button>
+          </div>
+          <p style={{ color: "#888", margin: 0, padding: "0 18px 4px", fontSize: "12px" }}>Klicka på Ändra för att redigera ämne och innehåll. Systemmallar kan inte tas bort.</p>
+          <Section title="Systemmallar">
+            <table style={TABLE}><thead><tr><th style={TH}>Mall</th><th style={{ ...TH, width: 90 }}>Ändra</th><th style={{ ...TH, width: 90 }}>Ta bort</th></tr></thead><tbody>{sys.map(rowEl)}</tbody></table>
+          </Section>
+          <Section title="Egna mallar">
+            <table style={TABLE}><thead><tr><th style={TH}>Mall</th><th style={{ ...TH, width: 90 }}>Ändra</th><th style={{ ...TH, width: 90 }}>Ta bort</th></tr></thead><tbody>{custom.length ? custom.map(rowEl) : (<tr><td style={TD} colSpan={3}><span style={{ color: "#999" }}>Inga egna mallar ännu.</span></td></tr>)}</tbody></table>
+          </Section>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ display: "flex", fontFamily: WF }}>
+    <div style={OUTER}>
       <Snabbmeny active="E-postmallar" />
-      <div style={{ flex: 1 }}>
-        <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden", margin: "0 0 12px" }}>
-          <div style={{ background: "#f4f4f4", borderBottom: "1px solid #ddd", padding: "10px 16px", fontWeight: 700, fontSize: "14px" }}>📧 Redigera E-postmallar</div>
-          <div style={{ padding: "16px" }}>
-            <p style={{ fontSize: "12px", color: "#666", margin: "0 0 12px" }}>Obs! Endast de mallar du skapar själv kan tas bort.</p>
-            {msg && <div style={{ color: "#036", fontSize: "12px", marginBottom: "8px" }}>{msg}</div>}
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th style={th}>Mall</th><th style={{ ...th, width: "160px" }}>Åtgärd</th></tr></thead>
-              <tbody>
-                {rows.length === 0 ? (
-                  <tr><td colSpan={2} style={{ ...td, textAlign: "center", color: "#999" }}>Laddar…</td></tr>
-                ) : (
-                  rows.map((t) => (
-                    <tr key={t.id}>
-                      <td style={td}>{t.name}{t.is_system ? "" : <span style={{ color: "#999", fontSize: "11px" }}> (egen)</span>}</td>
-                      <td style={td}>
-                        <a style={lnk} onClick={() => { setEdit({ ...t }); setMsg("") }}>Ändra</a>
-                        {!t.is_system && <a style={{ ...lnk, color: "#a00" }} onClick={() => remove(t.id)}>Ta bort</a>}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      <div style={INNER}>
+        <div style={{ padding: "16px 18px 2px" }}>
+          <p style={{ margin: 0 }}><a style={LINK} onClick={back}>« Tillbaka till mallar</a></p>
+          <h1 style={{ fontSize: "17px", fontWeight: 700, margin: "6px 0 0" }}>{sel.name}{sel.is_system ? <span style={{ fontSize: "11px", color: "#999", fontWeight: 400 }}> (systemmall)</span> : null}</h1>
+        </div>
+        <div style={{ padding: "0 18px" }}>
+          <label style={LBL}>Ämne (subject)</label>
+          <input style={INP} value={subject} onChange={(e) => setSubject(e.target.value)} />
 
-            {edit && (
-              <div style={{ marginTop: "16px", border: "1px solid #ddd", borderRadius: "4px", padding: "12px", background: "#fafafa" }}>
-                <div style={{ fontWeight: 700, fontSize: "13px", marginBottom: "8px" }}>Redigera: {edit.name}</div>
-                <div style={{ marginBottom: "8px" }}>
-                  <div style={{ fontSize: "11px", color: "#666" }}>Ämne</div>
-                  <input style={{ ...inp, width: "100%", boxSizing: "border-box" }} value={edit.subject || ""} onChange={(e) => setEdit({ ...edit, subject: e.target.value })} />
-                </div>
-                <div style={{ marginBottom: "8px" }}>
-                  <div style={{ fontSize: "11px", color: "#666" }}>HTML-innehåll</div>
-                  <textarea style={{ ...inp, width: "100%", height: "220px", boxSizing: "border-box", fontFamily: "monospace" }} value={edit.body_html || ""} onChange={(e) => setEdit({ ...edit, body_html: e.target.value })} />
-                </div>
-                <button style={btn} onClick={save}>Spara mall</button>
-                <a style={{ ...lnk, marginLeft: "10px" }} onClick={() => setEdit(null)}>Avbryt</a>
-              </div>
-            )}
+          <label style={LBL}>Innehåll</label>
+          <RichText value={html} onChange={(h: any) => setHtml(h)} minHeight={320} />
 
-            <div style={{ marginTop: "18px", borderTop: "1px solid #eee", paddingTop: "12px" }}>
-              <div style={{ fontWeight: 700, fontSize: "13px", marginBottom: "6px" }}>Ny e-postmall</div>
-              <input style={{ ...inp, width: "240px" }} placeholder="Benämning" value={nyNamn} onChange={(e) => setNyNamn(e.target.value)} />
-              <button style={{ ...btn, marginLeft: "8px" }} onClick={skapa}>Skapa</button>
-            </div>
+          <div style={{ marginTop: 12, background: "#fafafa", border: "1px solid #eee", borderRadius: 4, padding: "8px 10px" }}>
+            <div style={{ fontWeight: 700, marginBottom: 5, color: "#555" }}>Variabler (klicka för att kopiera):</div>
+            {VARS.map((v) => <span key={v} style={CHIP} onClick={() => { try { navigator.clipboard.writeText(v) } catch (e) {} }}>{v}</span>)}
+          </div>
+
+          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 14 }}>
+            <button style={BTN} onClick={save}>Spara mall</button>
+            <button style={BTN2} onClick={back}>Avbryt</button>
+            {msg ? <span style={{ color: "#127b12", fontWeight: 700 }}>{msg}</span> : null}
           </div>
         </div>
-        <div style={{ textAlign: "center", fontSize: "12px" }}><a href={`${ADMIN}/kontrollpanel`} style={{ color: "#06c" }}>◄ Till kontrollpanelen</a></div>
       </div>
     </div>
   )
 }
 
 export const config = defineRouteConfig({ label: "E-postmallar", icon: MailIcon })
-export default EpostmallarPage
+export default Page
