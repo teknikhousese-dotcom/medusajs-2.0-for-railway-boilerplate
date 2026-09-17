@@ -102,7 +102,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const metadata: any = {
     skick: b.skick || "", momssats: b.momssats != null ? String(b.momssats) : "",
     inpris: b.inpris != null ? String(b.inpris) : "", leverantor: b.leverantor || "",
-    tillverkare: b.tillverkare || "", modell: b.modell || "", lagerplats: b.lagerplats || "",
+    tillverkare: b.tillverkare || "", color: b.color || "", modell: b.modell || "", lagerplats: b.lagerplats || "",
     sokord: b.sokord || "", google_namn: b.googleNamn || "", html_falt: b.htmlFalt || "",
     seo_title: b.metaTitle || "", seo_desc: b.metaDesc || "", h1: b.h1 || "",
     visning: b.visning || "show", kampanj: kampanjAktiv, kampanjpris: kampanjAktiv ? String(kampanjpris) : "", kampanj_start: b.kampanjStart || "", kampanj_slut: b.kampanjSlut || "", ordinarie_pris: kampanjAktiv ? String(utpris) : "", antal: b.antal != null ? String(b.antal) : "",
