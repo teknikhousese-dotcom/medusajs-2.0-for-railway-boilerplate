@@ -142,6 +142,16 @@ const medusaConfig = {
       }
     }] : []),
     {
+      key: Modules.FULFILLMENT,
+      resolve: '@medusajs/fulfillment',
+      options: {
+        providers: [
+          { resolve: '@medusajs/fulfillment-manual', id: 'manual' },
+          { resolve: './src/modules/teknik-fulfillment', id: 'teknik' },
+        ],
+      },
+    },
+    {
       key: Modules.PAYMENT,
       resolve: '@medusajs/payment',
       options: {
