@@ -38,16 +38,24 @@ const Page = () => {
   const [subject, setSubject] = useState("")
   const [html, setHtml] = useState("")
   const [msg, setMsg] = useState("")
+  const [testTo, setTestTo] = useState("")
+  const [testMsg, setTestMsg] = useState<any>(null)
   const load = () => fetch("/admin/email-templates", { credentials: "include" }).then((r) => r.json()).then((j) => setRows(j.templates || [])).catch(() => {})
   useEffect(() => { load() }, [])
   const post = (b: any) => fetch("/admin/email-templates", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) })
-  const openEdit = (t: any) => { setSel(t); setSubject(t.subject || ""); setHtml(t.body_html || ""); setMsg("") }
+  const openEdit = (t: any) => { setSel(t); setSubject(t.subject || ""); setHtml(t.body_html || ""); setMsg(""); setTestMsg(null); setTestTo("") }
   const back = () => { setSel(null); load() }
   const save = async () => {
     setMsg("Sparar...")
     const r = await post({ kind: "update", id: sel.id, subject, body_html: html })
     setMsg(r.ok ? "Mallen sparades." : "Kunde inte spara.")
     setTimeout(() => setMsg(""), 3000)
+  }
+  const sendTest = async () => {
+    if (!testTo) { setTestMsg({ ok: false, message: "Ange en e-postadress" }); return }
+    setTestMsg({ ok: true, message: "Skickar..." })
+    const r = await post({ kind: "test", to: testTo, subject, body_html: html }).then((x: any) => x.json()).catch(() => ({ ok: false, message: "Nätverksfel" }))
+    setTestMsg(r)
   }
   const del = async (t: any) => {
     if (!window.confirm("Ta bort mallen: " + t.name + " ?")) return
@@ -115,6 +123,16 @@ const Page = () => {
             <button style={BTN} onClick={save}>Spara mall</button>
             <button style={BTN2} onClick={back}>Avbryt</button>
             {msg ? <span style={{ color: "#127b12", fontWeight: 700 }}>{msg}</span> : null}
+          </div>
+
+          <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid #eee" }}>
+            <label style={LBL}>Skicka testmejl</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <input style={{ ...INP, maxWidth: 280 }} type="email" placeholder="din@epost.se" value={testTo} onChange={(e) => setTestTo(e.target.value)} />
+              <button style={BTN2} onClick={sendTest}>Skicka test</button>
+              {testMsg ? <span style={{ color: testMsg.ok ? "#127b12" : "#c0392b", fontWeight: 700 }}>{testMsg.message}</span> : null}
+            </div>
+            <div style={{ color: "#999", fontSize: 11, marginTop: 5 }}>Skickar mallens ämne och innehåll som ett riktigt mejl till adressen ovan.</div>
           </div>
         </div>
       </div>
