@@ -82,13 +82,37 @@ const Payment = ({
     })
   }
 
+  // Selecting a method highlights it instantly (optimistic) and creates the
+  // payment session in the background, so proceeding to review is instant and
+  // the active session always matches the chosen method (no snap-back).
+  const handleChange = async (value: string) => {
+    setError(null)
+    setSelectedPaymentMethod(value)
+
+    if (isStripeFunc(value)) {
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      await initiatePaymentSession(cart, { provider_id: value })
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSubmit = async () => {
     setIsLoading(true)
     try {
       const shouldInputCard =
         isStripeFunc(selectedPaymentMethod) && !activeSession
 
-      if (!activeSession) {
+      const needsInit =
+        !activeSession || activeSession.provider_id !== selectedPaymentMethod
+
+      if (needsInit) {
         await initiatePaymentSession(cart, {
           provider_id: selectedPaymentMethod,
         })
@@ -147,7 +171,7 @@ const Payment = ({
             <>
               <RadioGroup
                 value={selectedPaymentMethod}
-                onChange={(value: string) => setSelectedPaymentMethod(value)}
+                onChange={(value: string) => handleChange(value)}
               >
                 {availablePaymentMethods
                   .sort((a, b) => {
