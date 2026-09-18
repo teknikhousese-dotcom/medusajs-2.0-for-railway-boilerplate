@@ -18,18 +18,124 @@ type ShippingProps = {
   availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
 }
 
-// Delivery description shown under each shipping option name (teknikhouse.se wording).
-const shippingDesc = (name?: string): string => {
+type Kind = "standard" | "ombud" | "express" | "hem" | "butik" | "other"
+
+const kindOf = (name?: string): Kind => {
   const n = (name || "").toLowerCase()
-  if (n.includes("hämta") || n.includes("hamta") || n.includes("butik"))
-    return "Hämta din beställning i vår butik på Sveavägen, Stockholm. Vi meddelar dig så snart din order är redo för upphämtning. Öppettider: Mån–Fre 11:00–16:00."
-  if (n.includes("ombud"))
-    return "Ditt paket kommer till närmaste PostNords utlämningsställe inom 1-3 vardagar."
-  if (n.includes("express")) return "1-2 vardagar."
-  if (n.includes("hem"))
-    return "Få ditt paket levererat direkt hem. Levereras inom 1-3 vardagar."
-  if (n.includes("standard")) return "2-3 vardagar. Fraktfritt vid köp över 999 kr."
-  return "Leverans med PostNord."
+  if (n.includes("hämta") || n.includes("hamta") || n.includes("butik")) return "butik"
+  if (n.includes("ombud")) return "ombud"
+  if (n.includes("express")) return "express"
+  if (n.includes("hem")) return "hem"
+  if (n.includes("standard")) return "standard"
+  return "other"
+}
+
+// Sub-copy under the arrival line (teknikhouse.se wording).
+const shippingDesc = (k: Kind): string => {
+  switch (k) {
+    case "butik":
+      return "Hämta i vår butik på Sveavägen, Stockholm · Mån–Fre 11:00–16:00"
+    case "ombud":
+      return "Levereras till ditt närmaste PostNord-ombud"
+    case "express":
+      return "Prioriterad leverans med PostNord"
+    case "hem":
+      return "Levereras hela vägen hem till dörren"
+    case "standard":
+      return "Fraktfritt vid köp över 999 kr"
+    default:
+      return "Leverans med PostNord"
+  }
+}
+
+const DAYS = ["söndag", "måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag"]
+const MONTHS = ["jan", "feb", "mars", "apr", "maj", "juni", "juli", "aug", "sep", "okt", "nov", "dec"]
+
+const addBusinessDays = (from: Date, n: number): Date => {
+  const d = new Date(from)
+  let added = 0
+  while (added < n) {
+    d.setDate(d.getDate() + 1)
+    const wd = d.getDay()
+    if (wd !== 0 && wd !== 6) added++
+  }
+  return d
+}
+
+const sameDate = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate()
+
+// Honest, computed estimate ("Framme onsdag 24 sep"). Not carrier-accurate.
+const arrivalLabel = (k: Kind): string => {
+  const days: Record<Kind, number | null> = {
+    express: 1,
+    ombud: 2,
+    standard: 3,
+    hem: 3,
+    butik: null,
+    other: null,
+  }
+  const n = days[k]
+  if (n == null) {
+    return k === "butik" ? "Klart för upphämtning inom 1–2 dagar" : "Leveranstid 1–3 vardagar"
+  }
+  const today = new Date()
+  const d = addBusinessDays(today, n)
+  const tomorrow = addBusinessDays(today, 1)
+  if (sameDate(d, tomorrow)) return "Framme imorgon"
+  return `Framme ${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`
+}
+
+const Icon = ({ k, active }: { k: Kind; active: boolean }) => {
+  const color = active ? "#F50000" : "#6B7280"
+  const common = {
+    width: 24,
+    height: 24,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: color,
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  }
+  if (k === "express")
+    return (
+      <svg {...common}>
+        <path d="M13 3 4 14h6l-1 7 9-11h-6l1-7Z" />
+      </svg>
+    )
+  if (k === "ombud")
+    return (
+      <svg {...common}>
+        <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" />
+        <circle cx="12" cy="10" r="2.5" />
+      </svg>
+    )
+  if (k === "butik")
+    return (
+      <svg {...common}>
+        <path d="M3 9l1.5-5h15L21 9M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9ZM4 9h16" />
+        <path d="M9 20v-5h6v5" />
+      </svg>
+    )
+  if (k === "hem")
+    return (
+      <svg {...common}>
+        <path d="M3 11l9-7 9 7" />
+        <path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9" />
+        <path d="M9 20v-6h6v6" />
+      </svg>
+    )
+  // standard / other — parcel truck
+  return (
+    <svg {...common}>
+      <path d="M1 5h11v11H1zM12 8h5l3 3v5h-8" />
+      <circle cx="5.5" cy="18.5" r="1.7" />
+      <circle cx="16.5" cy="18.5" r="1.7" />
+    </svg>
+  )
 }
 
 // Collapse duplicate options by name (prefer the calculated variant, e.g. free-shipping Standard).
@@ -54,8 +160,6 @@ const Shipping: React.FC<ShippingProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Optimistic selection: highlight the clicked option instantly while the
-  // server round-trip (which recomputes totals) happens in the background.
   const [pendingId, setPendingId] = useState<string | undefined>(undefined)
 
   const searchParams = useSearchParams()
@@ -94,7 +198,6 @@ const Shipping: React.FC<ShippingProps> = ({
       })
   }
 
-  // Once the cart catches up with the optimistic choice, drop the override.
   useEffect(() => {
     if (pendingId && cartSelectedId === pendingId) {
       setPendingId(undefined)
@@ -104,6 +207,27 @@ const Shipping: React.FC<ShippingProps> = ({
   useEffect(() => {
     setError(null)
   }, [isOpen])
+
+  const priceNode = (option: HttpTypes.StoreCartShippingOption) => {
+    const free = option.amount === 0
+    return (
+      <span
+        className={clx("text-base font-semibold", {
+          "text-[#1a9d55]": free,
+          "text-[#14161C]": !free,
+        })}
+      >
+        {option.amount == null
+          ? "29 kr"
+          : free
+          ? "Fri frakt"
+          : convertToLocale({
+              amount: option.amount!,
+              currency_code: cart?.currency_code,
+            })}
+      </span>
+    )
+  }
 
   return (
     <div className="bg-white">
@@ -140,43 +264,53 @@ const Shipping: React.FC<ShippingProps> = ({
       </div>
       {isOpen ? (
         <div data-testid="delivery-options-container">
-          <div className="pb-8">
+          <div className="pb-6">
             <RadioGroup value={activeId} onChange={set}>
               {shippingMethods.map((option) => {
                 const isSelected = option.id === activeId
+                const k = kindOf(option.name)
+                const recommended = k === "standard"
                 return (
                   <RadioGroup.Option
                     key={option.id}
                     value={option.id}
                     data-testid="delivery-option-radio"
                     className={clx(
-                      "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active",
-                      {
-                        "border-ui-border-interactive": isSelected,
-                      }
+                      "flex items-center justify-between cursor-pointer py-4 px-5 border rounded-2xl mb-3 transition-all duration-150",
+                      isSelected
+                        ? "border-[#F50000] bg-[#FFF5F5] ring-1 ring-[#F50000] shadow-[0_4px_14px_-6px_rgba(245,0,0,0.35)]"
+                        : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
                     )}
                   >
-                    <div className="flex items-center gap-x-4">
+                    <div className="flex items-center gap-x-4 min-w-0">
                       <Radio checked={isSelected} />
-                      <div className="flex flex-col">
-                        <span className="text-base-regular">{option.name}</span>
-                        <span className="text-ui-fg-subtle text-small-regular">
-                          {shippingDesc(option.name)}
+                      <span className="shrink-0">
+                        <Icon k={k} active={isSelected} />
+                      </span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="flex items-center gap-x-2">
+                          <span className="text-base font-medium text-[#14161C]">
+                            {option.name}
+                          </span>
+                          {recommended && (
+                            <span className="text-[11px] font-semibold text-[#F50000] bg-[#FFE8E8] rounded px-1.5 py-0.5 leading-none">
+                              Populärt
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-[13px] font-semibold text-[#14161C] mt-0.5">
+                          {arrivalLabel(k)}
+                        </span>
+                        <span className="text-[12px] text-gray-500 leading-snug truncate">
+                          {shippingDesc(k)}
                         </span>
                       </div>
                     </div>
-                    <span className="justify-self-end text-ui-fg-base flex items-center gap-x-2">
+                    <span className="justify-self-end flex items-center gap-x-2 shrink-0 ml-3">
                       {isSelected && isLoading && (
                         <Spinner className="animate-spin text-ui-fg-muted" />
                       )}
-                      {option.amount == null
-                        ? "29 kr"
-                        : option.amount === 0
-                        ? "Fri frakt"
-                        : convertToLocale({
-                            amount: option.amount!,
-                            currency_code: cart?.currency_code,
-                          })}
+                      {priceNode(option)}
                     </span>
                   </RadioGroup.Option>
                 )
@@ -191,7 +325,7 @@ const Shipping: React.FC<ShippingProps> = ({
 
           <Button
             size="large"
-            className="mt-6"
+            className="mt-2"
             onClick={handleSubmit}
             isLoading={isLoading}
             disabled={!cart.shipping_methods?.[0]}
