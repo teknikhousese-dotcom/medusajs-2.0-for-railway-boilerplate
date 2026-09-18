@@ -5,6 +5,31 @@ import Ideal from "@modules/common/icons/ideal"
 import Bancontact from "@modules/common/icons/bancontact"
 import PayPal from "@modules/common/icons/paypal"
 
+const badge = (
+  label: string,
+  bg: string,
+  color: string,
+  border?: string
+): React.JSX.Element => (
+  <span
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      backgroundColor: bg,
+      color,
+      border: border ? `1px solid ${border}` : "none",
+      padding: "4px 10px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      fontWeight: 700,
+      lineHeight: 1,
+      letterSpacing: "0.01em",
+    }}
+  >
+    {label}
+  </span>
+)
+
 /* Map of payment provider_id to their title and icon. Add in any payment providers you want to use. */
 export const paymentInfoMap: Record<
   string,
@@ -28,27 +53,15 @@ export const paymentInfoMap: Record<
   },
   pp_klarna_klarna: {
     title: "Klarna",
-    icon: (
-      <span className="inline-flex items-center rounded-md bg-[#FFB3C7] px-2.5 py-1 text-[13px] font-bold leading-none text-[#0A0B09]">
-        Klarna
-      </span>
-    ),
+    icon: badge("Klarna", "#FFB3C7", "#0A0B09"),
   },
   pp_swish_swish: {
     title: "Swish",
-    icon: (
-      <span className="inline-flex items-center rounded-md bg-[#4D2683] px-2.5 py-1 text-[13px] font-bold leading-none text-white">
-        Swish
-      </span>
-    ),
+    icon: badge("Swish", "#4D2683", "#FFFFFF"),
   },
   pp_system_default: {
     title: "Faktura",
-    icon: (
-      <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-50 px-2.5 py-1 text-[13px] font-semibold leading-none text-gray-700">
-        Faktura
-      </span>
-    ),
+    icon: badge("Faktura", "#F9FAFB", "#374151", "#D1D5DB"),
   },
   // Add more payment providers here
 }
