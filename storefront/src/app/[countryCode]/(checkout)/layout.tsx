@@ -1,6 +1,5 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
-import { getStoreName } from "@lib/util/env"
 
 export default function CheckoutLayout({
   children,
@@ -24,12 +23,25 @@ export default function CheckoutLayout({
               Tillbaka
             </span>
           </LocalizedClientLink>
+          <style
+            dangerouslySetInnerHTML={{
+              __html:
+                "@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&display=swap');",
+            }}
+          />
           <LocalizedClientLink
             href="/"
-            className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase"
+            className="hover:opacity-80"
             data-testid="store-link"
+            style={{
+              fontFamily: "'Baloo 2', ui-rounded, system-ui, sans-serif",
+              fontWeight: 800,
+              fontSize: "24px",
+              letterSpacing: "-0.02em",
+              color: "#F50000",
+             }}
           >
-            {getStoreName()}
+            teknikhouse.se
           </LocalizedClientLink>
           <div className="flex-1 basis-0" />
         </nav>
