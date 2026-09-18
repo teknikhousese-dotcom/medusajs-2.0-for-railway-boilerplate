@@ -110,3 +110,38 @@
     @apply text-[32px] leading-[44px] font-semibold;
   }
 }
+
+/* ===== Checkout 2027 — brand-red CTAs ===== */
+[data-testid="submit-address-button"],
+[data-testid="submit-delivery-option-button"],
+[data-testid="submit-payment-button"],
+[data-testid="submit-order-button"] {
+  background-color: #F50000 !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  border-radius: 9999px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 6px 16px -6px rgba(245, 0, 0, 0.55) !important;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+[data-testid="submit-address-button"]:hover:not(:disabled),
+[data-testid="submit-delivery-option-button"]:hover:not(:disabled),
+[data-testid="submit-payment-button"]:hover:not(:disabled),
+[data-testid="submit-order-button"]:hover:not(:disabled) {
+  background-color: #C90000 !important;
+  box-shadow: 0 8px 22px -6px rgba(201, 0, 0, 0.6) !important;
+}
+[data-testid="submit-address-button"]:disabled,
+[data-testid="submit-delivery-option-button"]:disabled,
+[data-testid="submit-payment-button"]:disabled,
+[data-testid="submit-order-button"]:disabled {
+  background-color: #E5E7EB !important;
+  color: #9CA3AF !important;
+  box-shadow: none !important;
+}
+/* Final "Slutför köp" — hero CTA, full width */
+[data-testid="submit-order-button"] {
+  width: 100% !important;
+  height: 52px !important;
+  font-size: 16px !important;
+}
