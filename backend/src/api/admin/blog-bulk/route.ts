@@ -26,7 +26,7 @@ async function ensureSchema(p: any) {
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const p: any = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
-  if (!p) return res.status(500).json({ message: "no pg" })
+  if (!p) return res.status(500).json({ message: "Databasen är inte tillgänglig just nu." })
   await ensureSchema(p)
   const body: any = req.body || {}
   const posts: any[] = Array.isArray(body.posts) ? body.posts : []
