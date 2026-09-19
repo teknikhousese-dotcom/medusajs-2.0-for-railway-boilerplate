@@ -78,6 +78,14 @@ export function installGlobalMenu() {
   if (w.__bmGlobalMenu) return
   w.__bmGlobalMenu = true
 
+  // En enda meny: dolj Medusas inbyggda sidomeny OCH den dubblerade sido-menyn (aside). Behall bara var globala meny.
+  try {
+    const __s = (document.getElementById("__bm_single_menu") as HTMLStyleElement) || document.createElement("style")
+    __s.id = "__bm_single_menu"
+    __s.textContent = 'div[class*="w-[220px]"][class*="border-e"]{display:none !important} aside.w-60.shrink-0{display:none !important}'
+    if (!__s.parentNode) document.head.appendChild(__s)
+  } catch (e) {}
+
   // Dolj Medusas inbyggda (engelska) menypunkter i sidomenyn - behall bara vara svenska sidor.
   try {
     const NATIVE_SEGMENTS = ["orders","products","collections","categories","inventory","reservations","customers","customer-groups","promotions","campaigns","price-lists","gift-cards","settings"]
