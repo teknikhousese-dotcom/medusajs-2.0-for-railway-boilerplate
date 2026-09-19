@@ -1,3 +1,4 @@
+import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
 import { ADMIN, WF, Snabbmeny, jget, jsend } from "../../lib/butikadmin"
 
@@ -111,4 +112,5 @@ function VarugruppersorteringPage() {
   )
 }
 
+export const config = defineRouteConfig({ label: "Ordning på varugrupper" })
 export default VarugruppersorteringPage
