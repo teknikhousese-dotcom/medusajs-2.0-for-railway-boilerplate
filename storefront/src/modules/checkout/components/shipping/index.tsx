@@ -30,62 +30,23 @@ const kindOf = (name?: string): Kind => {
   return "other"
 }
 
-// Sub-copy under the arrival line (teknikhouse.se wording).
-const shippingDesc = (k: Kind): string => {
-  switch (k) {
-    case "butik":
-      return "Hämta i vår butik på Sveavägen, Stockholm · Mån–Fre 11:00–16:00"
-    case "ombud":
-      return "Levereras till ditt närmaste PostNord-ombud"
-    case "express":
-      return "Prioriterad leverans med PostNord"
-    case "hem":
-      return "Levereras hela vägen hem till dörren"
-    case "standard":
-      return "Fraktfritt vid köp över 999 kr"
-    default:
-      return "Leverans med PostNord"
-  }
+// Leveranstid — teknikhouse.se exact numbers (no promised date).
+const timeLabel: Record<Kind, string> = {
+  standard: "2–3 vardagar",
+  ombud: "1–3 vardagar",
+  express: "1–2 vardagar",
+  hem: "1–3 vardagar",
+  butik: "Hämta i butik",
+  other: "1–3 vardagar",
 }
 
-const DAYS = ["söndag", "måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag"]
-const MONTHS = ["jan", "feb", "mars", "apr", "maj", "juni", "juli", "aug", "sep", "okt", "nov", "dec"]
-
-const addBusinessDays = (from: Date, n: number): Date => {
-  const d = new Date(from)
-  let added = 0
-  while (added < n) {
-    d.setDate(d.getDate() + 1)
-    const wd = d.getDay()
-    if (wd !== 0 && wd !== 6) added++
-  }
-  return d
-}
-
-const sameDate = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate()
-
-// Honest, computed estimate ("Framme onsdag 24 sep"). Not carrier-accurate.
-const arrivalLabel = (k: Kind): string => {
-  const days: Record<Kind, number | null> = {
-    express: 1,
-    ombud: 2,
-    standard: 3,
-    hem: 3,
-    butik: null,
-    other: null,
-  }
-  const n = days[k]
-  if (n == null) {
-    return k === "butik" ? "Klart för upphämtning inom 1–2 dagar" : "Leveranstid 1–3 vardagar"
-  }
-  const today = new Date()
-  const d = addBusinessDays(today, n)
-  const tomorrow = addBusinessDays(today, 1)
-  if (sameDate(d, tomorrow)) return "Framme imorgon"
-  return `Framme ${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`
+const noteLabel: Record<Kind, string> = {
+  standard: "Fraktfritt vid köp över 999 kr",
+  ombud: "Levereras till närmaste PostNord-ombud",
+  express: "Prioriterad leverans med PostNord",
+  hem: "Levereras hem till dörren",
+  butik: "Sveavägen, Stockholm · Mån–Fre 11:00–16:00",
+  other: "Leverans med PostNord",
 }
 
 const Icon = ({ k, active }: { k: Kind; active: boolean }) => {
@@ -128,7 +89,6 @@ const Icon = ({ k, active }: { k: Kind; active: boolean }) => {
         <path d="M9 20v-6h6v6" />
       </svg>
     )
-  // standard / other — parcel truck
   return (
     <svg {...common}>
       <path d="M1 5h11v11H1zM12 8h5l3 3v5h-8" />
@@ -138,7 +98,6 @@ const Icon = ({ k, active }: { k: Kind; active: boolean }) => {
   )
 }
 
-// Collapse duplicate options by name (prefer the calculated variant, e.g. free-shipping Standard).
 const dedupeMethods = (
   methods: HttpTypes.StoreCartShippingOption[] | null
 ): HttpTypes.StoreCartShippingOption[] => {
@@ -299,10 +258,10 @@ const Shipping: React.FC<ShippingProps> = ({
                           )}
                         </span>
                         <span className="text-[13px] font-semibold text-[#14161C] mt-0.5">
-                          {arrivalLabel(k)}
+                          {timeLabel[k]}
                         </span>
                         <span className="text-[12px] text-gray-500 leading-snug truncate">
-                          {shippingDesc(k)}
+                          {noteLabel[k]}
                         </span>
                       </div>
                     </div>
