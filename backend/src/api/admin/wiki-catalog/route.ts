@@ -36,7 +36,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         const made = await productModule.createProductCategories([{ name, parent_category_id: parent_id, is_active: true }])
         map[name] = made[0].id
         created++
-      } catch (e: any) { failed++; if (errors.length < 8) errors.push(name + ": " + e.message) }
+      } catch (e: any) { failed++; if (errors.length < 8) errors.push(name + ": kunde inte skapas") }
     }
     CAT_CACHE = null
     return res.json({ mode, received: rows.length, created, skipped, failed, errors, map })
@@ -92,7 +92,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       try {
         await createProductsWorkflow(req.scope).run({ input: { products: [input] } })
         created++
-      } catch (e: any) { failed++; if (errors.length < 10) errors.push(String(p.handle || p.sku) + ": " + e.message) }
+      } catch (e: any) { failed++; if (errors.length < 10) errors.push(String(p.handle || p.sku) + ": kunde inte importeras") }
     }
     return res.json({ mode, received: rows.length, created, skipped: rows.length - toCreate.length, failed, errors })
   }
