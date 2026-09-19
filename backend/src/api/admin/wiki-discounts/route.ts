@@ -41,7 +41,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       }
     }).filter((p: any) => p.kind !== "xfory")
     res.json({ discounts: rows })
-  } catch (e: any) { res.status(500).json({ error: String((e && e.message) || e) }) }
+  } catch (e: any) { res.status(500).json({ error: "Kunde inte hämta rabattkoder." }) }
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -105,6 +105,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
     return res.status(400).json({ error: "okänd åtgärd" })
   } catch (e: any) {
-    return res.status(500).json({ error: String((e && e.message) || e) })
+    const raw = String((e && e.message) || e || "")
+    let msg = "Något gick fel. Försök igen."
+    if (/already exists/i.test(raw)) msg = "Rabattkoden finns redan. Välj en annan kod."
+    else if (/not found/i.test(raw)) msg = "Rabattkoden kunde inte hittas."
+    else if (/(required|must|invalid|not allowed)/i.test(raw)) msg = "Ogiltiga uppgifter. Kontrollera fälten och försök igen."
+    return res.status(500).json({ error: msg })
   }
 }
