@@ -1,3 +1,4 @@
+import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
 import { WF, Snabbmeny } from "../../lib/butikadmin"
 
@@ -75,4 +76,5 @@ const Page = () => {
   )
 }
 
+export const config = defineRouteConfig({ label: "Metataggar" })
 export default Page
