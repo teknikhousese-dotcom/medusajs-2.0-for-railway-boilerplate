@@ -51,7 +51,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (b.kind === "new_percent") {
       const code = (b.code || "").trim().toUpperCase() || rndCode()
       const value = Math.round(Number(b.percentage) || 0)
-      if (!value) return res.status(400).json({ error: "Ange en procentsats." })
+      if (!value || value < 1 || value > 100) return res.status(400).json({ error: "Ange en procentsats mellan 1 och 100." })
       const created = await s.createPromotions([{
         code, type: "standard", is_automatic: false, status: "active",
         application_method: { type: "percentage", target_type: "order", value, allocation: "across" },
@@ -62,7 +62,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (b.kind === "new_amount") {
       const code = (b.code || "").trim().toUpperCase() || rndCode()
       const value = Math.round(Number(b.amountSEK) || 0)
-      if (!value) return res.status(400).json({ error: "Ange ett belopp i kr." })
+      if (!value || value < 1) return res.status(400).json({ error: "Ange ett positivt belopp i kr." })
       const created = await s.createPromotions([{
         code, type: "standard", is_automatic: false, status: "active",
         application_method: { type: "fixed", target_type: "order", currency_code: "sek", value, allocation: "across" },
