@@ -142,7 +142,7 @@ function Mallar() {
 }
 
 function NyhetsbrevPage() {
-  const [tab, setTab] = useState("hub")
+  const [tab, setTab] = useState(() => { try { const __m: any = { recipients: "subs", nya: "new", new: "new", letters: "sent", templates: "tpl" }; const __s = new URLSearchParams(window.location.search).get("s") || ""; return __m[__s] || "hub" } catch { return "hub" } })
   const [meta, setMeta] = useState<{ online: number | null; unread: number }>({ online: null, unread: 0 })
   const [subs, setSubs] = useState(0); const [bump, setBump] = useState(0)
 
