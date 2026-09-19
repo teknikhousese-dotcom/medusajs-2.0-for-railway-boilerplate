@@ -134,8 +134,8 @@ export function installGlobalMenu() {
       s.textContent = NAVSEL + (hide ? "{display:none !important}" : "{display:flex !important}")
     }
     const KEY = "__bm_hide_nav"
-    let hidden = false
-    try { hidden = localStorage.getItem(KEY) === "1" } catch {}
+    let hidden = true
+    try { hidden = localStorage.getItem(KEY) !== "0" } catch {}
     applyHide(hidden)
     if (!document.getElementById("__bm_nav_toggle_btn")) {
       const b = document.createElement("button")
@@ -237,7 +237,7 @@ function useHideNativeSidebar() {
   // Native Medusa sidebar is kept visible on butikadmin pages (per owner preference).
   // Only remove any leftover hide-style from earlier builds so the nav re-appears.
   useEffect(() => {
-    const e = document.getElementById("__butikadmin_hide_native"); if (e) e.remove()
+    const __id = "__butikadmin_hide_native"; if (!document.getElementById(__id)) { const __s = document.createElement("style"); __s.id = __id; __s.textContent = "div.h-screen.w-\\[220px\\].border-e{display:none !important}"; document.head.appendChild(__s) }
   }, [])
 }
 
