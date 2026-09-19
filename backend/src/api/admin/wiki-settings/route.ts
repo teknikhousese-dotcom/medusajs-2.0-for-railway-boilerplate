@@ -24,7 +24,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const meta = (store && store.metadata) || {}
     const data = meta["wiki_" + group] || {}
     res.json({ group, data })
-  } catch (e: any) { res.status(500).json({ error: String((e && e.message) || e) }) }
+  } catch (e: any) { res.status(500).json({ error: "Något gick fel. Försök igen." }) }
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -38,5 +38,5 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     meta["wiki_" + group] = b.data || {}
     await storeSvc(req.scope).updateStores(store.id, { metadata: meta })
     res.json({ ok: true })
-  } catch (e: any) { res.status(500).json({ error: String((e && e.message) || e) }) }
+  } catch (e: any) { res.status(500).json({ error: "Något gick fel. Försök igen." }) }
 }
