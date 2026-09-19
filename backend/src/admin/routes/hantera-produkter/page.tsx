@@ -265,9 +265,9 @@ function GridPage() {
           <span style={{ color: "#bbb" }}>|</span>
           <a href={`${ADMIN}/hantera-produkter?action=copy`} style={{ color: "#0060cc" }}>Kopiera produkt</a>
           <span style={{ color: "#bbb" }}>|</span>
-          <a href={`${ADMIN}/categories`} style={{ color: "#0060cc" }}>Produktsortering</a>
+          <a href={`${ADMIN}/produktsortering`} style={{ color: "#0060cc" }}>Produktsortering</a>
           <span style={{ color: "#bbb" }}>|</span>
-          <a href={`${ADMIN}/products`} style={{ color: "#0060cc" }}>Produktfiltrering</a>
+          <a href={`${ADMIN}/hantera-produkter?action=filter`} style={{ color: "#0060cc" }}>Produktfiltrering</a>
         </div>
 
         <div style={{ border: "1px solid #ddd", background: "#fafafa", borderRadius: "4px", padding: "10px 14px", marginBottom: "12px" }}>
