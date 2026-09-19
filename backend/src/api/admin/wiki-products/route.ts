@@ -73,7 +73,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           status: p.status, metadata: p.metadata || {},
         },
       })
-    } catch (e: any) { return res.status(500).json({ error: String(e && e.message || e) }) }
+    } catch (e: any) { return res.status(500).json({ error: "Något gick fel. Försök igen." }) }
   }
   const categories = await loadCategories(req.scope)
   res.json({ categories, suppliers: SUPPLIERS })
@@ -152,6 +152,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     } catch (e) { /* stock is best-effort */ }
     return res.json({ ok: true, id: created && created.id })
   } catch (e: any) {
-    return res.status(500).json({ error: String(e && e.message || e) })
+    return res.status(500).json({ error: "Något gick fel. Försök igen." })
   }
 }
