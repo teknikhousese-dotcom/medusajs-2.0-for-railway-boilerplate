@@ -22,11 +22,13 @@ async function loadTemplates(scope: any) {
 }
 
 async function loadOrder(scope: any, id: string) {
-  const orderService: any = scope.resolve(Modules.ORDER)
-  return await orderService.retrieveOrder(id, {
-    relations: ["items", "shipping_address"],
-    select: ["id", "display_id", "email", "currency_code", "total", "metadata"],
+  const query = scope.resolve(ContainerRegistrationKeys.QUERY)
+  const { data } = await query.graph({
+    entity: "order",
+    fields: ["id", "display_id", "email", "currency_code", "total", "metadata", "items.*", "shipping_address.*"],
+    filters: { id },
   })
+  return (data || [])[0]
 }
 
 function placeholders(order: any): Record<string, string> {
@@ -121,7 +123,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         body: JSON.stringify({ from: `Teknikhouse.se <${FROM}>`, to: [to], subject, html }),
       })
       const data = await r.json().catch(() => ({}))
-      if (!r.ok) return res.status(502).json({ ok: false, provider: "resend", message: (data as any)?.message || `Resend-fel (${r.status})` })
+      if (!r.ok) return res.status(502).json({ ok: false, provider: "resend", message: "E-post kunde inte skickas. Kontrollera mottagaradressen och forsok igen." })
       return res.json({ ok: true, provider: "resend", id: (data as any)?.id || null, to, subject })
     } catch (e: any) {
       return res.status(502).json({ ok: false, provider: "resend", message: "Kunde inte nå Resend." })
@@ -143,7 +145,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })
       if (!(r.status >= 200 && r.status < 300)) {
         const t = await r.text().catch(() => "")
-        return res.status(502).json({ ok: false, provider: "sendgrid", message: t || `SendGrid-fel (${r.status})` })
+        return res.status(502).json({ ok: false, provider: "sendgrid", message: "E-post kunde inte skickas. Forsok igen." })
       }
       return res.json({ ok: true, provider: "sendgrid", to, subject })
     } catch (e: any) {
