@@ -29,6 +29,7 @@ const emptyFilters = { name: "", email: "", phone: "", zip: "", city: "", countr
 function KunddatabasPage() {
   const [meta, setMeta] = useState<{ online: number | null; unread: number }>({ online: null, unread: 0 })
   const [rows, setRows] = useState<Cust[]>([])
+  const [sort, setSort] = useState<{ k: keyof Cust; d: 1 | -1 } | null>(null)
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(0)
   const [f, setF] = useState<any>({ ...emptyFilters })
@@ -74,6 +75,9 @@ function KunddatabasPage() {
     setLoading(false)
   })() }, [page, applied])
 
+  const toggleSort = (k: keyof Cust) => setSort((s) => (s && s.k === k ? { k, d: (s.d === 1 ? -1 : 1) as 1 | -1 } : { k, d: 1 }))
+  const arrow = (k: keyof Cust) => (sort && sort.k === k ? (sort.d === 1 ? " \u25B2" : " \u25BC") : "")
+  const viewRows = sort ? [...rows].sort((a, b) => { const av: any = a[sort.k], bv: any = b[sort.k]; if (typeof av === "number" && typeof bv === "number") return (av - bv) * sort.d; return String(av).localeCompare(String(bv), "sv") * sort.d }) : rows
   const runSearch = () => { setPage(0); setApplied({ ...f }) }
   const clearSearch = () => { setF({ ...emptyFilters }); setApplied({ ...emptyFilters }); setPage(0) }
 
@@ -125,11 +129,11 @@ function KunddatabasPage() {
         </div>
 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr><th style={th}>Namn</th><th style={th}>E-postadress</th><th style={th}>Telefonnummer</th><th style={th}>Ort</th><th style={{ ...th, textAlign: "right" }}>Antal ordrar</th></tr></thead>
+          <thead><tr><th style={{ ...th, cursor: "pointer" }} onClick={() => toggleSort("name")}>Namn{arrow("name")}</th><th style={{ ...th, cursor: "pointer" }} onClick={() => toggleSort("email")}>E-postadress{arrow("email")}</th><th style={{ ...th, cursor: "pointer" }} onClick={() => toggleSort("phone")}>Telefonnummer{arrow("phone")}</th><th style={{ ...th, cursor: "pointer" }} onClick={() => toggleSort("city")}>Ort{arrow("city")}</th><th style={{ ...th, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("orders")}>Antal ordrar{arrow("orders")}</th></tr></thead>
           <tbody>
             {loading ? <tr><td colSpan={5} style={{ ...td, textAlign: "center", color: "#666" }}>Laddar…</td></tr> :
               rows.length === 0 ? <tr><td colSpan={5} style={{ ...td, textAlign: "center", color: "#666" }}>Inga kunder matchar.</td></tr> :
-              rows.map((c) => (
+              viewRows.map((c) => (
                 <tr key={c.id} style={{ borderBottom: "1px solid #e2e2e2" }}>
                   <td style={td}><a href={`${ADMIN}/customers/${c.id}`} style={{ color: "#0060cc", textDecoration: "underline" }}>{c.name}</a></td>
                   <td style={td}>{c.email}</td>
