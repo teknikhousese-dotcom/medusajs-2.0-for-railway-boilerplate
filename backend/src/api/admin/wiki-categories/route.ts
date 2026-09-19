@@ -29,7 +29,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       description: c.description || "", metadata: c.metadata || {}, label: label(c),
     })).sort((a: any, b: any) => a.label.localeCompare(b.label, "sv"))
     res.json({ categories: cats })
-  } catch (e: any) { res.status(500).json({ error: String(e && e.message || e) }) }
+  } catch (e: any) { res.status(500).json({ error: "Något gick fel. Försök igen." }) }
 }
 
 function slugify(s: string) {
@@ -81,7 +81,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
     return res.status(400).json({ error: "okänd åtgärd" })
   } catch (e: any) {
-    return res.status(500).json({ error: String(e && e.message || e) })
+    return res.status(500).json({ error: "Något gick fel. Försök igen." })
   }
 }
 
