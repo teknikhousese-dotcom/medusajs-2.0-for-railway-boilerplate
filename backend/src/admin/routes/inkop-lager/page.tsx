@@ -27,7 +27,7 @@ async function jsend(url: string, method: string, body?: any) {
 }
 
 type Supplier = { id: string; name: string; email?: string | null; ref_first_name?: string | null; ref_last_name?: string | null }
-type Prod = { id: string; title: string; sku: string | null; supplier_id: string | null; qty: number; min_stock: number; inventory_item_id: string | null; variant_id: string | null; category: string }
+type Prod = { id: string; title: string; sku: string | null; supplier_id: string | null; qty: number; min_stock: number; inventory_item_id: string | null; variant_id: string | null; category: string; supplier_name_raw: string | null }
 
 // pull products with variants + inventory + metadata, flattened to one row per variant
 async function loadProducts(): Promise<Prod[]> {
@@ -42,12 +42,13 @@ async function loadProducts(): Promise<Prod[]> {
     for (const p of ps) {
       const cat = (p.categories && p.categories[0] && p.categories[0].name) || ""
       const supId = (p.metadata && (p.metadata.supplier_id || p.metadata.leverantor_id)) || null
-      const minS = Number((p.metadata && (p.metadata.min_stock || p.metadata.min_lager)) || 0)
+      const supName = (p.metadata && (p.metadata.leverantor || p.metadata.supplier_name)) || null
+      const minS = Number((p.metadata && (p.metadata.min_stock || p.metadata.min_lager || p.metadata.lagervarning)) || 0)
       const vs: any[] = p.variants || []
-      if (!vs.length) { out.push({ id: p.id, title: p.title, sku: null, supplier_id: supId, qty: 0, min_stock: minS, inventory_item_id: null, variant_id: null, category: cat }); continue }
+      if (!vs.length) { out.push({ id: p.id, title: p.title, sku: null, supplier_id: supId, qty: 0, min_stock: minS, inventory_item_id: null, variant_id: null, category: cat, supplier_name_raw: supName }); continue }
       for (const v of vs) {
         const invItem = (v.inventory_items && v.inventory_items[0] && v.inventory_items[0].inventory_item_id) || null
-        out.push({ id: p.id, title: vs.length > 1 ? `${p.title} — ${v.title || v.sku || ""}` : p.title, sku: v.sku || null, supplier_id: supId, qty: Number(v.inventory_quantity || 0), min_stock: minS, inventory_item_id: invItem, variant_id: v.id, category: cat })
+        out.push({ id: p.id, title: vs.length > 1 ? `${p.title} — ${v.title || v.sku || ""}` : p.title, sku: v.sku || null, supplier_id: supId, qty: Number(v.inventory_quantity || 0), min_stock: minS, inventory_item_id: invItem, variant_id: v.id, category: cat, supplier_name_raw: supName })
       }
     }
     if (ps.length < limit) break
@@ -331,6 +332,11 @@ function InkopLagerPage() {
   })() }, [bump])
 
   const categories = useMemo(() => Array.from(new Set(products.map((p) => p.category).filter(Boolean))).sort(), [products])
+  const resolvedProducts = useMemo(() => {
+    const byName: Record<string, string> = {}
+    for (const s of suppliers) if (s.name) byName[s.name.trim().toLowerCase()] = s.id
+    return products.map((p) => (p.supplier_id || !p.supplier_name_raw) ? p : { ...p, supplier_id: byName[String(p.supplier_name_raw).trim().toLowerCase()] || null })
+  }, [products, suppliers])
   const reload = () => setBump((b) => b + 1)
 
   const tabBtn = (active: boolean): any => ({ padding: "6px 16px", margin: "0 4px", fontSize: "12px", fontFamily: WF, cursor: "pointer",
@@ -351,9 +357,9 @@ function InkopLagerPage() {
           <button style={tabBtn(tab === "lev")} onClick={() => setTab("lev")}>Leverantörer</button>
           <button style={tabBtn(tab === "help")} onClick={() => setTab("help")}>Hjälp/info</button>
         </div>
-        {tab === "ny" && <NyBestallning suppliers={suppliers} products={products} reload={reload} />}
+        {tab === "ny" && <NyBestallning suppliers={suppliers} products={resolvedProducts} reload={reload} />}
         {tab === "best" && <Bestallningar />}
-        {tab === "lager" && <LagerInventering products={products} suppliers={suppliers} categories={categories} />}
+        {tab === "lager" && <LagerInventering products={resolvedProducts} suppliers={suppliers} categories={categories} />}
         {tab === "lev" && <Leverantorer suppliers={suppliers} reload={reload} />}
         {tab === "help" && <Hjalp />}
         <div style={{ textAlign: "center", marginTop: "24px", fontSize: "12px" }}>
