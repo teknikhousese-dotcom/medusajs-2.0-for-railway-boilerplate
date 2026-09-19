@@ -72,7 +72,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       const [c] = await channelModule.listSalesChannels({ name: process.env.CHANNEL_NAME || "Teknikhouse.se" }, { take: 1 })
       CHANNEL_ID = c?.id || null
     }
-    if (!REGION_ID || !CHANNEL_ID) return res.status(400).json({ error: "region/channel not found" })
+    if (!REGION_ID || !CHANNEL_ID) return res.status(400).json({ error: "Region eller försäljningskanal saknas." })
 
     const ids = rows.map((o) => o.wiki_order_id).filter(Boolean)
     const dups = ids.length
@@ -121,5 +121,5 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.json({ mode, received: rows.length, created, failed, errors })
   }
 
-  return res.status(400).json({ error: "unknown mode" })
+  return res.status(400).json({ error: "Okänt läge." })
 }
