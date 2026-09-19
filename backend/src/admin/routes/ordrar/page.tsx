@@ -4,7 +4,7 @@ import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
 
 /**
  * Teknikhouse.se — Visa ordrar
- * A faithful 1:1 mirror of Wikinggruppen's order_list.php + order_page.php,
+ * A faithful 1:1 mirror of Wikinggruppens order_list.php + order_page.php,
  * built on Medusa's order engine. Classic Wiki look (Verdana, grey header bars,
  * bordered tables) with the right-hand "Hantera order" panel. Live data via
  * /admin/orders with the logged-in session cookie. Native order screens hidden.
@@ -32,6 +32,36 @@ const payText = (st?: string): string => {
     case "canceled": return "Makulerad"
     default: return "Ej betald"
   }
+}
+
+// Landsflagga + landsnamn (svenska) från country_code.
+const flagOf = (o: any): string => {
+  const cc = (o?.shipping_address?.country_code || "").toLowerCase()
+  const map: Record<string, string> = { se: "🇸🇪", no: "🇳🇴", dk: "🇩🇰", fi: "🇫🇮", de: "🇩🇪", gb: "🇬🇧", us: "🇺🇸" }
+  return map[cc] || (cc ? "🇪🇺" : "🇸🇪")
+}
+const countryName = (cc?: string): string => {
+  const c = (cc || "").toLowerCase()
+  const map: Record<string, string> = { se: "Sverige", no: "Norge", dk: "Danmark", fi: "Finland", de: "Tyskland", gb: "Storbritannien", us: "USA" }
+  return map[c] || (cc ? cc.toUpperCase() : "Sverige")
+}
+// Betalsätt: metadata.payment_method (t.ex. import) annars härlett ur betalningsprovider.
+const paymentOf = (o: any): string => {
+  const meta = (o?.metadata?.payment_method || "").toString().trim()
+  if (meta) return meta
+  try {
+    for (const pc of (o?.payment_collections || [])) {
+      for (const pm of (pc?.payments || [])) {
+        const id = (pm?.provider_id || "").toLowerCase()
+        if (id.includes("klarna")) return "Klarna"
+        if (id.includes("swish")) return "Swish"
+        if (id.includes("stripe") || id.includes("card")) return "Kort"
+        if (id.includes("paypal")) return "PayPal"
+        if (id.includes("payson")) return "Payson"
+      }
+    }
+  } catch { /* ignore */ }
+  return ""
 }
 
 
@@ -63,14 +93,19 @@ function SectionRow({ title }: { title: string }) {
 const lhTd: any = { background: "#dddddd", fontSize: "11px", fontWeight: 700, padding: "4px 6px", border: "1px solid #cfcfcf", color: "#000", textAlign: "left" }
 const lcTd: any = { fontSize: "11px", padding: "4px 6px", border: "1px solid #e2e2e2", color: "#000", verticalAlign: "middle" }
 
+// Betal-logga som färgad pill med varumärkesnamn (Klarna/Swish/Kort/Payson).
 function payBadge(pm?: string) {
+  if (!pm) return null
+  const k = (pm || "").toUpperCase()
   const map: Record<string, { t: string; bg: string; fg: string }> = {
-    KLARNA: { t: "KL", bg: "#ffb3c7", fg: "#17120f" }, KLARNACHECKOUT: { t: "KL", bg: "#ffb3c7", fg: "#17120f" },
-    PAYSON: { t: "Pa", bg: "#d9e6ff", fg: "#123" }, PAYSONFAKTURA: { t: "Pa", bg: "#d9e6ff", fg: "#123" },
-    SWISH: { t: "Sw", bg: "#d9ffe6", fg: "#161" }, CDON: { t: "CD", bg: "#ffe9cc", fg: "#630" },
+    KLARNA: { t: "Klarna", bg: "#ffb3c7", fg: "#0b051d" }, KLARNACHECKOUT: { t: "Klarna", bg: "#ffb3c7", fg: "#0b051d" }, KLARNAFAKTURA: { t: "Klarna", bg: "#ffb3c7", fg: "#0b051d" },
+    SWISH: { t: "Swish", bg: "#e5007d", fg: "#ffffff" },
+    KORT: { t: "Kort", bg: "#1a1f36", fg: "#ffffff" }, KORTBETALNING: { t: "Kort", bg: "#1a1f36", fg: "#ffffff" }, STRIPE: { t: "Kort", bg: "#1a1f36", fg: "#ffffff" },
+    PAYSON: { t: "Payson", bg: "#dcdcdc", fg: "#444" }, PAYSONFAKTURA: { t: "Payson", bg: "#dcdcdc", fg: "#444" },
+    PAYPAL: { t: "PayPal", bg: "#dbeafe", fg: "#123" }, CDON: { t: "CDON", bg: "#ffe9cc", fg: "#630" },
   }
-  const k = (pm || "").toUpperCase(); const b = map[k] || { t: (k[0] || "?"), bg: "#eee", fg: "#333" }
-  return <span title={pm || ""} style={{ display: "inline-block", minWidth: "20px", textAlign: "center", fontSize: "9px", fontWeight: 700, padding: "1px 3px", borderRadius: "3px", background: b.bg, color: b.fg, marginRight: "6px" }}>{b.t}</span>
+  const b = map[k] || { t: pm, bg: "#eee", fg: "#333" }
+  return <span title={pm} style={{ display: "inline-block", textAlign: "center", fontSize: "9px", fontWeight: 700, padding: "1px 5px", borderRadius: "3px", background: b.bg, color: b.fg, marginRight: "6px", verticalAlign: "middle" }}>{b.t}</span>
 }
 const flikOf = (o: any): string => o.metadata?.orderflik || (o.payment_status === "canceled" ? "makulerade" : "nya")
 const deviceOf = (o: any): string => { const v = (o.metadata?.ordered_via || "").toLowerCase(); return /dator|desktop|surf|tablet/.test(v) ? "🖥" : "📱" }
@@ -91,7 +126,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   const PAGE = 50
   const [fliks, setFliks] = useState<any[]>([{ key: "nya", label: "Nya" }, { key: "makulerade", label: "Makulerade" }, { key: "arkiverade", label: "Arkiverade" }])
 
-  const FIELDS = "id,display_id,email,total,currency_code,created_at,payment_status,fulfillment_status,status,*shipping_address,+metadata"
+  const FIELDS = "id,display_id,email,total,currency_code,created_at,payment_status,fulfillment_status,status,*shipping_address,payment_collections.payments.provider_id,+metadata"
   const load = async () => {
     setLoading(true)
     try {
@@ -145,10 +180,19 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
     }
     setSel({}); setMoveTo(""); setBusy(""); await load()
   }
-  const opna = () => {
+  // ÖPPNA: sök först i laddade rader, annars server-side över ALLA ordrar.
+  const opna = async () => {
     const t = q.trim(); if (!t) return
-    const o = rows.find((x) => String(x.metadata?.wiki_order_id) === t || String(x.display_id) === t)
+    let o = rows.find((x) => String(x.metadata?.wiki_order_id) === t || String(x.display_id) === t)
+    if (!o) {
+      try {
+        const r = await fetch(`/admin/orders?limit=5&fields=id,display_id,+metadata&q=${encodeURIComponent(t)}`, { credentials: "include" })
+        const d = await r.json()
+        o = (d.orders || []).find((x: any) => String(x.metadata?.wiki_order_id) === t || String(x.display_id) === t) || (d.orders || [])[0]
+      } catch { /* ignore */ }
+    }
     if (o) onOpen(o.id)
+    else setBusy(`Order ${t} hittades inte.`)
   }
 
   const tabStyle = (active: boolean): any => ({ display: "inline-block", padding: "4px 16px", marginRight: "4px", fontSize: "12px", fontFamily: WF,
@@ -231,9 +275,9 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
                 onMouseEnter={(e) => (e.currentTarget.style.background = "#eef4ff")} onMouseLeave={(e) => (e.currentTarget.style.background = baseBg)}>
                 <td style={{ ...lcTd, textAlign: "center", background: "transparent" }}><input type="checkbox" checked={!!sel[o.id]} onChange={(e) => setSel({ ...sel, [o.id]: e.target.checked })} /></td>
                 <td style={{ ...lcTd, background: "transparent" }}><a onClick={() => onOpen(o.id)} style={{ color: idColor, fontWeight: unread ? 700 : 400, cursor: "pointer" }}>{wid}</a></td>
-                <td style={{ ...lcTd, background: "transparent" }}>{payBadge(o.metadata?.payment_method)}<a onClick={() => onOpen(o.id)} style={{ color: "#06c", fontWeight: unread ? 700 : 400, cursor: "pointer" }}>{nm || o.email}</a></td>
+                <td style={{ ...lcTd, background: "transparent" }}>{payBadge(paymentOf(o))}<a onClick={() => onOpen(o.id)} style={{ color: "#06c", fontWeight: unread ? 700 : 400, cursor: "pointer" }}>{nm || o.email}</a></td>
                 <td style={{ ...lcTd, color: "#444", whiteSpace: "nowrap", background: "transparent", fontWeight: unread ? 700 : 400 }}>{dt(when)}</td>
-                <td style={{ ...lcTd, textAlign: "center", background: "transparent" }}>🇸🇪</td>
+                <td style={{ ...lcTd, textAlign: "center", background: "transparent" }} title={countryName(o.shipping_address?.country_code)}>{flagOf(o)}</td>
                 <td style={{ ...lcTd, textAlign: "center", background: "transparent" }}>
                   <span title="Egen orderstatus (klicka)" onClick={cycleDot} style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "50%", cursor: "pointer", background: dotColor[dotVal], border: "1px solid " + (dotVal ? "#0005" : "#bbb") }} />
                 </td>
@@ -241,7 +285,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
                 <td style={{ ...lcTd, textAlign: "center", background: "transparent" }}>{deviceOf(o)}</td>
                 <td style={{ ...lcTd, color: "#333", background: "transparent" }}>{o.metadata?.internal_comment || ""}</td>
                 <td style={{ ...lcTd, whiteSpace: "nowrap", fontSize: "13px", background: "transparent" }}>
-                  <span title="Skriv ut" style={{ cursor: "pointer", marginRight: "4px" }} onClick={() => window.print()}>🖨</span>
+                  <span title="Visa följesedel" style={{ cursor: "pointer", marginRight: "4px" }} onClick={() => window.open(`/admin/order-foljesedel?id=${o.id}`, "_blank")}>🧾</span>
                   <span title="Redigera" style={{ cursor: "pointer", marginRight: "4px" }} onClick={() => onOpen(o.id)}>📝</span>
                   <span title="Makulera" style={{ cursor: "pointer" }} onClick={async () => { if (!confirm("Flytta ordern till Makulerade?")) return; const meta = Object.assign({}, o.metadata, { orderflik: "makulerade" }); await fetch(`/admin/orders/${o.id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: meta }) }); load() }}>❌</span>
                 </td>
@@ -302,7 +346,7 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
     let alive = true
     ;(async () => {
       try {
-        const f = "*items,*shipping_address,*billing_address,*shipping_methods,+metadata,+display_id,+email,+currency_code,+total,+item_total,+item_subtotal,+shipping_total,+tax_total,+payment_status,+created_at"
+        const f = "*items,*shipping_address,*billing_address,*shipping_methods,payment_collections.payments.provider_id,+metadata,+display_id,+email,+currency_code,+total,+item_total,+item_subtotal,+shipping_total,+tax_total,+payment_status,+created_at"
         const r = await fetch(`/admin/orders/${id}?fields=${f}`, { credentials: "include" })
         const d = await r.json()
         if (!alive) return
@@ -332,6 +376,7 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const when = m.order_time || o.created_at
   const paid = o.payment_status === "captured" || o.payment_status === "paid"
   const canceled = o.payment_status === "canceled" || flik === "makulerade"
+  const betalsatt = paymentOf(o)
 
   const itemsExcl = (o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity), 0)
   const shipExcl = Number(sm ? sm.amount : (o.shipping_total ?? 0))
@@ -365,15 +410,16 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
           <KV k="Namn" v={`${sa.first_name || ""} ${sa.last_name || ""}`.trim()} />
           <KV k="Gatuadress" v={sa.address_1 || ""} />
           <KV k="Postnr och Ort" v={`${sa.postal_code || ""} ${sa.city || ""}`.trim()} />
-          <KV k="Land" v={(sa.country_code || "").toUpperCase() === "SE" ? "Sverige" : (sa.country_code || "").toUpperCase()} />
-          <KV k="Mobil" v={sa.phone || m.cell_phone || m.phone || ""} />
+          <KV k="Land" v={countryName(sa.country_code)} />
+          <KV k="Telefon" v={sa.phone || m.phone || ""} />
+          <KV k="Mobil" v={m.cell_phone || m.mobil || m.mobile || sa.phone || ""} />
           <KV k="E-mail" v={<a href={`mailto:${o.email}`} style={{ color: "#06c" }}>{o.email}</a>} />
         </tbody></table>
 
         <table style={tbl}><tbody>
           <SectionRow title="Leverans" />
           <KV k="Meddelande" v={m.customer_message || ""} />
-          <KV k="Leveransmetod" v={<span><b>{(sm && sm.name) || m.wiki_shipping_method || "Standard"}</b></span>} />
+          <KV k="Leveransmetod" v={<span><b>{(sm && sm.name) || m.wiki_shipping_method || "Standard"}</b><br /><span style={{ color: "#666" }}>2-3 vardagar. Fraktfritt vid köp över 999 kr.</span></span>} />
         </tbody></table>
 
         <table style={tbl}><tbody>
@@ -382,7 +428,7 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
           <KV k="IP-adress vid beställning" v={m.ip_address || "—"} />
           <KV k="Beställd via" v={m.ordered_via || "—"} />
           <KV k="Tidpunkt vid beställning" v={dt(when)} />
-          <KV k="Betalningstatus:" v={<span>{m.payment_method || ""}{m.payment_method ? " · " : ""}<span style={{ color: paid ? "#161" : "#a00" }}>{paid ? "Betald" : payText(o.payment_status)}</span></span>} />
+          <KV k="Betalningstatus:" v={<span>{payBadge(betalsatt)}<span style={{ color: paid ? "#161" : "#a00" }}>{paid ? "Betald – transaktionen är genomförd" : payText(o.payment_status)}</span></span>} />
           <KV k="Språk / Valuta:" v={`Svenska / ${(o.currency_code || "SEK").toUpperCase()}`} />
         </tbody></table>
 
@@ -419,7 +465,7 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
         <div style={{ marginTop: "4px" }}>
           <div style={{ fontSize: "13px", fontWeight: 700, marginBottom: "6px" }}>Meddelanden/loggar från ändringar</div>
           <div style={{ fontSize: "11px", color: "#0a0", fontStyle: "italic", lineHeight: 1.7 }}>
-            <div>{dt(o.created_at)}<br />Ordern lades.{m.payment_method ? ` Betalsätt: ${m.payment_method}.` : ""}</div>
+            <div>{dt(o.created_at)}<br />Ordern lades.{betalsatt ? ` Betalsätt: ${betalsatt}.` : ""}</div>
             {paid && <div>{dt(o.created_at)}<br />Betalning registrerad ({sek(grand)}).</div>}
             {m.wiki_order_id && <div>Importerad från Wikinggruppen · Wiki-ordernr {m.wiki_order_id}.</div>}
           </div>
@@ -451,10 +497,9 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
             <Btn onClick={save}>Spara ovanstående</Btn>
             {saved && <div style={{ fontSize: "11px", color: "#161", textAlign: "center" }}>{saved}</div>}
             <div style={{ borderTop: "1px solid #ddd", margin: "8px 0" }} />
-            <Btn onClick={() => window.print()}>🧾 Visa följesedel</Btn>
+            <Btn onClick={() => window.open(`/admin/order-foljesedel?id=${o.id}`, "_blank")}>🧾 Visa följesedel</Btn>
             <Btn onClick={() => window.print()}>🖨 Skriv ut order</Btn>
             <Btn href={`${ADMIN}/order-email?order=${o.id}`}>✉ Skicka e-post</Btn>
-            <Btn href={`sms:${((o.shipping_address && o.shipping_address.phone) || o.phone || "").replace(/\s/g, "")}`}>📱 Skicka SMS</Btn>
             <Btn href={`mailto:${o.email}?subject=${encodeURIComponent("Uppföljning av din order hos Teknikhouse.se")}&body=${encodeURIComponent("Hej,\n\nTack för din order hos Teknikhouse.se! Vi hoppas att allt är till belåtenhet. Hör gärna av dig om du har några frågor.\n\nMed vänliga hälsningar\nTeknikhouse.se")}`}>⭐ Uppföljningsmail</Btn>
             <div style={{ borderTop: "1px solid #ddd", margin: "8px 0" }} />
             <Btn href={`${ADMIN}/orders/${o.id}`}>📝 Redigera order</Btn>
@@ -495,10 +540,10 @@ function OrdrarPage() {
     ;(async () => {
       try {
         const [o, p] = await Promise.all([
-          fetch("/admin/orders?limit=1", { credentials: "include" }).then((r) => r.json()),
+          fetch("/admin/order-fliks", { credentials: "include" }).then((r) => r.json()),
           fetch("/admin/products?limit=1", { credentials: "include" }).then((r) => r.json()),
         ])
-        setMeta({ unread: o.count || 0, products: p.count || 0 })
+        setMeta({ unread: o.unread || 0, products: p.count || 0 })
       } catch { /* ignore */ }
     })()
   }, [])
