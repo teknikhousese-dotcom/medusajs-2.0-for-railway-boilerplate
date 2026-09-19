@@ -16,6 +16,24 @@ async function firstId(scope: any, entity: string) {
   } catch { return null }
 }
 
+// Skriv verkligt lagersaldo (Medusa inventory) — körs på både skapa OCH uppdatera.
+async function syncStock(scope: any, productId: string, b: any) {
+  try {
+    if (b.oandligt || b.antal == null) return
+    const locId = await firstId(scope, "stock_location")
+    if (!locId) return
+    const inv = scope.resolve(Modules.INVENTORY)
+    const { data } = await q(scope).graph({
+      entity: "product", fields: ["variants.inventory_items.inventory_item_id"], filters: { id: productId },
+    })
+    const iid = data?.[0]?.variants?.[0]?.inventory_items?.[0]?.inventory_item_id
+    if (!iid) return
+    const qty = Math.round(Number(String(b.antal).replace(",", ".")) || 0)
+    try { await inv.updateInventoryLevels([{ inventory_item_id: iid, location_id: locId, stocked_quantity: qty }]) }
+    catch { await inv.createInventoryLevels([{ inventory_item_id: iid, location_id: locId, stocked_quantity: qty }]) }
+  } catch (e) { /* lager är best-effort */ }
+}
+
 async function loadCategories(scope: any) {
   try {
     const { data } = await q(scope).graph({
@@ -63,11 +81,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const v = (p.variants || [])[0] || {}
       const prices = v.prices || []
       const sek = prices.find((x: any) => (x.currency_code || "").toLowerCase() === "sek") || prices[0]
+      const md: any = p.metadata || {}
+      // När kampanj är aktiv ligger kampanjpriset på varianten — visa det ordinarie priset i Utpris-fältet.
+      const utprisVal = md.kampanj && md.ordinarie_pris ? Number(md.ordinarie_pris) : (sek && sek.amount != null ? sek.amount : "")
       return res.json({
         product: {
           id: p.id, artnr: v.sku || "", namn: p.title || "", googleNamn: p.subtitle || "",
           beskrivning: p.description || "", ean: v.barcode || "", weight: p.weight || "",
-          utpris: sek && sek.amount != null ? sek.amount : "",
+          utpris: utprisVal,
           category_ids: (p.categories || []).map((c: any) => c.id),
           images: (p.images || []).map((i: any) => i.url),
           status: p.status, metadata: p.metadata || {},
@@ -94,24 +115,31 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const utpris = Math.round(Number(String(b.utpris ?? "").replace(",", ".")) || 0)
   const kampanjpris = Math.round(Number(String(b.kampanjpris ?? "").replace(",", ".")) || 0)
-  const kampanjAktiv = !!b.kampanj && kampanjpris > 0
+  const inprisNum = String(b.inpris ?? "").trim() !== "" ? Number(String(b.inpris).replace(",", ".")) : null
+  // Kampanj: checkbox-avsikten sparas alltid i metadata (så formuläret laddar rätt);
+  // priset byts bara om dagens datum ligger inom kampanjfönstret.
+  const kampanjChecked = !!b.kampanj && kampanjpris > 0
+  const today = new Date().toISOString().slice(0, 10)
+  const withinWindow = (!b.kampanjStart || String(b.kampanjStart) <= today) && (!b.kampanjSlut || String(b.kampanjSlut) >= today)
+  const kampanjAktiv = kampanjChecked && withinWindow
   const price = kampanjAktiv ? kampanjpris : utpris
   const weight = Number(String(b.weight ?? "").replace(",", ".")) || undefined
   const catIds: string[] = Array.isArray(b.category_ids) ? b.category_ids : []
   const images: any[] = Array.isArray(b.images) ? b.images.filter(Boolean).map((u: string) => ({ url: u })) : []
+  const thumbnail = (typeof b.thumbnail === "string" && b.thumbnail) || (images[0] && images[0].url) || undefined
   const metadata: any = {
     skick: b.skick || "", momssats: b.momssats != null ? String(b.momssats) : "",
-    inpris: b.inpris != null ? String(b.inpris) : "", leverantor: b.leverantor || "",
+    inpris: inprisNum != null && !Number.isNaN(inprisNum) ? String(inprisNum) : "", leverantor: b.leverantor || "",
     tillverkare: b.tillverkare || "", color: b.color || "", modell: b.modell || "", lagerplats: b.lagerplats || "",
     sokord: b.sokord || "", google_namn: b.googleNamn || "", html_falt: b.htmlFalt || "",
-    seo_title: b.metaTitle || "", seo_desc: b.metaDesc || "", h1: b.h1 || "",
-    visning: b.visning || "show", kampanj: kampanjAktiv, kampanjpris: kampanjAktiv ? String(kampanjpris) : "", kampanj_start: b.kampanjStart || "", kampanj_slut: b.kampanjSlut || "", ordinarie_pris: kampanjAktiv ? String(utpris) : "", antal: b.antal != null ? String(b.antal) : "",
+    seo_title: b.metaTitle || "", seo_desc: b.metaDesc || "", meta_title: b.metaTitle || "", meta_description: b.metaDesc || "", h1: b.h1 || "",
+    visning: b.visning || "show", kampanj: kampanjChecked, kampanjpris: kampanjChecked ? String(kampanjpris) : "", kampanj_start: b.kampanjStart || "", kampanj_slut: b.kampanjSlut || "", ordinarie_pris: kampanjChecked ? String(utpris) : "", antal: b.antal != null ? String(b.antal) : "",
     oandligt: !!b.oandligt, lagervarning: b.lagervarning != null ? String(b.lagervarning) : "",
     skrymmande: !!b.skrymmande, bestallningsvara: !!b.bestallningsvara, empty_stock_text: b.emptyStockText || "", custom_text: b.customText || "",
   }
 
   const variant: any = {
-    title: namn, sku: artnr, manage_inventory: !b.oandligt,
+    title: namn, sku: artnr, manage_inventory: !b.oandligt, allow_backorder: !!b.bestallningsvara,
     options: { Variant: "Standard" },
     prices: [{ amount: price, currency_code: "sek" }],
     metadata: { inpris: metadata.inpris, momssats: metadata.momssats },
@@ -121,7 +149,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const productInput: any = {
     title: namn, subtitle: b.googleNamn || undefined, description: b.beskrivning || "",
-    status: toStatus(b.visning || "show"), weight,
+    status: toStatus(b.visning || "show"), weight, thumbnail,
     options: [{ title: "Variant", values: ["Standard"] }],
     category_ids: catIds, images, metadata, variants: [variant],
   }
@@ -132,24 +160,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (b.id) {
       productInput.id = b.id
       await updateProductsWorkflow(req.scope).run({ input: { products: [productInput] } })
+      await syncStock(req.scope, b.id, b)
       return res.json({ ok: true, id: b.id })
     }
     const { result } = await createProductsWorkflow(req.scope).run({ input: { products: [productInput] } })
     const created = (result || [])[0]
-    // Best-effort: set stock level
-    try {
-      if (!b.oandligt && b.antal != null && created) {
-        const locId = await firstId(req.scope, "stock_location")
-        const inv = req.scope.resolve(Modules.INVENTORY)
-        const { data } = await q(req.scope).graph({
-          entity: "product", fields: ["variants.inventory_items.inventory_item_id"], filters: { id: created.id },
-        })
-        const iid = data && data[0] && data[0].variants && data[0].variants[0] && data[0].variants[0].inventory_items && data[0].variants[0].inventory_items[0] && data[0].variants[0].inventory_items[0].inventory_item_id
-        if (iid && locId) {
-          await inv.createInventoryLevels([{ inventory_item_id: iid, location_id: locId, stocked_quantity: Math.round(Number(b.antal) || 0) }])
-        }
-      }
-    } catch (e) { /* stock is best-effort */ }
+    if (created) await syncStock(req.scope, created.id, b)
     return res.json({ ok: true, id: created && created.id })
   } catch (e: any) {
     return res.status(500).json({ error: "Något gick fel. Försök igen." })
