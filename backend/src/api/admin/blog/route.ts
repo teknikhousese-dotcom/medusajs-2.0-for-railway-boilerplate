@@ -11,7 +11,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const pg = getPg(req.scope)
-  if (!pg) return res.status(500).json({ message: "no pg" })
+  if (!pg) return res.status(500).json({ message: "Databasen är inte tillgänglig just nu." })
   await ensureTables(pg)
   const body: any = req.body || {}
   const kind = body.kind
