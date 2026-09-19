@@ -51,9 +51,9 @@ export default async function Checkout({
   if (region) {
     const { response } = await getProductsList({
       countryCode: cc,
-      queryParams: { limit: 4 } as HttpTypes.StoreProductListParams,
+      queryParams: { limit: 12 } as HttpTypes.StoreProductListParams,
     }).catch(() => ({ response: { products: [], count: 0 } }))
-    recommended = (response.products ?? []).slice(0, 4)
+    recommended = response.products ?? []
   }
 
   return (
@@ -70,9 +70,12 @@ export default async function Checkout({
           <h2 className="text-[26px] font-semibold text-[#14161C] mb-6">
             Kanske gillar du också
           </h2>
-          <ul className="grid grid-cols-2 small:grid-cols-4 gap-4">
+          <ul className="flex gap-4 overflow-x-auto snap-x pb-3 -mx-4 px-4">
             {recommended.map((p) => (
-              <li key={p.id}>
+              <li
+                key={p.id}
+                className="snap-start shrink-0 w-[160px] small:w-[220px]"
+              >
                 <ProductPreview product={p} region={region} />
               </li>
             ))}
