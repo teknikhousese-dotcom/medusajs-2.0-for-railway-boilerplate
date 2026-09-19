@@ -48,7 +48,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       const [c] = await channelModule.listSalesChannels({ name: process.env.CHANNEL_NAME || "Teknikhouse.se" }, { take: 1 })
       CHANNEL_ID = c?.id || null
     }
-    if (!CHANNEL_ID) return res.status(400).json({ error: "sales channel not found" })
+    if (!CHANNEL_ID) return res.status(400).json({ error: "Försäljningskanal saknas." })
     if (!CAT_CACHE) {
       CAT_CACHE = new Map()
       const all = await productModule.listProductCategories({}, { select: ["id", "name"], take: 10000 })
@@ -97,5 +97,5 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.json({ mode, received: rows.length, created, skipped: rows.length - toCreate.length, failed, errors })
   }
 
-  return res.status(400).json({ error: "unknown mode (use categories|products)" })
+  return res.status(400).json({ error: "Okänt läge (använd categories eller products)." })
 }
