@@ -8,7 +8,7 @@ import { enrichLineItems, retrieveCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { getCustomer } from "@lib/data/customer"
 import { getRegion } from "@lib/data/regions"
-import { getProductsListWithSort } from "@lib/data/products"
+import { getProductsList } from "@lib/data/products"
 import ProductPreview from "@modules/products/components/product-preview"
 
 export const metadata: Metadata = {
@@ -38,11 +38,19 @@ export default async function Checkout({
   const cart = await fetchCart()
   const customer = await getCustomer()
 
-  const region = await getRegion(countryCode).catch(() => null)
+  // Source the region from the cart (always present in checkout) with the
+  // route param as a fallback, so the recommendations reliably resolve prices.
+  const cc = (
+    (cart as any)?.shipping_address?.country_code ||
+    countryCode ||
+    "se"
+  ).toLowerCase()
+
+  const region = await getRegion(cc).catch(() => null)
   let recommended: HttpTypes.StoreProduct[] = []
   if (region) {
-    const { response } = await getProductsListWithSort({
-      countryCode,
+    const { response } = await getProductsList({
+      countryCode: cc,
       queryParams: { limit: 4 } as HttpTypes.StoreProductListParams,
     }).catch(() => ({ response: { products: [], count: 0 } }))
     recommended = (response.products ?? []).slice(0, 4)
