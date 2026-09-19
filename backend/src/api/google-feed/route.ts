@@ -52,7 +52,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     try {
       const r = await query.graph({
         entity: "product",
-        fields: ["id", "title", "handle", "description", "subtitle", "status", "metadata", "images.url", "categories.name", "variants.id", "variants.sku", "variants.ean", "variants.barcode", "variants.upc", "variants.weight", "variants.manage_inventory", "variants.calculated_price.*"],
+        fields: ["id", "title", "handle", "description", "subtitle", "status", "metadata", "images.url", "categories.name", "variants.id", "variants.sku", "variants.ean", "variants.barcode", "variants.upc", "variants.weight", "variants.manage_inventory", "variants.inventory_quantity", "variants.calculated_price.*"],
         filters: { status: "published" },
         context: { variants: { calculated_price: QueryContext({ region_id: regionId, currency_code: "sek" }) } },
         pagination: { skip, take },
@@ -78,7 +78,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const mpn = String(meta.mpn || meta.artnr || v.sku || "")
       const sk = String(meta.skick || meta.condition || "")
       const condition = /begagn|used/i.test(sk) ? "used" : (/refurb|renov/i.test(sk) ? "refurbished" : "new")
-      const inStock = !(meta.in_stock === false || String(meta.stock) === "0")
+      // Verklig lagerstatus: oändligt lager (manage_inventory=false) = alltid i lager,
+      // annars riktigt saldo från Medusa (fallback metadata.antal).
+      const oandligt = meta.oandligt === true || meta.oandligt === "true" || v.manage_inventory === false
+      const realQty = Number(v.inventory_quantity)
+      const metaQty = Number(meta.antal)
+      const inStock = oandligt || (Number.isFinite(realQty) ? realQty > 0 : (Number.isFinite(metaQty) ? metaQty > 0 : true))
       const cats = (p.categories || []).map((c: any) => c.name).filter(Boolean)
       const link = DOMAIN + "/products/" + p.handle
       const desc = strip(p.description || meta.meta_description || p.subtitle || p.title).slice(0, 4900)
@@ -88,7 +93,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       let it = "<item>"
       it += "<g:id>" + esc(v.sku || v.id) + "</g:id>"
       if ((p.variants || []).length > 1) it += "<g:item_group_id>" + esc(p.id) + "</g:item_group_id>"
-      it += "<g:title>" + esc(String(p.title || "").slice(0, 150)) + "</g:title>"
+      const gTitle = String(p.subtitle || meta.google_namn || "").trim() || p.title
+      it += "<g:title>" + esc(String(gTitle || "").slice(0, 150)) + "</g:title>"
       it += "<g:description>" + esc(desc) + "</g:description>"
       it += "<g:link>" + esc(link) + "</g:link>"
       it += "<g:mobile_link>" + esc(link) + "</g:mobile_link>"
