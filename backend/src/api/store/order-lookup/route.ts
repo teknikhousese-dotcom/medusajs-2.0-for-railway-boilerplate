@@ -84,6 +84,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       items,
     })
   } catch (e: any) {
-    return res.status(500).json({ error: String((e && e.message) || e).slice(0, 200) })
+    return res.status(500).json({ error: "Något gick fel. Försök igen eller kontakta kundtjänst." })
   }
 }
