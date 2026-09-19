@@ -376,7 +376,7 @@ function KontrollpanelPage() {
       {/* Order alert, like Wiki's "Du har X olästa ordrar" */}
       <div className="px-6 pt-4">
         {s.orders > 0 ? (
-          <button onClick={() => { window.location.href = `${ADMIN}/orders` }}
+          <button onClick={() => { window.location.href = `${ADMIN}/ordrar` }}
             className="w-full text-left text-sm font-semibold px-4 py-2.5 rounded-md border bg-ui-tag-orange-bg text-ui-tag-orange-text border-ui-tag-orange-border">
             Du har {s.orders} olästa ordrar! Klicka på orderknappen nedan.
           </button>
