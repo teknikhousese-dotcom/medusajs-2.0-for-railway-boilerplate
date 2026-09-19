@@ -80,7 +80,7 @@ const CartDropdown = ({
       onMouseLeave={close}
     >
       <Popover className="relative h-full">
-        <Popover.Button className="h-full">
+        <Popover.Button as="div" className="h-full">
           <LocalizedClientLink
             className="relative flex items-center gap-2 hover:text-[#F50000]"
             href="/cart"
