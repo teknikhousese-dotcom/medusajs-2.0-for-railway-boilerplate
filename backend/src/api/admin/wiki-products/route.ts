@@ -158,8 +158,37 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   try {
     if (b.id) {
-      productInput.id = b.id
-      await updateProductsWorkflow(req.scope).run({ input: { products: [productInput] } })
+      // Uppdatering: options får INTE skickas igen (borttagen i Medusa 2.16) och varianten
+      // måste bära sitt befintliga id, annars försöker workflowet skapa en ny variant → 500.
+      const { data: exData } = await q(req.scope).graph({
+        entity: "product",
+        fields: ["variants.id", "variants.prices.id", "variants.prices.currency_code"],
+        filters: { id: b.id },
+      })
+      const exVar: any = exData?.[0]?.variants?.[0]
+      const upVariant: any = {
+        title: namn, sku: artnr, manage_inventory: !b.oandligt, allow_backorder: !!b.bestallningsvara,
+        metadata: { inpris: metadata.inpris, momssats: metadata.momssats },
+      }
+      if (b.ean) upVariant.barcode = String(b.ean).trim()
+      if (weight) upVariant.weight = weight
+      if (exVar && exVar.id) {
+        upVariant.id = exVar.id
+        const exPrice = (exVar.prices || []).find((x: any) => (x.currency_code || "").toLowerCase() === "sek")
+        upVariant.prices = exPrice && exPrice.id
+          ? [{ id: exPrice.id, amount: price, currency_code: "sek" }]
+          : [{ amount: price, currency_code: "sek" }]
+      } else {
+        upVariant.prices = [{ amount: price, currency_code: "sek" }]
+      }
+      const updateInput: any = {
+        id: b.id,
+        title: namn, subtitle: b.googleNamn || undefined, description: b.beskrivning || "",
+        status: toStatus(b.visning || "show"), weight, thumbnail,
+        category_ids: catIds, images, metadata,
+      }
+      if (upVariant.id) updateInput.variants = [upVariant]
+      await updateProductsWorkflow(req.scope).run({ input: { products: [updateInput] } })
       await syncStock(req.scope, b.id, b)
       return res.json({ ok: true, id: b.id })
     }
