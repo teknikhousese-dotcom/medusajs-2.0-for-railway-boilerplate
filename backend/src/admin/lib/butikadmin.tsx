@@ -78,6 +78,27 @@ export function installGlobalMenu() {
   if (w.__bmGlobalMenu) return
   w.__bmGlobalMenu = true
 
+  // Dolj Medusas inbyggda (engelska) menypunkter i sidomenyn - behall bara vara svenska sidor.
+  try {
+    const NATIVE_SEGMENTS = ["orders","products","collections","categories","inventory","reservations","customers","customer-groups","promotions","campaigns","price-lists","gift-cards","settings"]
+    const hideNative = () => {
+      try {
+        document.querySelectorAll('nav a[href^="/app/"]').forEach((a: any) => {
+          const href = a.getAttribute("href") || ""
+          const seg = href.slice(5).split(/[/?#]/)[0]
+          if (NATIVE_SEGMENTS.indexOf(seg) !== -1) {
+            const item = a.closest("div.w-full") || a.parentElement
+            if (item) (item as any).style.display = "none"
+          }
+        })
+      } catch (e) {}
+    }
+    hideNative()
+    const mo = new MutationObserver(() => hideNative())
+    mo.observe(document.body, { childList: true, subtree: true })
+    setInterval(hideNative, 1500)
+  } catch (e) {}
+
   // Medusa's own sidebar "Orders" links to /app/orders, which we reserve for
   // the post-login landing bounce to the Kontrollpanel. Redirect any click on a
   // native /app/orders link to our own order page (/app/ordrar).
