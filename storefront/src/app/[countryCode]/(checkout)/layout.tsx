@@ -1,5 +1,13 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
+import Footer from "@modules/layout/templates/footer"
+
+const TRUST = [
+  { b: "Fri frakt", t: "över 999 kr" },
+  { b: "4,6 / 5", t: "på Trustpilot" },
+  { b: "30 dagars", t: "öppet köp" },
+  { b: "Snabb leverans", t: "skickas 1–2 dagar" },
+]
 
 export default function CheckoutLayout({
   children,
@@ -8,7 +16,7 @@ export default function CheckoutLayout({
 }) {
   return (
     <div className="w-full bg-white relative small:min-h-screen">
-      <div className="h-16 bg-white border-b ">
+      <div className="h-16 bg-white border-b sticky top-0 z-40">
         <nav className="flex h-full items-center content-container justify-between">
           <LocalizedClientLink
             href="/cart"
@@ -39,21 +47,31 @@ export default function CheckoutLayout({
               fontSize: "24px",
               letterSpacing: "-0.02em",
               color: "#F50000",
-             }}
+            }}
           >
             teknikhouse.se
           </LocalizedClientLink>
-          <div className="flex-1 basis-0" />
+          <div className="flex-1 basis-0 hidden small:flex justify-end">
+            <span className="text-[12px] text-ui-fg-muted">
+              Frågor? info@teknikhouse.se
+            </span>
+          </div>
         </nav>
       </div>
       <div className="relative" data-testid="checkout-container">
         {children}
       </div>
-      <div className="py-4 w-full flex items-center justify-center">
-        <span className="text-ui-fg-muted txt-compact-small">
-          Trygg e-handel · Nordic Teknik House AB
-        </span>
+      <div className="border-t border-b bg-gray-50">
+        <div className="content-container py-5 grid grid-cols-2 small:grid-cols-4 gap-4 text-center">
+          {TRUST.map((x) => (
+            <div key={x.b} className="text-[13px] text-gray-600">
+              <div className="font-semibold text-[#14161C]">{x.b}</div>
+              <div>{x.t}</div>
+            </div>
+          ))}
+        </div>
       </div>
+      <Footer />
     </div>
   )
 }
