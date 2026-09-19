@@ -65,6 +65,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     } catch { /* notification module not configured */ }
     return res.json({ ok: true, reference })
   } catch (e: any) {
-    return res.status(500).json({ error: String((e && e.message) || e).slice(0, 160) })
+    return res.status(500).json({ error: "Något gick fel. Försök igen eller kontakta kundtjänst." })
   }
 }
