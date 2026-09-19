@@ -92,6 +92,9 @@ export function installGlobalMenu() {
         const resp = await orig(...a)
         try {
           const u = typeof a[0] === "string" ? a[0] : (a[0] && a[0].url) || ""
+          if (resp && resp.ok && u.indexOf("/auth/") !== -1) {
+            try { sessionStorage.removeItem("th_home_redirect") } catch {}
+          }
           if (resp && resp.status === 401 && u.indexOf("/admin/") !== -1 && u.indexOf("/auth/") === -1 && !w.__bm401) {
             w.__bm401 = true
             try { alert("Du har blivit utloggad. Du skickas till inloggningen \u2013 logga in och f\u00f6rs\u00f6k igen.") } catch {}
