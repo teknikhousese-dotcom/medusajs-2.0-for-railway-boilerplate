@@ -92,11 +92,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const artnr = (b.artnr || "").trim()
   if (!namn || !artnr) return res.status(400).json({ error: "Artikelnummer och namn krävs." })
 
-  const utpris = Math.round(Number(b.utpris) || 0)
-  const kampanjpris = Math.round(Number(b.kampanjpris) || 0)
+  const utpris = Math.round(Number(String(b.utpris ?? "").replace(",", ".")) || 0)
+  const kampanjpris = Math.round(Number(String(b.kampanjpris ?? "").replace(",", ".")) || 0)
   const kampanjAktiv = !!b.kampanj && kampanjpris > 0
   const price = kampanjAktiv ? kampanjpris : utpris
-  const weight = Number(b.weight) || undefined
+  const weight = Number(String(b.weight ?? "").replace(",", ".")) || undefined
   const catIds: string[] = Array.isArray(b.category_ids) ? b.category_ids : []
   const images: any[] = Array.isArray(b.images) ? b.images.filter(Boolean).map((u: string) => ({ url: u })) : []
   const metadata: any = {
