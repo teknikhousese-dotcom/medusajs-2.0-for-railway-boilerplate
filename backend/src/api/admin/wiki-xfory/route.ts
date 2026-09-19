@@ -28,7 +28,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         pagination: { take: 30 },
       })
       return res.json({ products: (data || []).map((p: any) => ({ id: p.id, title: p.title })) })
-    } catch (e: any) { return res.status(500).json({ error: String((e && e.message) || e) }) }
+    } catch (e: any) { return res.status(500).json({ error: "Något gick fel. Försök igen." }) }
   }
   try {
     const s = svc(req.scope)
@@ -43,7 +43,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       }
     })
     res.json({ rules })
-  } catch (e: any) { res.status(500).json({ error: String((e && e.message) || e) }) }
+  } catch (e: any) { res.status(500).json({ error: "Något gick fel. Försök igen." }) }
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -90,6 +90,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
     return res.status(400).json({ error: "okänd åtgärd" })
   } catch (e: any) {
-    return res.status(500).json({ error: String((e && e.message) || e) })
+    return res.status(500).json({ error: "Något gick fel. Försök igen." })
   }
 }
