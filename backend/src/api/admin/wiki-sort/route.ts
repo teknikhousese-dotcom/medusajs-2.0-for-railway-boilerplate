@@ -32,5 +32,5 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return res.json({ ok: true, updated: ok })
     }
     return res.status(400).json({ error: "okänd typ" })
-  } catch (e: any) { res.status(500).json({ error: String((e && e.message) || e) }) }
+  } catch (e: any) { res.status(500).json({ error: "Något gick fel. Försök igen." }) }
 }
