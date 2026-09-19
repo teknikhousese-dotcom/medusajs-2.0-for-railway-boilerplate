@@ -7,6 +7,9 @@ import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
 import { enrichLineItems, retrieveCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { getCustomer } from "@lib/data/customer"
+import { getRegion } from "@lib/data/regions"
+import { getProductsListWithSort } from "@lib/data/products"
+import ProductPreview from "@modules/products/components/product-preview"
 
 export const metadata: Metadata = {
   title: "Kassa",
@@ -26,16 +29,48 @@ const fetchCart = async () => {
   return cart
 }
 
-export default async function Checkout() {
+export default async function Checkout({
+  params,
+}: {
+  params: Promise<{ countryCode: string }>
+}) {
+  const { countryCode } = await params
   const cart = await fetchCart()
   const customer = await getCustomer()
 
+  const region = await getRegion(countryCode).catch(() => null)
+  let recommended: HttpTypes.StoreProduct[] = []
+  if (region) {
+    const { response } = await getProductsListWithSort({
+      countryCode,
+      queryParams: { limit: 4 } as HttpTypes.StoreProductListParams,
+    }).catch(() => ({ response: { products: [], count: 0 } }))
+    recommended = (response.products ?? []).slice(0, 4)
+  }
+
   return (
-    <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
-      <Wrapper cart={cart}>
-        <CheckoutForm cart={cart} customer={customer} />
-      </Wrapper>
-      <CheckoutSummary cart={cart} />
-    </div>
+    <>
+      <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
+        <Wrapper cart={cart}>
+          <CheckoutForm cart={cart} customer={customer} />
+        </Wrapper>
+        <CheckoutSummary cart={cart} />
+      </div>
+
+      {region && recommended.length > 0 && (
+        <div className="content-container border-t py-12">
+          <h2 className="text-[26px] font-semibold text-[#14161C] mb-6">
+            Kanske gillar du också
+          </h2>
+          <ul className="grid grid-cols-2 small:grid-cols-4 gap-4">
+            {recommended.map((p) => (
+              <li key={p.id}>
+                <ProductPreview product={p} region={region} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
   )
 }
