@@ -40,21 +40,25 @@ export default async function Cart({
 }: {
   params: Promise<{ countryCode: string }>
 }) {
-  const { countryCode } = await params
+  await params
   const cart = await fetchCart()
   const customer = await getCustomer()
 
-  const cc = (
-    (cart as any)?.shipping_address?.country_code ||
-    countryCode ||
-    "se"
-  ).toLowerCase()
+  // The cart already carries its own (valid) region. The route param
+  // countryCode can be an unserved default (e.g. "gb"), so prefer the cart's
+  // region and fall back to the Swedish region rather than trusting the param.
+  const region =
+    ((cart as any)?.region as HttpTypes.StoreRegion | undefined) ||
+    (cart ? await getRegion("se").catch(() => null) : null)
+  const regionCc =
+    (region?.countries?.[0]?.iso_2 ||
+      (cart as any)?.shipping_address?.country_code ||
+      "se").toLowerCase()
 
-  const region = cart ? await getRegion(cc).catch(() => null) : null
   let recommended: HttpTypes.StoreProduct[] = []
   if (cart?.items?.length && region) {
     const { response } = await getProductsList({
-      countryCode: cc,
+      countryCode: regionCc,
       queryParams: { limit: 12 } as HttpTypes.StoreProductListParams,
     }).catch(() => ({ response: { products: [], count: 0 } }))
     recommended = response.products ?? []
