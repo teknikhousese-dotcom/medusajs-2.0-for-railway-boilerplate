@@ -10,7 +10,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const pg: any = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
     if (pg) {
       const r = await pg.raw(
-        `SELECT "id","title","slug","excerpt","cover_image","published_at"
+        `SELECT "id","title","slug","body_html","published_at"
          FROM "blog_post" WHERE "is_published"=true
          ORDER BY "published_at" DESC`)
       posts = (r && r.rows) || []
