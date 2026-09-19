@@ -26,7 +26,6 @@ export const MENU: MenuItem[] = [
       { lab: "Hantera HTML-mallar", href: `${ADMIN}/nyhetsbrev?s=templates` },
     ],
   },
-  { emo: "📱", lab: "SMS-utskick", href: `${ADMIN}/sms-utskick` },
   { emo: "🤝", lab: "Avtalskunder", href: `${ADMIN}/avtalskunder` },
   { emo: "💰", lab: "Sälj din enhet", href: `${ADMIN}/varderingar` },
   {
@@ -45,7 +44,6 @@ export const MENU: MenuItem[] = [
     ],
   },
   { emo: "🏷️", lab: "Rabattkoder", href: `${ADMIN}/rabattkoder` },
-  { emo: "🎁", lab: "Köp X betala för Y", href: `${ADMIN}/kop-x-for-y` },
   { emo: "🚚", lab: "Fraktinställningar", href: `${ADMIN}/fraktinstallningar` },
   { emo: "💳", lab: "Betalningsalternativ", href: `${ADMIN}/betalningsalternativ` },
   { emo: "📄", lab: "Redigerbara sidor", href: `${ADMIN}/redigerbara-sidor` },
@@ -54,8 +52,6 @@ export const MENU: MenuItem[] = [
   { emo: "🖼️", lab: "Bildspel på 1:a sidan", href: `${ADMIN}/bildspel` },
   { emo: "📝", lab: "Blogg", href: `${ADMIN}/blogg` },
   { emo: "↪️", lab: "Hantera gamla URLer", href: `${ADMIN}/url301` },
-  { emo: "🌐", lab: "Språk och valuta", href: `${ADMIN}/sprak-valuta` },
-  { emo: "🈳", lab: "Översättningar", href: `${ADMIN}/kontrollpanel?s=translations` },
   { emo: "🛍️", lab: "Google Shopping", href: `${ADMIN}/google-shopping` },
   { emo: "📧", lab: "E-postmallar", href: `${ADMIN}/epostmallar` },
   { emo: "⚙️", lab: "Grundinställningar", href: `${ADMIN}/grundinstallningar` },
@@ -217,7 +213,7 @@ export function installGlobalMenu() {
   tick()
 }
 
-const HIDE_NATIVE_ROUTES = ["ordrar","statistik","inkop-lager","kunddatabas","kampanjutskick","nyhetsbrev","sms-utskick","avtalskunder","hantera-produkter","rekommendationer","varugrupper","rabattkoder","kop-x-for-y","fraktinstallningar","betalningsalternativ","redigerbara-sidor","nyheter","lankar","recensioner","bildspel","blogg","sprak-valuta","google-shopping","epostmallar","grundinstallningar","produkt-form"]
+const HIDE_NATIVE_ROUTES = ["ordrar","statistik","inkop-lager","kunddatabas","kampanjutskick","nyhetsbrev","avtalskunder","hantera-produkter","rekommendationer","varugrupper","rabattkoder","kop-x-for-y","fraktinstallningar","betalningsalternativ","redigerbara-sidor","nyheter","lankar","recensioner","bildspel","blogg","sprak-valuta","google-shopping","epostmallar","grundinstallningar","produkt-form"]
 
 export function hideWikiNativeLinks() {
   if (typeof document === "undefined") return
