@@ -86,7 +86,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       placeholders: map,
     })
   } catch (e: any) {
-    res.status(404).json({ templates, order: null, message: e?.message || "order saknas" })
+    res.status(404).json({ templates, order: null, message: "Ordern kunde inte hittas." })
   }
 }
 
@@ -124,7 +124,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       if (!r.ok) return res.status(502).json({ ok: false, provider: "resend", message: (data as any)?.message || `Resend-fel (${r.status})` })
       return res.json({ ok: true, provider: "resend", id: (data as any)?.id || null, to, subject })
     } catch (e: any) {
-      return res.status(502).json({ ok: false, provider: "resend", message: e?.message || "Kunde inte nå Resend." })
+      return res.status(502).json({ ok: false, provider: "resend", message: "Kunde inte nå Resend." })
     }
   }
 
@@ -147,7 +147,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
       return res.json({ ok: true, provider: "sendgrid", to, subject })
     } catch (e: any) {
-      return res.status(502).json({ ok: false, provider: "sendgrid", message: e?.message || "Kunde inte nå SendGrid." })
+      return res.status(502).json({ ok: false, provider: "sendgrid", message: "Kunde inte nå SendGrid." })
     }
   }
 
