@@ -42,6 +42,20 @@ function initialView(): string {
 
 function KontrollpanelPage() {
   const [view, setView] = useState<string>(initialView)
+  // Hide Medusa native sidebar on the Kontrollpanel (keep only our Wiki menu)
+  useEffect(() => {
+    const hide = () => {
+      document.querySelectorAll("div.h-screen").forEach((el) => {
+        const c = (el as HTMLElement).className || ""
+        if (c.includes("w-[220px]") && c.includes("border-e")) {
+          (el as HTMLElement).style.display = "none"
+        }
+      })
+    }
+    hide()
+    const t = setInterval(hide, 500)
+    return () => clearInterval(t)
+  }, [])
   const [menuOpen, setMenuOpen] = useState<boolean>(true)
   const [s, setS] = useState({ orders: 0, ordersYear: 0, salesYear: 0, customers: 0, products: 0, categories: 0, loading: true, salesLoading: true })
 
@@ -102,7 +116,7 @@ function KontrollpanelPage() {
   // Wiki "Snabbmeny" — exact order and sub-items from controls.php
   const menu: MenuItem[] = useMemo(() => ([
     { emo: "🏠", lab: "Start", section: "home" },
-    { emo: "📋", lab: "Visa ordrar", href: `${ADMIN}/orders` },
+    { emo: "📋", lab: "Visa ordrar", href: `${ADMIN}/ordrar` },
     { emo: "📊", lab: "Statistik", section: "statistik" },
     { emo: "📦", lab: "Inköp / Lager", section: "lager" },
     { emo: "📇", lab: "Kunddatabas", href: `${ADMIN}/customers` },
@@ -146,7 +160,7 @@ function KontrollpanelPage() {
 
   const groups: { title: string; tiles: Tile[] }[] = useMemo(() => ([
     { title: "Ordrar och kunder", tiles: [
-      { emo: "📋", lab: "Visa ordrar", href: `${ADMIN}/orders` },
+      { emo: "📋", lab: "Visa ordrar", href: `${ADMIN}/ordrar` },
       { emo: "📊", lab: "Statistik", section: "statistik" },
       { emo: "📦", lab: "Inköp / Lager", section: "lager" },
       { emo: "📇", lab: "Kunddatabas", href: `${ADMIN}/customers` },
