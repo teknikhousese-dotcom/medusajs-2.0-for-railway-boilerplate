@@ -1,3 +1,4 @@
+import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useEffect, useState } from "react"
 import { ADMIN, WF, Snabbmeny, jget, jsend } from "../../lib/butikadmin"
 
@@ -132,4 +133,5 @@ function ProduktsorteringPage() {
   )
 }
 
+export const config = defineRouteConfig({ label: "Produktsortering" })
 export default ProduktsorteringPage
