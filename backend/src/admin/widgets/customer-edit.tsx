@@ -118,7 +118,7 @@ const CustomerEditWidget = ({ data }: { data: any }) => {
   }, [id])
 
   const saveAddr = async (a: Addr, kind: "billing" | "shipping") => {
-    const has = ["company", "first_name", "last_name", "address_1", "postal_code", "city"].some((k) => String(a(as any)[k] || "").trim() !== "")
+    const has = ["company", "first_name", "last_name", "address_1", "postal_code", "city"].some((k) => String((a as any)[k] || "").trim() !== "")
     if (!has && !a.id) return
     const body: any = {
       company: a.company || undefined, first_name: a.first_name || undefined, last_name: a.last_name || undefined,
