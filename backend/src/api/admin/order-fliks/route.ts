@@ -7,7 +7,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
  * Medusas /admin/orders kan inte filtrera på metadata, så denna route sköter
  * flik-listning (via rå SQL på order.metadata) + hantering av egna flikar.
  *
- *  GET  /admin/order-fliks                    → { fliks:[{key,label,is_system,count}] }
+ *  GET  /admin/order-fliks                    → { fliks:[{key,label,is_system,count}], unread }
  *  GET  /admin/order-fliks?flik=<key>&limit=&offset=  → { orders, count }
  *  POST /admin/order-fliks  { kind:"create", name } | { kind:"rename", key, name } | { kind:"delete", key }
  */
@@ -44,7 +44,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const cmap: any = {}
     for (const g of grp) cmap[g.f] = g.c
     const fliks = defs.map((d: any) => ({ key: d.key, label: d.label, is_system: d.is_system, count: cmap[d.key] || 0 }))
-    return res.json({ fliks })
+    // Olästa ordrar = nya ordrar som ännu inte öppnats (metadata.read != 'true').
+    let unread = 0
+    try {
+      unread = (await p.raw(`SELECT count(*)::int AS c FROM "order" o WHERE o.deleted_at IS NULL AND ${nyaCond} AND (o.metadata->>'read') IS DISTINCT FROM 'true'`)).rows[0]?.c || 0
+    } catch { unread = 0 }
+    return res.json({ fliks, unread })
   }
 
   const limit = Math.min(200, parseInt(String((req.query as any).limit || "50")) || 50)
@@ -63,7 +68,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     try {
       const { data } = await query(req.scope).graph({
         entity: "order",
-        fields: ["id", "display_id", "email", "total", "currency_code", "created_at", "payment_status", "fulfillment_status", "status", "shipping_address.first_name", "shipping_address.last_name", "metadata"],
+        fields: ["id", "display_id", "email", "total", "currency_code", "created_at", "payment_status", "fulfillment_status", "status", "shipping_address.first_name", "shipping_address.last_name", "shipping_address.country_code", "payment_collections.payments.provider_id", "metadata"],
         filters: { id: ids },
       })
       const byId: any = {}
