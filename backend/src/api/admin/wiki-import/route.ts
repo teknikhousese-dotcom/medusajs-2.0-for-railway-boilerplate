@@ -6,7 +6,7 @@ import { Modules } from "@medusajs/framework/utils"
 // customers: skip existing email. orders: skip existing metadata.wiki_order_id.
 
 let REGION_ID: string | null = null
-let CHANNEL_ID: string | null = null
+let CHANNEL_ID: string | null = nul
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const body: any = req.body || {}
