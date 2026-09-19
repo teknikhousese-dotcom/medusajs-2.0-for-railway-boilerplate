@@ -73,5 +73,5 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       data.push({ id: c.id, name: nm, email: c.email || "", phone: c.phone || addr.phone || "", city: addr.city || "", orders })
     }
     res.json({ customers: data, count })
-  } catch (e: any) { res.status(500).json({ error: String((e && e.message) || e) }) }
+  } catch (e: any) { res.status(500).json({ error: "Något gick fel. Försök igen." }) }
 }
