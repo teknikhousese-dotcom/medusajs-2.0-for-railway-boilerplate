@@ -95,6 +95,10 @@ export const isPaypal = (providerId?: string) => {
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }
+export const isKlarna = (providerId?: string) => {
+  return providerId?.startsWith("pp_klarna")
+}
+
 export const isSwish = (providerId?: string) => {
   return providerId?.startsWith("pp_swish")
 }
