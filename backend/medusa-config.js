@@ -165,6 +165,19 @@ const medusaConfig = {
               apiBase: process.env.KLARNA_API_BASE,
             },
           },
+          {
+            resolve: './src/modules/swish',
+            id: 'swish',
+            options: {
+              apiBase: process.env.SWISH_API_BASE,
+              qrBase: process.env.SWISH_QR_BASE,
+              number: process.env.SWISH_NUMBER,
+              cert: process.env.SWISH_CERT,
+              key: process.env.SWISH_KEY,
+              ca: process.env.SWISH_CA,
+              callbackBase: process.env.SWISH_CALLBACK_BASE,
+            },
+          },
           ...(STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET ? [{
             resolve: '@medusajs/payment-stripe',
             id: 'stripe',
