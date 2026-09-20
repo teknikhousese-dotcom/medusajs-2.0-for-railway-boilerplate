@@ -7,7 +7,7 @@ export const AUTHENTICATE = false
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*")
   const token = (req.query.token as string) || ""
-  const size = Math.min(600, Math.max(100, Number(req.query.size) || 300))
+  const size = Math.min(600, Math.max(300, Number(req.query.size) || 300))
   if (!token) return res.status(400).json({ error: "token saknas" })
   try {
     const png = await qrPng(token, size)
