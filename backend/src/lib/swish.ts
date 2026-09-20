@@ -138,7 +138,8 @@ export async function refund(o: { originalPaymentReference: string; amount: any;
 
 export async function qrPng(token: string, size = 300): Promise<Buffer | null> {
   const url = qrBase() + "/qrg-swish/api/v1/commerce"
-  const r = await req(url, "POST", { token, size, format: "png", border: 0, transparent: false }, false, true)
+  const r = await req(url, "POST", { format: "png", size, token }, false, true)
   if (r.status >= 200 && r.status < 300 && r.body && r.body.length > 0) return r.body
+  console.error("[swish] qr fail", r.status, (r.text || "").slice(0, 200))
   return null
 }
