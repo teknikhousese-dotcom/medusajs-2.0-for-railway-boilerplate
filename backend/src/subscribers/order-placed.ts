@@ -1,4 +1,4 @@
-import { Modules } from '@medusajs/framework/utils'
+import { Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { INotificationModuleService, IOrderModuleService } from '@medusajs/framework/types'
 import { SubscriberArgs, SubscriberConfig } from '@medusajs/medusa'
 import { EmailTemplates } from '../modules/email-notifications/templates'
@@ -49,6 +49,34 @@ export default async function orderPlacedHandler({
     })
   } catch (error) {
     console.error('Error sending order confirmation notification:', error)
+  }
+
+  // Tag the payment method on the order (metadata.payment_method) from the
+  // payment provider, so the admin Orders list shows the right logo
+  // (Swish/Klarna/Card). Runs after the email so a failure here cannot
+  // block the order confirmation.
+  try {
+    const query = container.resolve(ContainerRegistrationKeys.QUERY)
+    const { data: rows } = await query.graph({
+      entity: 'order',
+      filters: { id: data.id },
+      fields: ['id', 'metadata', 'payment_collections.payments.provider_id'],
+    })
+    const row: any = rows?.[0]
+    const pid: string =
+      row?.payment_collections?.[0]?.payments?.[0]?.provider_id || ''
+    let pm = ''
+    if (/swish/i.test(pid)) pm = 'SWISH'
+    else if (/klarna/i.test(pid)) pm = 'KLARNA'
+    else if (/stripe|card/i.test(pid)) pm = 'Kort'
+    const current = (row?.metadata?.payment_method as string) || ''
+    if (pm && current !== pm) {
+      await orderModuleService.updateOrders(data.id, {
+        metadata: { ...(row?.metadata || {}), payment_method: pm },
+      })
+    }
+  } catch (error) {
+    console.error('Could not stamp payment_method on order', data.id, error)
   }
 }
 
