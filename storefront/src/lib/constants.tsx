@@ -87,6 +87,9 @@ export const isPaypal = (providerId?: string) => {
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }
+export const isSwish = (providerId?: string) => {
+  return providerId?.startsWith("pp_swish")
+}
 
 // Add currencies that don't need to be divided by 100
 export const noDivisionCurrencies = [
