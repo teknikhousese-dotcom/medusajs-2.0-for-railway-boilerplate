@@ -13,14 +13,22 @@ const KlarnaLogo = (
   </svg>
 )
 
-// Swish — swirl mark + magenta wordmark
-const SwishLogo = (
-  <svg width="72" height="26" viewBox="0 0 72 26" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Swish">
-    <path d="M8 8.5c-3.6-1-6.5 1-6.5 4 0 2.2 1.8 3.6 4.2 3.6" fill="none" stroke="#DD0074" strokeWidth="2.6" strokeLinecap="round" />
-    <path d="M13.5 17c3.6 1 6.5-1 6.5-4 0-2.2-1.8-3.6-4.2-3.6" fill="none" stroke="#7A2E8E" strokeWidth="2.6" strokeLinecap="round" />
-    <text x="26" y="18" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontSize="15" fontWeight="700" fill="#DD0074">Swish</text>
-  </svg>
-)
+// Swish — official brand asset (drop the real file at storefront/public/swish.svg).
+// Falls back to a clean Swish wordmark in the brand colour until the asset is added.
+const SwishMark = () => {
+  const [err, setErr] = React.useState(false)
+  if (err) {
+    return (
+      <span style={{ color: "#DD0074", fontWeight: 700, fontSize: "15px", fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+        Swish
+      </span>
+    )
+  }
+  return (
+    <img src="/swish.svg" alt="Swish" height={24} style={{ objectFit: "contain", display: "block" }} onError={() => setErr(true)} />
+  )
+}
+const SwishLogo = <SwishMark />
 
 const FakturaLogo = (
   <span
