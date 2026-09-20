@@ -10,7 +10,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   if (!id) return res.status(400).json({ status: "ERROR", error: "id saknas" })
   try {
     const s = await getStatus(id)
-    return res.json({ status: s.status || "CREATED", paymentReference: s.paymentReference })
+    return res.json({ status: s.status || "CREATED", paymentReference: s.paymentReference, errorCode: (s.raw as any)?.errorCode, errorMessage: (s.raw as any)?.errorMessage })
   } catch (e: any) {
     return res.json({ status: "CREATED" })
   }
