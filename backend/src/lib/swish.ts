@@ -25,9 +25,15 @@ export function callbackUrl(): string {
 }
 function getAgent(): https.Agent {
   if (agent) return agent
-  const cert = (process.env.SWISH_CERT || "").replace(/\\n/g, "\n")
-  const key = (process.env.SWISH_KEY || "").replace(/\\n/g, "\n")
-  const ca = (process.env.SWISH_CA || "").replace(/\\n/g, "\n")
+  const pemify = (v: string) => {
+    const t = (v || "").trim()
+    if (!t) return ""
+    if (t.includes("BEGIN")) return t.replace(/\\n/g, "\n")
+    try { return Buffer.from(t.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8") } catch { return t }
+  }
+  const cert = pemify(process.env.SWISH_CERT || "")
+  const key = pemify(process.env.SWISH_KEY || "")
+  const ca = pemify(process.env.SWISH_CA || "")
   agent = new https.Agent({
     cert: cert || undefined,
     key: key || undefined,
