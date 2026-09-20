@@ -9,8 +9,9 @@ import ErrorMessage from "../error-message"
 import Spinner from "@modules/common/icons/spinner"
 import { placeOrder } from "@lib/data/cart"
 import SwishPaymentButton from "./SwishPaymentButton"
+import KlarnaPaymentButton from "./KlarnaPaymentButton"
 import { HttpTypes } from "@medusajs/types"
-import { isManual, isPaypal, isStripe, isSwish } from "@lib/constants"
+import { isManual, isPaypal, isStripe, isSwish, isKlarna } from "@lib/constants"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -54,6 +55,10 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isSwish(paymentSession?.provider_id):
       return (
         <SwishPaymentButton notReady={notReady} cart={cart} data-testid={dataTestId} />
+      )
+    case isKlarna(paymentSession?.provider_id):
+      return (
+        <KlarnaPaymentButton cart={cart} data-testid={dataTestId} />
       )
     case isPaypal(paymentSession?.provider_id):
       return (
