@@ -25,7 +25,7 @@ const SwishMark = () => {
     )
   }
   return (
-    <img src="/swish.svg" alt="Swish" height={24} style={{ objectFit: "contain", display: "block" }} onError={() => setErr(true)} />
+    <img src="https://images.ctfassets.net/zrqoyh8r449h/5dYSjiUWZq3ITy9acKxDGq/b11b197ae975131489c79311f0f9abeb/Swish_Logo_Secondary_Light_BG_P3.png?w=200" alt="Swish" height={24} style={{ objectFit: "contain", display: "block" }} onError={() => setErr(true)} />
   )
 }
 const SwishLogo = <SwishMark />
