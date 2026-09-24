@@ -178,6 +178,17 @@ const medusaConfig = {
               callbackBase: process.env.SWISH_CALLBACK_BASE,
             },
           },
+          {
+            resolve: './src/modules/kustom',
+            id: 'kustom',
+            options: {
+              apiBase: process.env.KUSTOM_API_BASE,
+              username: process.env.KUSTOM_USERNAME,
+              password: process.env.KUSTOM_PASSWORD,
+              storefrontUrl: process.env.KUSTOM_STOREFRONT_URL,
+              backendUrl: process.env.KUSTOM_BACKEND_URL,
+            },
+          },
           ...(STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET ? [{
             resolve: '@medusajs/payment-stripe',
             id: 'stripe',
