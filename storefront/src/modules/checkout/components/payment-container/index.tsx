@@ -16,6 +16,7 @@ type PaymentContainerProps = {
 
 const subtitleMap: Record<string, string> = {
   pp_klarna_klarna: "Faktura, delbetalning eller kort – via Klarna",
+  pp_kustom_kustom: "Faktura, delbetalning eller kort – via Klarna",
   pp_swish_swish: "Betala direkt med Swish",
   pp_stripe_stripe: "Betala säkert med kort",
   pp_paypal_paypal: "Betala med ditt PayPal-konto",
