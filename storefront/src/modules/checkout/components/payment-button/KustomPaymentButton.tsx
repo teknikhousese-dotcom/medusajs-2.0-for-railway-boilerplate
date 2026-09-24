@@ -52,7 +52,7 @@ const KustomPaymentButton = ({
       }
       await initiatePaymentSession(cart, {
         provider_id: "pp_kustom_kustom",
-        context: { kustom_order_id: j.order_id },
+        data: { kustom_order_id: j.order_id },
       } as any)
       setSnippet(j.html_snippet)
     } catch (e: any) {
