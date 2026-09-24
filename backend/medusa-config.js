@@ -157,15 +157,6 @@ const medusaConfig = {
       options: {
         providers: [
           {
-            resolve: './src/modules/klarna',
-            id: 'klarna',
-            options: {
-              username: process.env.KLARNA_USERNAME,
-              password: process.env.KLARNA_PASSWORD,
-              apiBase: process.env.KLARNA_API_BASE,
-            },
-          },
-          {
             resolve: './src/modules/swish',
             id: 'swish',
             options: {
