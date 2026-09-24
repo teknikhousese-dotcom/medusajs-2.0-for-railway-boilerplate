@@ -10,8 +10,9 @@ import Spinner from "@modules/common/icons/spinner"
 import { placeOrder } from "@lib/data/cart"
 import SwishPaymentButton from "./SwishPaymentButton"
 import KlarnaPaymentButton from "./KlarnaPaymentButton"
+import KustomPaymentButton from "./KustomPaymentButton"
 import { HttpTypes } from "@medusajs/types"
-import { isManual, isPaypal, isStripe, isSwish, isKlarna } from "@lib/constants"
+import { isManual, isPaypal, isStripe, isSwish, isKlarna, isKustom } from "@lib/constants"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -55,6 +56,10 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isSwish(paymentSession?.provider_id):
       return (
         <SwishPaymentButton notReady={notReady} cart={cart} data-testid={dataTestId} />
+      )
+    case isKustom(paymentSession?.provider_id):
+      return (
+        <KustomPaymentButton notReady={notReady} cart={cart} data-testid={dataTestId} />
       )
     case isKlarna(paymentSession?.provider_id):
       return (
