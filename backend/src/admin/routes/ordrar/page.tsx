@@ -110,7 +110,7 @@ function payBadge(pm?: string) {
   const b = map[k] || { t: pm, bg: "#eee", fg: "#333" }
   return <span title={pm} style={{ display: "inline-block", textAlign: "center", fontSize: "9px", fontWeight: 700, padding: "1px 5px", borderRadius: "3px", background: b.bg, color: b.fg, marginRight: "6px", verticalAlign: "middle" }}>{b.t}</span>
 }
-const flikOf = (o: any): string => o.metadata?.orderflik || (o.payment_status === "canceled" ? "makulerade" : "nya")
+const flikOf = (o: any): string => o.metadata?.orderflik || "nya"
 const deviceOf = (o: any): string => { const v = (o.metadata?.ordered_via || "").toLowerCase(); return /dator|desktop|surf|tablet/.test(v) ? "🖥" : "📱" }
 
 function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
@@ -355,7 +355,7 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
         if (!alive) return
         setO(d.order); setLoading(false)
         const m = d.order?.metadata || {}
-        setNote(m.internal_comment || ""); setFlik(m.orderflik || (d.order?.payment_status === "canceled" ? "makulerade" : "nya")); setStat(m.counts_in_stats !== false)
+        setNote(m.internal_comment || ""); setFlik(m.orderflik || "nya"); setStat(m.counts_in_stats !== false)
         if (m.read !== true) { // markera som läst (Olästa = fet stil i listan)
           try { fetch(`/admin/orders/${id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: Object.assign({}, m, { read: true }) }) }) } catch { /* ignore */ }
         }
