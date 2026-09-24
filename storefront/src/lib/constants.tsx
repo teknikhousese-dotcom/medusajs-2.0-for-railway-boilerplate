@@ -74,6 +74,10 @@ export const paymentInfoMap: Record<
     title: "Klarna",
     icon: KlarnaLogo,
   },
+  pp_kustom_kustom: {
+    title: "Klarna",
+    icon: KlarnaLogo,
+  },
   pp_swish_swish: {
     title: "Swish",
     icon: SwishLogo,
@@ -97,6 +101,10 @@ export const isManual = (providerId?: string) => {
 }
 export const isKlarna = (providerId?: string) => {
   return providerId?.startsWith("pp_klarna")
+}
+
+export const isKustom = (providerId?: string) => {
+  return providerId?.startsWith("pp_kustom")
 }
 
 export const isSwish = (providerId?: string) => {
