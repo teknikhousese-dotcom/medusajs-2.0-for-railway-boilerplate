@@ -28,11 +28,12 @@ class KustomProviderService extends AbstractPaymentProvider {
   }
 
   async initiatePayment(input: any): Promise<any> {
-    const { amount, currency_code, data } = input || {}
+    const { amount, currency_code, data, context } = input || {}
+    const oid = data?.kustom_order_id || context?.kustom_order_id
     return {
-      id: data?.kustom_order_id || "kustom",
+      id: oid || "kustom",
       data: {
-        kustom_order_id: data?.kustom_order_id,
+        kustom_order_id: oid,
         html_snippet: data?.html_snippet,
         status: data?.status,
         amount,
