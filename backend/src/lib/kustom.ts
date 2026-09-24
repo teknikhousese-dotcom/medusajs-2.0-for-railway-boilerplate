@@ -78,7 +78,7 @@ export function merchantUrls(cartId: string) {
   return {
     terms: `${store}/kopvillkor`,
     checkout: `${store}/kassa?kustom_order_id={checkout.order.id}`,
-    confirmation: `${store}/kassa/bekraftelse?kustom_order_id={checkout.order.id}`,
+    confirmation: `${store}/kassa-klar?kustom_order_id={checkout.order.id}`,
     push: `${back}/kustom/push?kustom_order_id={checkout.order.id}&cart_id=${encodeURIComponent(
       cartId
     )}`,
