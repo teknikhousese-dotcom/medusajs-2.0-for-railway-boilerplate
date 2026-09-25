@@ -154,8 +154,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
       const variantUpdate: any = {
         id: v.id,
-        manage_inventory: !m.oandligt,
-        allow_backorder: m.best,
+        // NOTE: never touch manage_inventory/allow_backorder here. The storefront keeps
+        // manage_inventory=false and reads stock from product.metadata (in_stock/stock).
         metadata: { inpris: m.metadata.inpris, momssats: m.metadata.momssats },
       }
       if (m.ean) variantUpdate.barcode = m.ean
@@ -164,7 +164,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       await updateProductVariantsWorkflow(req.scope).run({ input: { product_variants: [variantUpdate] } })
 
       const iid = v.inventory_items && v.inventory_items[0] && v.inventory_items[0].inventory_item_id
-      if (iid && locId && !m.oandligt) {
+      if (false && iid && locId && !m.oandligt) {
         const levels = await inv.listInventoryLevels({ inventory_item_id: iid, location_id: locId })
         if (levels && levels.length) {
           if (Number(levels[0].stocked_quantity) !== m.antal) out.changes.stock++
