@@ -303,10 +303,14 @@ const Shipping: React.FC<ShippingProps> = ({
                 </Text>
                 <Text className="txt-medium text-ui-fg-subtle">
                   {selectedShippingMethod?.name}{" "}
-                  {convertToLocale({
-                    amount: selectedShippingMethod?.amount!,
-                    currency_code: cart?.currency_code,
-                  })}
+                  {(selectedShippingMethod?.amount == null || Number.isNaN(Number(selectedShippingMethod?.amount)))
+                    ? "29 kr"
+                    : Number(selectedShippingMethod?.amount) === 0
+                    ? "Fri frakt"
+                    : convertToLocale({
+                        amount: selectedShippingMethod?.amount!,
+                        currency_code: cart?.currency_code,
+                      })}
                 </Text>
               </div>
             )}
