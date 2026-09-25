@@ -107,7 +107,7 @@ function mapWiki(w: any) {
   if (!buyable) metadata.in_stock = false
   return {
     title: str(w.title_sv), subtitle: str(w.googleShoppingTitle_sv), status,
-    price: pris, // baspris = ordinarie pris; kampanj -> rea-prislistan (syncSalePrice) ean: str(w.ean), weight: Math.round(num(w.vikt)) || null,
+    price: pris, /* baspris = ordinarie pris; kampanj -> rea-prislistan (syncSalePrice) */ ean: str(w.ean), weight: Math.round(num(w.vikt)) || null,
     antal: buyable ? antal : 0, oandligt: buyable ? oandligt : false, best: buyable ? best : false,
     metadata, description: str(w.description_sv),
   }
