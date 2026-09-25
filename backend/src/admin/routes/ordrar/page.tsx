@@ -260,7 +260,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
             const paid = o.payment_status === "captured" || o.payment_status === "paid"
             const fulfilled = ["fulfilled", "shipped", "delivered", "partially_fulfilled", "partially_shipped", "partially_delivered"].includes(o.fulfillment_status)
             // Wiki: rött ID = ej slutfört köp (ej betalt); blått ID = måste behandlas (betalt, ej hanterat); annars svart
-            const idColor = o.metadata?.wiki_order_id ? "#333" : ((o.payment_status === "authorized" || o.payment_status === "partially_authorized") ? "#0000ff" : ((o.payment_status === "captured" || o.payment_status === "partially_captured" || o.payment_status === "paid" || o.payment_status === "refunded" || o.payment_status === "partially_refunded") ? "#333" : "#cc0000"))
+            const idColor = (o.metadata?.kustom_captured || o.metadata?.wiki_order_id) ? "#333" : (o.metadata?.kustom_cancelled ? "#999" : ((o.payment_status === "authorized" || o.payment_status === "partially_authorized") ? "#0000ff" : ((o.payment_status === "captured" || o.payment_status === "partially_captured" || o.payment_status === "paid" || o.payment_status === "refunded" || o.payment_status === "partially_refunded") ? "#333" : "#cc0000")))
             const unread = o.metadata?.read !== true               // Olästa ordrar i fet stil
             const isMak = flikOf(o) === "makulerade"                // Makulerade ordrar med grå bakgrund
             const baseBg = isMak ? "#e6e6e6" : "#ffffff"
@@ -345,6 +345,18 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const [flik, setFlik] = useState("nya")
   const [stat, setStat] = useState(true)
   const [saved, setSaved] = useState("")
+  const [klarna, setKlarna] = useState<any>(null)
+  const klarnaAction = async (action: string) => {
+    if (action === "capture" && !confirm("Aktivera och leverera - Klarna-transaktionen debiteras kunden. Fortsatt?")) return
+    if (action === "cancel" && !confirm("Avbryt Klarna-transaktionen? Kunden debiteras inte.")) return
+    try {
+      const r = await fetch("/admin/kustom-order", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order_id: o.id, action }) })
+      const j = await r.json()
+      if (!j.ok) { alert(j.message || "Atgarden misslyckades."); return }
+      const kj = await fetch("/admin/kustom-order?order_id=" + o.id, { credentials: "include" }).then((x) => x.json()).catch(() => null)
+      if (kj) setKlarna(kj)
+    } catch (e) { alert("Natverksfel.") }
+  }
 
   useEffect(() => {
     let alive = true
@@ -354,7 +366,7 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
         const r = await fetch(`/admin/orders/${id}?fields=${f}`, { credentials: "include" })
         const d = await r.json()
         if (!alive) return
-        setO(d.order); setLoading(false)
+        setO(d.order); setLoading(false); fetch("/admin/kustom-order?order_id=" + id, { credentials: "include" }).then((kr) => kr.json()).then((kj) => { if (alive) setKlarna(kj) }).catch(() => {})
         const m = d.order?.metadata || {}
         setNote(m.internal_comment || ""); setFlik(m.orderflik || "nya"); setStat(m.counts_in_stats !== false)
         if (m.read !== true) { // markera som läst (Olästa = fet stil i listan)
@@ -435,6 +447,27 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
           <KV k="Betalningstatus:" v={<span>{payBadge(betalsatt)}<span style={{ color: paid ? "#161" : "#a00" }}>{paid ? "Betald – transaktionen är genomförd" : payText(o.payment_status)}</span></span>} />
           <KV k="Språk / Valuta:" v={`Svenska / ${(o.currency_code || "SEK").toUpperCase()}`} />
         </tbody></table>
+        {klarna?.kustom && !klarna?.cancelled ? (
+          <div style={{ margin: "12px 0", padding: "12px 14px", border: "1px solid #e5c07b", background: "#fff9ec", borderRadius: "6px", fontSize: "13px" }}>
+            <div style={{ fontWeight: 700, marginBottom: "4px" }}>Klarna Checkout</div>
+            {klarna?.captured ? (
+              <div style={{ color: "#161", marginBottom: "6px" }}>Transaktionen ar aktiverad och levererad.</div>
+            ) : (
+              <div>
+                <div style={{ marginBottom: "8px" }}>Klarna har godkant kunden for betalning! I samband med leveransen ska du aktivera transaktionen nedan - alternativt kan transaktionen avbrytas om kunden angrar sig. Andring i varulistan kan goras under "Redigera order" innan aktiveringen.</div>
+                <div style={{ marginBottom: "8px" }}>
+                  <button onClick={() => klarnaAction("capture")} style={{ background: "#111", color: "#fff", border: 0, borderRadius: "4px", padding: "6px 12px", cursor: "pointer", marginRight: "8px" }}>Aktivera och leverera</button>
+                  <button onClick={() => klarnaAction("cancel")} style={{ background: "#fff", color: "#a00", border: "1px solid #a00", borderRadius: "4px", padding: "6px 12px", cursor: "pointer" }}>Avbryt</button>
+                </div>
+              </div>
+            )}
+            <div style={{ color: "#555" }}>Klarnas order-id: {klarna.kustom_order_id}</div>
+            {klarna.reference ? <div style={{ color: "#555" }}>Referens: {klarna.reference}</div> : null}
+            {klarna.butik_id ? <div style={{ color: "#555" }}>Butik-id: {klarna.butik_id}</div> : null}
+            {klarna.expiry ? <div style={{ color: "#555" }}>Giltig till: {String(klarna.expiry).slice(0, 10)} <a onClick={() => klarnaAction("extend")} style={{ color: "#06c", cursor: "pointer" }}>Forlang</a></div> : null}
+          </div>
+        ) : null}
+
 
         <table style={{ ...tbl }}><tbody>
           <tr><td style={secTd} colSpan={6}>Beställda varor</td></tr>
