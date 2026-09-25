@@ -52,7 +52,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       return { artnr: it.metadata?.sku || "", namn: it.title || "", attribut: it.subtitle || "", typ: "vara", moms, pris_inkl: r2(net * (1 + moms / 100)), antal: Number(it.quantity) || 0, krediterad: 0 }
     })
     const shipName = (o.shipping_methods || [])[0]?.name || m.fraktmetod || "Standard"
-    const captured = m.kustom_captured === true || ["captured", "partially_captured", "paid"].includes(o.payment_status)
+    const captured = m.kustom_captured === true || m.wiki_activated === true || ["captured", "partially_captured", "paid"].includes(o.payment_status)
     return res.json({
       ok: true,
       email: o.email || "",
