@@ -1,6 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-import { getManagement, capture, cancel, extendAuth } from "../../../lib/kustom"
+import { getManagement, capture, cancel, extendAuth, refund } from "../../../lib/kustom"
 
 async function load(scope: any, order_id: string) {
   const om: any = scope.resolve(Modules.ORDER)
@@ -55,6 +55,15 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       const meta = Object.assign({}, o?.metadata || {}, { kustom_cancelled: true, kustom_cancelled_at: new Date().toISOString() })
       await om.updateOrders([{ id: order_id, metadata: meta }])
       return res.json({ ok: true, action, status: "CANCELLED" })
+    }
+    if (action === "refund") {
+      const amount = Math.round(Number(body.amount || 0) * 100)
+      if (amount <= 0) return res.status(400).json({ ok: false, message: "Ange ett belopp storre an 0." })
+      await refund(kid, amount)
+      const prev = Number(o?.metadata?.kustom_refunded || 0)
+      const meta = Object.assign({}, o?.metadata || {}, { kustom_refunded: prev + Number(body.amount || 0), kustom_refunded_at: new Date().toISOString() })
+      await om.updateOrders([{ id: order_id, metadata: meta }])
+      return res.json({ ok: true, action, credited: Number(body.amount || 0) })
     }
     if (action === "extend") {
       await extendAuth(kid)
