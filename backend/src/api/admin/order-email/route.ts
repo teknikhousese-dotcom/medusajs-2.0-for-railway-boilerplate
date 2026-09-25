@@ -13,6 +13,16 @@ import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 const kr = (n: number) =>
   new Intl.NumberFormat("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0)) + " kr"
 
+async function markNotified(scope: any, order_id: string) {
+  if (!order_id) return
+  try {
+    const om: any = scope.resolve(Modules.ORDER)
+    const o: any = await om.retrieveOrder(order_id, { select: ["id", "metadata"] })
+    const meta = Object.assign({}, o?.metadata || {}, { kund_meddelad: new Date().toISOString() })
+    await om.updateOrders([{ id: order_id, metadata: meta }])
+  } catch (e) { /* icke-kritiskt */ }
+}
+
 async function loadTemplates(scope: any) {
   try {
     const pg = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
@@ -124,7 +134,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })
       const data = await r.json().catch(() => ({}))
       if (!r.ok) return res.status(502).json({ ok: false, provider: "resend", message: "E-post kunde inte skickas. Kontrollera mottagaradressen och forsok igen." })
-      return res.json({ ok: true, provider: "resend", id: (data as any)?.id || null, to, subject })
+      await markNotified(req.scope, order_id); return res.json({ ok: true, provider: "resend", id: (data as any)?.id || null, to, subject })
     } catch (e: any) {
       return res.status(502).json({ ok: false, provider: "resend", message: "Kunde inte nå Resend." })
     }
@@ -147,7 +157,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         const t = await r.text().catch(() => "")
         return res.status(502).json({ ok: false, provider: "sendgrid", message: "E-post kunde inte skickas. Forsok igen." })
       }
-      return res.json({ ok: true, provider: "sendgrid", to, subject })
+      await markNotified(req.scope, order_id); return res.json({ ok: true, provider: "sendgrid", to, subject })
     } catch (e: any) {
       return res.status(502).json({ ok: false, provider: "sendgrid", message: "Kunde inte nå SendGrid." })
     }
