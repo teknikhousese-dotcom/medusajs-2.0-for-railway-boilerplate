@@ -147,7 +147,44 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   res.json({ total })
 }
 
+// Kopiera en bild från gamla Wiki (teknikhouse.se/images/zoom|normal) till vår fillagring.
+async function rehostWikiImage(fileModule: any, file: string): Promise<string | null> {
+  const clean = String(file || "").split("/").pop() || ""
+  if (!/^[A-Za-z0-9._-]+$/.test(clean)) return null
+  let buf: Buffer | null = null
+  for (const dir of ["images/zoom/", "images/normal/", "images/"]) {
+    try {
+      const r = await fetch("https://teknikhouse.se/" + dir + clean)
+      const ct = String(r.headers.get("content-type") || "")
+      if (r.ok && ct.startsWith("image/")) { buf = Buffer.from(await r.arrayBuffer()); break }
+    } catch {}
+  }
+  if (!buf || !buf.length) return null
+  const low = clean.toLowerCase()
+  const mimeType = low.endsWith(".png") ? "image/png" : low.endsWith(".webp") ? "image/webp" : low.endsWith(".gif") ? "image/gif" : "image/jpeg"
+  for (const mode of ["binary", "base64"]) {
+    const content = mode === "base64" ? buf.toString("base64") : buf.toString("binary")
+    const out = await fileModule.createFiles([{ filename: clean, mimeType, content }])
+    const f = Array.isArray(out) ? out[0] : out
+    if (!f || !f.url) continue
+    try {
+      const chk = await fetch(f.url)
+      const len = (await chk.arrayBuffer()).byteLength
+      if (len === buf.length) return f.url
+    } catch {}
+  }
+  return null
+}
+
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const bb: any = req.body || {}
+  if (bb.action === "rehost") {
+    const fileModule: any = req.scope.resolve(Modules.FILE)
+    const files: string[] = Array.isArray(bb.files) ? bb.files.slice(0, 12) : []
+    const out: any[] = []
+    for (const f of files) out.push({ file: f, url: await rehostWikiImage(fileModule, f) })
+    return res.json({ ok: true, images: out })
+  }
   const b: any = req.body || {}
   const offset = Math.max(0, Number(b.offset) || 0)
   const limit = Math.min(100, Math.max(1, Number(b.limit) || 25))
