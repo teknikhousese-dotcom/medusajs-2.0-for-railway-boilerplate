@@ -18,6 +18,36 @@ const q = (scope: any) => scope.resolve(ContainerRegistrationKeys.QUERY)
 const num = (v: any) => { const n = Number(String(v ?? "").replace(/\s/g, "").replace(",", ".")); return isFinite(n) ? n : 0 }
 const str = (v: any) => (v == null ? "" : String(v)).trim()
 
+const SALE_LIST_TITLE = "Kampanjpriser (import)"
+
+// Rea-pris: lägg/uppdatera/ta bort variantens pris i kampanjprislistan (typ "sale").
+async function syncSalePrice(scope: any, productId: string, amount: number) {
+  try {
+    const pricing: any = scope.resolve(Modules.PRICING)
+    const { data } = await q(scope).graph({
+      entity: "product",
+      fields: ["variants.id", "variants.price_set.id"],
+      filters: { id: productId },
+    })
+    const psId = data && data[0] && data[0].variants && data[0].variants[0] && data[0].variants[0].price_set && data[0].variants[0].price_set.id
+    if (!psId) return
+    const lists = await pricing.listPriceLists({}, { take: 100 })
+    const pl = (lists || []).find((x: any) => x.title === SALE_LIST_TITLE) || (lists || []).find((x: any) => x.type === "sale")
+    if (!pl) return
+    const existing = await pricing.listPrices({ price_list_id: pl.id, price_set_id: psId })
+    if (amount > 0) {
+      if (existing && existing.length) {
+        await pricing.updatePriceListPrices([{ price_list_id: pl.id, prices: [{ id: existing[0].id, price_set_id: psId, amount, currency_code: "sek" }] }])
+        if (existing.length > 1) await pricing.removePrices(existing.slice(1).map((p: any) => p.id))
+      } else {
+        await pricing.addPriceListPrices([{ price_list_id: pl.id, prices: [{ price_set_id: psId, amount, currency_code: "sek" }] }])
+      }
+    } else if (existing && existing.length) {
+      await pricing.removePrices(existing.map((p: any) => p.id))
+    }
+  } catch {}
+}
+
 function todayInRange(start: string, end: string) {
   const t = new Date().toISOString().slice(0, 10)
   if (start && start > t) return false
@@ -77,7 +107,7 @@ function mapWiki(w: any) {
   if (!buyable) metadata.in_stock = false
   return {
     title: str(w.title_sv), subtitle: str(w.googleShoppingTitle_sv), status,
-    price: kampanj ? kpris : pris, ean: str(w.ean), weight: Math.round(num(w.vikt)) || null,
+    price: pris, // baspris = ordinarie pris; kampanj -> rea-prislistan (syncSalePrice) ean: str(w.ean), weight: Math.round(num(w.vikt)) || null,
     antal: buyable ? antal : 0, oandligt: buyable ? oandligt : false, best: buyable ? best : false,
     metadata, description: str(w.description_sv),
   }
@@ -186,6 +216,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           await inv.createInventoryLevels([{ inventory_item_id: iid, location_id: locId, stocked_quantity: m.antal }])
         }
       }
+      await syncSalePrice(req.scope, v.product_id, m.metadata.kampanj ? Number(m.metadata.kampanjpris) || 0 : 0)
       await pg.raw(`UPDATE "wiki_product_raw" SET "applied_at"=now() WHERE "sku"=?`, [r.sku])
       out.updated++
     } catch (e: any) {
