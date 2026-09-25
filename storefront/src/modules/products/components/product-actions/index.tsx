@@ -257,8 +257,8 @@ export default function ProductActions({
           <div className="tr">
             <svg viewBox="0 0 24 24"><path d="M3 13h6l2-8 3 16 2-6h5" /></svg>
             <span>
-              <b>{inStock ? "I lager" : "Tillfälligt slut"}</b>
-              {inStock ? " – skickas idag, hemma om 1–3 dagar" : " – vi fyller på snart"}
+              <b>{!selectedVariant ? "Välj alternativ ovan" : inStock ? "I lager" : "Tillfälligt slut"}</b>
+              {!selectedVariant ? "" : inStock ? " – skickas idag, hemma om 1–3 dagar" : " – vi fyller på snart"}
             </span>
           </div>
           <div className="tr">
