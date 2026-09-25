@@ -173,9 +173,13 @@ const Payment = ({
                 value={selectedPaymentMethod}
                 onChange={(value: string) => handleChange(value)}
               >
-                {availablePaymentMethods
+                {[...availablePaymentMethods]
                   .sort((a, b) => {
-                    return a.provider_id > b.provider_id ? 1 : -1
+                    const rank: Record<string, number> = { pp_swish_swish: 0, pp_kustom_kustom: 1 }
+                    const ai = rank[a.id] ?? 50
+                    const bi = rank[b.id] ?? 50
+                    if (ai !== bi) return ai - bi
+                    return a.id > b.id ? 1 : -1
                   })
                   .map((paymentMethod) => {
                     return (
