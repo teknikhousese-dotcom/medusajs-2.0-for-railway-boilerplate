@@ -85,6 +85,7 @@ async function loadOrder(scope: any, id: string) {
       "items.total",
       "items.variant_sku",
       "items.product_id",
+      "items.metadata",
       "shipping_address.first_name",
       "shipping_address.last_name",
       "shipping_address.address_1",
@@ -135,13 +136,14 @@ function renderFoljesedel(order: any): string {
 
   const inkom = formatDateTime(m.order_time || order.created_at)
 
+  const grossFactor = Number(order.tax_total) > 0 ? 1 : 1.25
   const itemRows = items
     .map((it: any) => {
       const artikelnr = esc(it.variant_sku || (it.metadata && it.metadata.sku) || it.product_id || "-")
       let vara = esc(it.title || it.product_title || "")
       if (it.subtitle) vara += ` <span class="muted">(${esc(it.subtitle)})</span>`
       const antal = `${Number(it.quantity || 0)} st`
-      const summa = kr((Number(it.unit_price) || 0) * Number(it.quantity || 0))
+      const summa = kr((Number(it.unit_price) || 0) * Number(it.quantity || 0) * grossFactor)
       return `
         <tr>
           <td class="col-sku">${artikelnr}</td>
@@ -152,8 +154,8 @@ function renderFoljesedel(order: any): string {
     })
     .join("")
 
-  const totalt = kr(order.total)
-  const moms = kr(order.tax_total)
+  const totalt = kr((Number(order.total) || 0) * grossFactor)
+  const moms = kr(Number(order.tax_total) > 0 ? Number(order.tax_total) : (Number(order.total) || 0) * 0.25)
 
   return `<!DOCTYPE html>
 <html lang="sv">
