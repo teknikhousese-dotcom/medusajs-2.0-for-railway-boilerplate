@@ -557,6 +557,8 @@ function OrderEdit({ id, onBack }: { id: string; onBack: () => void }) {
   const [d, setD] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState("")
+  const [credit, setCredit] = useState("")
+  const [creditMsg, setCreditMsg] = useState("")
   useEffect(() => {
     let alive = true
     fetch("/admin/order-edit?order_id=" + id, { credentials: "include" }).then((r) => r.json()).then((j) => { if (alive && j.ok) setD(j) }).catch(() => {})
@@ -577,6 +579,17 @@ function OrderEdit({ id, onBack }: { id: string; onBack: () => void }) {
       if (!j.ok) { setMsg(j.message || "Kunde inte spara."); setSaving(false); return }
       setMsg(j.addrSaved === false ? "Sparat (adressen kunde inte uppdateras automatiskt)." : "Andringarna sparades."); setSaving(false)
     } catch (e) { setMsg("Natverksfel."); setSaving(false) }
+  }
+  const doCredit = async () => {
+    const amt = Number(String(credit).replace(",", "."))
+    if (!(amt > 0)) { setCreditMsg("Ange ett belopp storre an 0."); return }
+    if (!confirm("Kreditera " + amt + " kr till kunden via Klarna?")) return
+    setCreditMsg("Krediterar...")
+    try {
+      const r = await fetch("/admin/kustom-order", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order_id: id, action: "refund", amount: amt }) })
+      const j = await r.json()
+      setCreditMsg(j.ok ? ("Krediterat " + amt + " kr.") : (j.message || "Krediteringen misslyckades."))
+    } catch (e) { setCreditMsg("Natverksfel.") }
   }
   const inp: any = { width: "100%", padding: "4px 6px", border: "1px solid #ccc", borderRadius: "3px", fontFamily: WF, fontSize: "13px", boxSizing: "border-box" }
   const lbl: any = { background: "#f0f0f0", padding: "6px 8px", fontFamily: WF, fontSize: "13px", width: "160px" }
@@ -612,6 +625,7 @@ function OrderEdit({ id, onBack }: { id: string; onBack: () => void }) {
         <tr><td style={lbl}>Totalvikt (gram)</td><td style={cell}><input style={{ ...inp, width: "120px" }} value={d.weight || 0} onChange={(e) => setD((p: any) => ({ ...p, weight: e.target.value }))} /></td></tr>
         <tr><td style={lbl}>Fraktmetod</td><td style={cell}><select style={inp} value={d.fraktmetod || "Standard"} onChange={(e) => setD((p: any) => ({ ...p, fraktmetod: e.target.value }))}><option>Standard</option><option>Express</option><option>PostNord Ombud</option><option>Hamtas i butik</option></select></td></tr>
       </tbody></table>
+      {d.captured ? <div style={{ background: "#fff4e5", border: "1px solid #f0c78a", borderRadius: "4px", padding: "8px 10px", marginBottom: "8px", fontSize: "13px", color: "#7a5b00" }}>Obs! Da transaktionen ar aktiverad kan inga fler andringar goras i ordern forutom krediteringar.</div> : null}
       <table style={{ width: "100%", maxWidth: "900px", borderCollapse: "collapse", marginBottom: "8px", background: "#fff", border: "1px solid #ddd", fontSize: "13px" }}>
         <thead><tr style={{ background: "#e8e8e8" }}><th style={{ padding: "6px" }}>Artikelnr</th><th style={{ padding: "6px" }}>Produkt</th><th style={{ padding: "6px" }}>Attribut</th><th style={{ padding: "6px" }}>Moms</th><th style={{ padding: "6px" }}>Pris inkl.</th><th style={{ padding: "6px" }}>Antal</th><th style={{ padding: "6px" }}>Summa</th></tr></thead>
         <tbody>
@@ -620,13 +634,13 @@ function OrderEdit({ id, onBack }: { id: string; onBack: () => void }) {
               <td style={cell}><input style={{ ...inp, width: "80px" }} value={l.artnr || ""} onChange={(e) => L(i, "artnr", e.target.value)} /></td>
               <td style={cell}><input style={inp} value={l.namn || ""} onChange={(e) => L(i, "namn", e.target.value)} /></td>
               <td style={cell}><input style={{ ...inp, width: "90px" }} value={l.attribut || ""} onChange={(e) => L(i, "attribut", e.target.value)} /></td>
-              <td style={cell}><select style={{ ...inp, width: "58px" }} value={l.moms} onChange={(e) => L(i, "moms", Number(e.target.value))}><option value={25}>25</option><option value={12}>12</option><option value={6}>6</option><option value={0}>0</option></select></td>
-              <td style={cell}><input style={{ ...inp, width: "80px" }} value={l.pris_inkl} onChange={(e) => L(i, "pris_inkl", e.target.value)} /></td>
-              <td style={cell}><input style={{ ...inp, width: "50px" }} value={l.antal} onChange={(e) => L(i, "antal", e.target.value)} /></td>
+              <td style={cell}><select style={{ ...inp, width: "58px" }} value={l.moms} disabled={d.captured} onChange={(e) => L(i, "moms", Number(e.target.value))}><option value={25}>25</option><option value={12}>12</option><option value={6}>6</option><option value={0}>0</option></select></td>
+              <td style={cell}><input style={{ ...inp, width: "80px" }} value={l.pris_inkl} readOnly={d.captured} onChange={(e) => L(i, "pris_inkl", e.target.value)} /></td>
+              <td style={cell}><input style={{ ...inp, width: "50px" }} value={l.antal} readOnly={d.captured} onChange={(e) => L(i, "antal", e.target.value)} /></td>
               <td style={{ ...cell, textAlign: "right", whiteSpace: "nowrap" }}>{fmt((Number(l.pris_inkl) || 0) * (Number(l.antal) || 0))}</td>
             </tr>
           ))}
-          <tr><td colSpan={7} style={{ padding: "6px", background: "#f4f4f8" }}><a onClick={addLine} style={{ color: "#06c", cursor: "pointer", fontWeight: 700 }}>Lagg in vara...</a></td></tr>
+          <tr><td colSpan={7} style={{ padding: "6px", background: "#f4f4f8" }}>{d.captured ? null : <a onClick={addLine} style={{ color: "#06c", cursor: "pointer", fontWeight: 700 }}>Lagg in vara...</a>}</td></tr>
         </tbody>
         <tfoot>
           <tr><td colSpan={6} style={{ textAlign: "right", padding: "4px 8px" }}>Summa exkl moms</td><td style={{ textAlign: "right", padding: "4px 8px" }}>{fmt(inkl - moms)}</td></tr>
@@ -635,8 +649,22 @@ function OrderEdit({ id, onBack }: { id: string; onBack: () => void }) {
         </tfoot>
       </table>
       <div style={{ fontSize: "12px", color: "#666", marginBottom: "10px" }}>Tips! For att ta bort en rad, satt Antal till 0.</div>
-      <button onClick={save} disabled={saving} style={{ background: "#111", color: "#fff", border: 0, borderRadius: "4px", padding: "8px 18px", cursor: "pointer", fontFamily: WF }}>{saving ? "Sparar..." : "SPARA ANDRINGAR"}</button>
-      {msg ? <span style={{ marginLeft: "12px", color: (msg.indexOf("Kunde") >= 0 || msg.indexOf("Natverk") >= 0) ? "#a00" : "#161", fontWeight: 700 }}>{msg}</span> : null}
+      {d.captured ? (
+        <div style={{ border: "1px solid #ddd", borderRadius: "6px", padding: "12px 14px", maxWidth: "620px", background: "#fff" }}>
+          <div style={{ fontWeight: 700, marginBottom: "6px" }}>Kreditering av belopp</div>
+          <div style={{ fontSize: "12px", color: "#555", marginBottom: "8px" }}>Om en kreditering inte godkanns av Klarna far du ett meddelande om detta.</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <input style={{ ...inp, width: "130px" }} placeholder="Belopp (kr)" value={credit} onChange={(e) => setCredit(e.target.value)} />
+            <button onClick={doCredit} style={{ background: "#a00", color: "#fff", border: 0, borderRadius: "4px", padding: "8px 16px", cursor: "pointer", fontFamily: WF }}>Kreditera belopp</button>
+            {creditMsg ? <span style={{ color: creditMsg.indexOf("Krediterat") >= 0 ? "#161" : "#a00", fontWeight: 700 }}>{creditMsg}</span> : null}
+          </div>
+        </div>
+      ) : (
+        <div>
+          <button onClick={save} disabled={saving} style={{ background: "#111", color: "#fff", border: 0, borderRadius: "4px", padding: "8px 18px", cursor: "pointer", fontFamily: WF }}>{saving ? "Sparar..." : "SPARA ANDRINGAR"}</button>
+          {msg ? <span style={{ marginLeft: "12px", color: (msg.indexOf("Kunde") >= 0 || msg.indexOf("Natverk") >= 0) ? "#a00" : "#161", fontWeight: 700 }}>{msg}</span> : null}
+        </div>
+      )}
     </div>
   )
 }
