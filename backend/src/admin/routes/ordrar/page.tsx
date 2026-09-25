@@ -337,7 +337,7 @@ function Btn({ children, onClick, href }: { children: any; onClick?: () => void;
   return <button style={st} onClick={onClick}>{children}</button>
 }
 
-function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
+function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; onEdit: (oid: string) => void }) {
   const [o, setO] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [nav, setNav] = useState<{ prev?: any; next?: any }>({})
@@ -539,7 +539,7 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
             <Btn href={`${ADMIN}/order-email?order=${o.id}`}>✉ Skicka e-post</Btn>
             <Btn href={`mailto:${o.email}?subject=${encodeURIComponent("Uppföljning av din order hos Teknikhouse.se")}&body=${encodeURIComponent("Hej,\n\nTack för din order hos Teknikhouse.se! Vi hoppas att allt är till belåtenhet. Hör gärna av dig om du har några frågor.\n\nMed vänliga hälsningar\nTeknikhouse.se")}`}>⭐ Uppföljningsmail</Btn>
             <div style={{ borderTop: "1px solid #ddd", margin: "8px 0" }} />
-            <Btn href={`${ADMIN}/orders/${o.id}`}>📝 Redigera order</Btn>
+            <Btn onClick={() => onEdit(o.id)}>📝 Redigera order</Btn>
             <div style={{ fontSize: "11px", marginTop: "10px" }}>
               <a onClick={onBack} style={{ color: "#06c", cursor: "pointer" }}>« Tillbaka till orderlistan</a>
             </div>
@@ -553,8 +553,99 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
   )
 }
 
+function OrderEdit({ id, onBack }: { id: string; onBack: () => void }) {
+  const [d, setD] = useState<any>(null)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState("")
+  useEffect(() => {
+    let alive = true
+    fetch("/admin/order-edit?order_id=" + id, { credentials: "include" }).then((r) => r.json()).then((j) => { if (alive && j.ok) setD(j) }).catch(() => {})
+    return () => { alive = false }
+  }, [id])
+  if (!d) return <div style={{ padding: "20px", fontFamily: WF }}>Laddar...</div>
+  const A = (which: string, k: string, v: string) => setD((p: any) => ({ ...p, [which]: { ...(p[which] || {}), [k]: v } }))
+  const L = (i: number, k: string, v: any) => setD((p: any) => { const lines = [...(p.lines || [])]; lines[i] = { ...lines[i], [k]: v }; return { ...p, lines } })
+  const addLine = () => setD((p: any) => ({ ...p, lines: [...(p.lines || []), { artnr: "", namn: "", attribut: "", typ: "vara", moms: 25, pris_inkl: 0, antal: 1, krediterad: 0 }] }))
+  let inkl = 0, moms = 0
+  ;(d.lines || []).forEach((l: any) => { const q = Number(l.antal) || 0, pr = Number(l.pris_inkl) || 0, ra = Number(l.moms) || 25; if (q > 0) { inkl += pr * q; moms += pr * q - (pr * q) / (1 + ra / 100) } })
+  const fmt = (n: number) => (Math.round(n * 100) / 100).toFixed(2)
+  const save = async () => {
+    setSaving(true); setMsg("")
+    try {
+      const r = await fetch("/admin/order-edit", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order_id: id, epost: d.email, telefon: d.telefon, mobil: d.mobil, weight: d.weight, fraktmetod: d.fraktmetod, billing: d.billing, shipping: d.shipping, lines: d.lines }) })
+      const j = await r.json()
+      if (!j.ok) { setMsg(j.message || "Kunde inte spara."); setSaving(false); return }
+      setMsg(j.addrSaved === false ? "Sparat (adressen kunde inte uppdateras automatiskt)." : "Andringarna sparades."); setSaving(false)
+    } catch (e) { setMsg("Natverksfel."); setSaving(false) }
+  }
+  const inp: any = { width: "100%", padding: "4px 6px", border: "1px solid #ccc", borderRadius: "3px", fontFamily: WF, fontSize: "13px", boxSizing: "border-box" }
+  const lbl: any = { background: "#f0f0f0", padding: "6px 8px", fontFamily: WF, fontSize: "13px", width: "160px" }
+  const cell: any = { padding: "4px 6px", borderBottom: "1px solid #eee" }
+  const secHd: any = { background: "#e8e8e8", textAlign: "center", fontWeight: 700, padding: "6px", fontFamily: WF, fontSize: "14px" }
+  const F = (which: string, k: string) => <input style={inp} value={(d[which] && d[which][k]) || ""} onChange={(e) => A(which, k, e.target.value)} />
+  const addrTable = (which: string, title: string) => (
+    <table style={{ width: "620px", maxWidth: "100%", borderCollapse: "collapse", marginBottom: "12px", background: "#fff", border: "1px solid #ddd" }}><tbody>
+      <tr><td colSpan={2} style={secHd}>{title}</td></tr>
+      <tr><td style={lbl}>Foretagsnamn/Namn</td><td style={cell}>{F(which, "company")}</td></tr>
+      <tr><td style={lbl}>Person/org-nr</td><td style={cell}>{F(which, "org_nr")}</td></tr>
+      <tr><td style={lbl}>Fornamn/Efternamn</td><td style={cell}><div style={{ display: "flex", gap: "6px" }}>{F(which, "first_name")}{F(which, "last_name")}</div></td></tr>
+      <tr><td style={lbl}>Gatuadress</td><td style={cell}>{F(which, "address_1")}</td></tr>
+      <tr><td style={lbl}>Gatuadress rad 2</td><td style={cell}>{F(which, "address_2")}</td></tr>
+      <tr><td style={lbl}>Gatuadress rad 3</td><td style={cell}>{F(which, "address_3")}</td></tr>
+      <tr><td style={lbl}>Postnummer/Ort</td><td style={cell}><div style={{ display: "flex", gap: "6px" }}><input style={{ ...inp, width: "90px" }} value={(d[which] && d[which].postal_code) || ""} onChange={(e) => A(which, "postal_code", e.target.value)} />{F(which, "city")}</div></td></tr>
+      <tr><td style={lbl}>Region/delstat</td><td style={cell}>{F(which, "province")}</td></tr>
+      <tr><td style={lbl}>Land</td><td style={cell}><select style={inp} value={(d[which] && d[which].country_code) || "SE"} onChange={(e) => A(which, "country_code", e.target.value)}><option value="SE">Sverige</option><option value="NO">Norge</option><option value="DK">Danmark</option><option value="FI">Finland</option></select></td></tr>
+    </tbody></table>
+  )
+  return (
+    <div style={{ padding: "16px", fontFamily: WF, width: "100%" }}>
+      <h2 style={{ fontFamily: WF, margin: "0 0 4px" }}>REDIGERA ORDER</h2>
+      <div style={{ marginBottom: "10px" }}><a onClick={onBack} style={{ color: "#06c", cursor: "pointer" }}>&laquo; Tillbaka till ordern</a></div>
+      <div style={{ fontSize: "12px", color: "#555", marginBottom: "12px", maxWidth: "620px" }}>Andringar i varulistan pa Klarna/Kustom-ordrar aktiveras via betalningspanelen. Har sparas orderns uppgifter och radlista i butiken.</div>
+      {addrTable("billing", "Bestallare")}
+      {addrTable("shipping", "Leveransadress")}
+      <table style={{ width: "620px", maxWidth: "100%", borderCollapse: "collapse", marginBottom: "12px", background: "#fff", border: "1px solid #ddd" }}><tbody>
+        <tr><td colSpan={2} style={secHd}>Ovriga uppgifter</td></tr>
+        <tr><td style={lbl}>Telefon</td><td style={cell}><input style={inp} value={d.telefon || ""} onChange={(e) => setD((p: any) => ({ ...p, telefon: e.target.value }))} /></td></tr>
+        <tr><td style={lbl}>Mobil</td><td style={cell}><input style={inp} value={d.mobil || ""} onChange={(e) => setD((p: any) => ({ ...p, mobil: e.target.value }))} /></td></tr>
+        <tr><td style={lbl}>E-post</td><td style={cell}><input style={inp} value={d.email || ""} onChange={(e) => setD((p: any) => ({ ...p, email: e.target.value }))} /></td></tr>
+        <tr><td style={lbl}>Totalvikt (gram)</td><td style={cell}><input style={{ ...inp, width: "120px" }} value={d.weight || 0} onChange={(e) => setD((p: any) => ({ ...p, weight: e.target.value }))} /></td></tr>
+        <tr><td style={lbl}>Fraktmetod</td><td style={cell}><select style={inp} value={d.fraktmetod || "Standard"} onChange={(e) => setD((p: any) => ({ ...p, fraktmetod: e.target.value }))}><option>Standard</option><option>Express</option><option>PostNord Ombud</option><option>Hamtas i butik</option></select></td></tr>
+      </tbody></table>
+      <table style={{ width: "100%", maxWidth: "900px", borderCollapse: "collapse", marginBottom: "8px", background: "#fff", border: "1px solid #ddd", fontSize: "13px" }}>
+        <thead><tr style={{ background: "#e8e8e8" }}><th style={{ padding: "6px" }}>Artikelnr</th><th style={{ padding: "6px" }}>Produkt</th><th style={{ padding: "6px" }}>Attribut</th><th style={{ padding: "6px" }}>Moms</th><th style={{ padding: "6px" }}>Pris inkl.</th><th style={{ padding: "6px" }}>Antal</th><th style={{ padding: "6px" }}>Summa</th></tr></thead>
+        <tbody>
+          {(d.lines || []).map((l: any, i: number) => (
+            <tr key={i}>
+              <td style={cell}><input style={{ ...inp, width: "80px" }} value={l.artnr || ""} onChange={(e) => L(i, "artnr", e.target.value)} /></td>
+              <td style={cell}><input style={inp} value={l.namn || ""} onChange={(e) => L(i, "namn", e.target.value)} /></td>
+              <td style={cell}><input style={{ ...inp, width: "90px" }} value={l.attribut || ""} onChange={(e) => L(i, "attribut", e.target.value)} /></td>
+              <td style={cell}><select style={{ ...inp, width: "58px" }} value={l.moms} onChange={(e) => L(i, "moms", Number(e.target.value))}><option value={25}>25</option><option value={12}>12</option><option value={6}>6</option><option value={0}>0</option></select></td>
+              <td style={cell}><input style={{ ...inp, width: "80px" }} value={l.pris_inkl} onChange={(e) => L(i, "pris_inkl", e.target.value)} /></td>
+              <td style={cell}><input style={{ ...inp, width: "50px" }} value={l.antal} onChange={(e) => L(i, "antal", e.target.value)} /></td>
+              <td style={{ ...cell, textAlign: "right", whiteSpace: "nowrap" }}>{fmt((Number(l.pris_inkl) || 0) * (Number(l.antal) || 0))}</td>
+            </tr>
+          ))}
+          <tr><td colSpan={7} style={{ padding: "6px", background: "#f4f4f8" }}><a onClick={addLine} style={{ color: "#06c", cursor: "pointer", fontWeight: 700 }}>Lagg in vara...</a></td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td colSpan={6} style={{ textAlign: "right", padding: "4px 8px" }}>Summa exkl moms</td><td style={{ textAlign: "right", padding: "4px 8px" }}>{fmt(inkl - moms)}</td></tr>
+          <tr><td colSpan={6} style={{ textAlign: "right", padding: "4px 8px" }}>Moms</td><td style={{ textAlign: "right", padding: "4px 8px" }}>{fmt(moms)}</td></tr>
+          <tr><td colSpan={6} style={{ textAlign: "right", padding: "4px 8px", fontWeight: 700 }}>Summa inkl moms</td><td style={{ textAlign: "right", padding: "4px 8px", fontWeight: 700 }}>{fmt(inkl)}</td></tr>
+        </tfoot>
+      </table>
+      <div style={{ fontSize: "12px", color: "#666", marginBottom: "10px" }}>Tips! For att ta bort en rad, satt Antal till 0.</div>
+      <button onClick={save} disabled={saving} style={{ background: "#111", color: "#fff", border: 0, borderRadius: "4px", padding: "8px 18px", cursor: "pointer", fontFamily: WF }}>{saving ? "Sparar..." : "SPARA ANDRINGAR"}</button>
+      {msg ? <span style={{ marginLeft: "12px", color: (msg.indexOf("Kunde") >= 0 || msg.indexOf("Natverk") >= 0) ? "#a00" : "#161", fontWeight: 700 }}>{msg}</span> : null}
+    </div>
+  )
+}
+
 function OrdrarPage() {
   const [id, setId] = useState<string | null>(currentId)
+  const [editId, setEditId] = useState<string | null>(null)
+  const openEdit = (oid: string) => { setEditId(oid); window.scrollTo(0, 0) }
+  const closeEdit = () => setEditId(null)
   const [meta, setMeta] = useState({ unread: 0, products: 0 })
 
   useEffect(() => {
@@ -598,7 +689,7 @@ function OrdrarPage() {
   return (
     <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden", display: "flex", minHeight: "600px" }}>
       <Snabbmeny unread={meta.unread} products={meta.products} />
-      {id ? <OrderDetail key={id} id={id} onBack={back} /> : <OrderList onOpen={open} />}
+      {editId ? <OrderEdit key={editId} id={editId} onBack={closeEdit} /> : (id ? <OrderDetail key={id} id={id} onBack={back} onEdit={openEdit} /> : <OrderList onOpen={open} />)}
     </div>
   )
 }
