@@ -111,7 +111,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           shipping_methods: o.shipping_method?.name
             ? [{ name: o.shipping_method.name, amount: o.shipping_method.amount_excl_vat ?? 0 }]
             : [],
-          metadata: { ...o.metadata, wiki_order_id: o.wiki_order_id, wiki_order_time: o.created_at, wiki_migrated: true, counts_in_stats: true },
+          metadata: { ...o.metadata, wiki_order_id: o.wiki_order_id, wiki_order_time: o.created_at, wiki_migrated: true, counts_in_stats: true, internal_comment: o.internal_comment ?? o.metadata?.internal_comment ?? "", wiki_activated: (o.activated ?? o.metadata?.wiki_activated) === true, wiki_paid: (o.paid ?? o.metadata?.wiki_paid) === true, wiki_shipped: (o.shipped ?? o.metadata?.wiki_shipped) === true, wiki_status: o.wiki_status ?? o.metadata?.wiki_status ?? null, status_dot: o.status_dot ?? o.metadata?.status_dot, kund_meddelad: o.kund_meddelad ?? o.metadata?.kund_meddelad },
         })
         await orderModule.updateOrders(order.id, { created_at: new Date(o.created_at) }).catch(() => {})
         await orderModule.updateOrders(order.id, { status: "completed" }).catch(() => {})
