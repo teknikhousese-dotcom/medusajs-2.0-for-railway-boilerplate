@@ -76,7 +76,7 @@ export const getProductsList = cache(async function ({
         limit,
         offset,
         region_id: region.id,
-        fields: "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id",
+        fields: "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id,+metadata",
         ...queryParams,
       },
       ...(await getCacheDirectives("products")),
@@ -140,7 +140,7 @@ export const getProductsListWithSort = cache(async function ({
         offset: 0,
         region_id: region.id,
         fields:
-          "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id",
+          "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id,+metadata",
       },
       cache: "no-store",
       next: { revalidate: 0 },
