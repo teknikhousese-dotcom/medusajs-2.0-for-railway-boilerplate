@@ -260,11 +260,11 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
             const paid = o.payment_status === "captured" || o.payment_status === "paid"
             const fulfilled = ["fulfilled", "shipped", "delivered", "partially_fulfilled", "partially_shipped", "partially_delivered"].includes(o.fulfillment_status)
             // Wiki: rött ID = ej slutfört köp (ej betalt); blått ID = måste behandlas (betalt, ej hanterat); annars svart
-            const idColor = !paid ? "#cc0000" : (!fulfilled ? "#0060cc" : "#333")
+            const idColor = o.metadata?.wiki_order_id ? "#333" : ((o.payment_status === "authorized" || o.payment_status === "partially_authorized") ? "#0000ff" : ((o.payment_status === "captured" || o.payment_status === "partially_captured" || o.payment_status === "paid" || o.payment_status === "refunded" || o.payment_status === "partially_refunded") ? "#333" : "#cc0000"))
             const unread = o.metadata?.read !== true               // Olästa ordrar i fet stil
             const isMak = flikOf(o) === "makulerade"                // Makulerade ordrar med grå bakgrund
             const baseBg = isMak ? "#e6e6e6" : "#ffffff"
-            const dotVal = o.metadata?.status_dot || ""
+            const dotVal = o.metadata?.status_dot || "gul"
             const dotColor: Record<string, string> = { gul: "#f2c200", gron: "#2ea92e", rod: "#dd3333", "": "transparent" }
             const followup = o.metadata?.followup_sent === true
             const cycleDot = () => {
@@ -288,6 +288,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
                 <td style={{ ...lcTd, textAlign: "center", background: "transparent" }}>{deviceOf(o)}</td>
                 <td style={{ ...lcTd, color: "#333", background: "transparent" }}>{o.metadata?.internal_comment || ""}</td>
                 <td style={{ ...lcTd, whiteSpace: "nowrap", fontSize: "13px", background: "transparent" }}>
+                  <span title={o.metadata?.kund_meddelad ? ("Kund meddelad: " + dt(o.metadata.kund_meddelad)) : "Kund har inte meddelats"} style={{ marginRight: "4px", color: o.metadata?.kund_meddelad ? "#2ea92e" : "#bbb" }}>✉</span>
                   <span title="Visa följesedel" style={{ cursor: "pointer", marginRight: "4px" }} onClick={() => window.open(`/admin/order-foljesedel?id=${o.id}`, "_blank")}>🧾</span>
                   <span title="Redigera" style={{ cursor: "pointer", marginRight: "4px" }} onClick={() => onOpen(o.id)}>📝</span>
                   <span title="Makulera" style={{ cursor: "pointer" }} onClick={async () => { if (!confirm("Flytta ordern till Makulerade?")) return; const meta = Object.assign({}, o.metadata, { orderflik: "makulerade" }); await fetch(`/admin/orders/${o.id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: meta }) }); load() }}>❌</span>
