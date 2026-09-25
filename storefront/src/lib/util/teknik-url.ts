@@ -23,6 +23,7 @@ export function buildCategoryPathMap(categories: Cat[]): Map<string, string> {
 
 type WithCats = {
   handle?: string | null
+  metadata?: Record<string, unknown> | null
   categories?: { handle?: string | null }[] | null
 }
 
@@ -30,6 +31,10 @@ type WithCats = {
 export function productHref(product: WithCats | null | undefined, map: Map<string, string>): string {
   const handle = product?.handle
   if (!handle) return "/store"
+  // Fast huvudkategori (metadata.url_category) = produktens riktiga adress, även om produkten
+  // också ligger i fler varugrupper (som i Wiki). Annars: djupaste kategorin.
+  const pin = product?.metadata?.url_category
+  if (typeof pin === "string" && map.get(pin)) return "/" + map.get(pin) + "/" + handle
   let best = ""
   for (const c of product?.categories || []) {
     const p = c?.handle ? map.get(c.handle) : undefined
