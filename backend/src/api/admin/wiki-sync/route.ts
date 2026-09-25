@@ -156,12 +156,24 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         id: v.id,
         // NOTE: never touch manage_inventory/allow_backorder here. The storefront keeps
         // manage_inventory=false and reads stock from product.metadata (in_stock/stock).
-        metadata: { inpris: m.metadata.inpris, momssats: m.metadata.momssats },
+        metadata: { inpris: m.metadata.inpris, momssats: m.metadata.momssats, ean: m.ean },
       }
       if (m.ean) variantUpdate.barcode = m.ean
       if (m.weight) variantUpdate.weight = m.weight
       if (m.price > 0) variantUpdate.prices = [{ amount: m.price, currency_code: "sek" }]
-      await updateProductVariantsWorkflow(req.scope).run({ input: { product_variants: [variantUpdate] } })
+      try {
+        await updateProductVariantsWorkflow(req.scope).run({ input: { product_variants: [variantUpdate] } })
+      } catch (err: any) {
+        // Wiki has some duplicate EANs across products; Medusa requires unique barcodes.
+        // Keep the EAN in metadata only and still apply price/weight.
+        if (variantUpdate.barcode && /barcode/i.test(String(err && err.message))) {
+          delete variantUpdate.barcode
+          out.ean_dupes = (out.ean_dupes || 0) + 1
+          await updateProductVariantsWorkflow(req.scope).run({ input: { product_variants: [variantUpdate] } })
+        } else {
+          throw err
+        }
+      }
 
       const iid = v.inventory_items && v.inventory_items[0] && v.inventory_items[0].inventory_item_id
       if (false && iid && locId && !m.oandligt) {
