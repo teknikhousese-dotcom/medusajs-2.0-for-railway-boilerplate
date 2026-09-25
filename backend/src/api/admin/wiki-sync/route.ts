@@ -178,6 +178,39 @@ async function rehostWikiImage(fileModule: any, file: string): Promise<string | 
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const bb: any = req.body || {}
+  if (bb.action === "rehost_path") {
+    // Kopiera valfri fil från gamla Wiki (t.ex. CKFinder userfiles/image/...) till vår fillagring.
+    const fileModule: any = req.scope.resolve(Modules.FILE)
+    const paths: string[] = Array.isArray(bb.paths) ? bb.paths.slice(0, 10) : []
+    const out: any[] = []
+    for (const raw of paths) {
+      let url: string | null = null, size = 0, error = ""
+      try {
+        const p = String(raw || "").replace(/^\/+/, "")
+        if (!/^userfiles\//.test(p) || p.includes("..")) throw new Error("ogiltig sökväg")
+        const src = "https://teknikhouse.se/" + p.split("/").map((x) => encodeURIComponent(decodeURIComponent(x))).join("/")
+        const r = await fetch(src)
+        if (!r.ok) throw new Error("wiki " + r.status)
+        const buf = Buffer.from(await r.arrayBuffer())
+        size = buf.length
+        const name = (p.split("/").pop() || "fil").replace(/[^A-Za-z0-9._-]/g, "-")
+        const mimeType = String(r.headers.get("content-type") || "application/octet-stream").split(";")[0]
+        for (const mode of ["binary", "base64"]) {
+          const content = mode === "base64" ? buf.toString("base64") : buf.toString("binary")
+          const created = await fileModule.createFiles([{ filename: name, mimeType, content }])
+          const f = Array.isArray(created) ? created[0] : created
+          if (!f || !f.url) continue
+          try {
+            const chk = await fetch(f.url)
+            if ((await chk.arrayBuffer()).byteLength === buf.length) { url = f.url; break }
+          } catch {}
+        }
+        if (!url) error = "uppladdning kunde inte verifieras"
+      } catch (e: any) { error = String(e && e.message || e).slice(0, 120) }
+      out.push({ path: raw, url, size, error })
+    }
+    return res.json({ ok: true, files: out })
+  }
   if (bb.action === "rehost") {
     const fileModule: any = req.scope.resolve(Modules.FILE)
     const files: string[] = Array.isArray(bb.files) ? bb.files.slice(0, 12) : []
