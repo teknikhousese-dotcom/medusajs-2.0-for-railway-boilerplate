@@ -397,8 +397,8 @@ function OrderDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const itemsExcl = (o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity), 0)
   const shipExcl = Number(sm ? sm.amount : (o.shipping_total ?? 0))
   const totalExcl = itemsExcl + shipExcl
-  const grand = Number(o.total ?? 0)
-  const taxTotal = Number(o.tax_total ?? (grand - totalExcl))
+  const grand = Number(o.tax_total) > 0 ? Number(o.total ?? 0) : (itemsExcl + shipExcl) * 1.25
+  const taxTotal = Number(o.tax_total) > 0 ? Number(o.tax_total) : (grand - totalExcl)
   const incl = (excl: number, vat: number) => Number(excl) * (1 + (Number(vat) || 25) / 100)
 
   const save = async () => {
