@@ -125,6 +125,18 @@ export async function refund(orderId: string, amount: number) {
 
 // Hjälpare: bygg order_lines + totaler från en Medusa-kundvagn.
 // Svensk moms 25% inkl. i priset => moms = 20% av bruttobeloppet.
+export async function getManagement(orderId: string) {
+  return call("GET", `/ordermanagement/v1/orders/${orderId}`)
+}
+
+export async function cancel(orderId: string) {
+  return call("POST", `/ordermanagement/v1/orders/${orderId}/cancel`)
+}
+
+export async function extendAuth(orderId: string) {
+  return call("POST", `/ordermanagement/v1/orders/${orderId}/extend-authorization-time`)
+}
+
 export function buildLinesFromCart(cart: any): {
   order_amount: number
   order_tax_amount: number
