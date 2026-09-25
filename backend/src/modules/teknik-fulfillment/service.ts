@@ -55,7 +55,7 @@ class TeknikFulfillmentService extends AbstractFulfillmentProviderService {
     const threshold = this.isB2B(context) ? B2B_THRESHOLD : THRESHOLD
     return {
       calculated_amount: subtotal >= threshold ? 0 : BASE,
-      is_calculated_price_tax_inclusive: false,
+      is_calculated_price_tax_inclusive: true,
     }
   }
 
