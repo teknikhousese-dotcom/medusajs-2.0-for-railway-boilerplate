@@ -260,7 +260,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
             const paid = o.payment_status === "captured" || o.payment_status === "paid"
             const fulfilled = ["fulfilled", "shipped", "delivered", "partially_fulfilled", "partially_shipped", "partially_delivered"].includes(o.fulfillment_status)
             // Wiki: rött ID = ej slutfört köp (ej betalt); blått ID = måste behandlas (betalt, ej hanterat); annars svart
-            const idColor = (o.metadata?.kustom_captured || o.metadata?.wiki_order_id) ? "#333" : (o.metadata?.kustom_cancelled ? "#999" : ((o.payment_status === "authorized" || o.payment_status === "partially_authorized") ? "#0000ff" : ((o.payment_status === "captured" || o.payment_status === "partially_captured" || o.payment_status === "paid" || o.payment_status === "refunded" || o.payment_status === "partially_refunded") ? "#333" : "#cc0000")))
+            const idColor = o.metadata?.kustom_cancelled ? "#999" : ((o.metadata?.kustom_captured || o.metadata?.wiki_activated === true) ? "#333" : ((o.payment_status === "authorized" || o.payment_status === "partially_authorized" || o.metadata?.wiki_activated === false) ? "#0000ff" : ((o.payment_status === "captured" || o.payment_status === "partially_captured" || o.payment_status === "paid" || o.payment_status === "refunded" || o.payment_status === "partially_refunded" || o.metadata?.wiki_order_id) ? "#333" : "#cc0000")))
             const unread = o.metadata?.read !== true               // Olästa ordrar i fet stil
             const isMak = flikOf(o) === "makulerade"                // Makulerade ordrar med grå bakgrund
             const baseBg = isMak ? "#e6e6e6" : "#ffffff"
