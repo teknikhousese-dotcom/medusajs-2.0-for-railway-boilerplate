@@ -1,5 +1,5 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { ADMIN, WF, Snabbmeny } from "../../lib/butikadmin"
 
 /**
@@ -209,7 +209,7 @@ function GridPage() {
 
   const load = async (off = 0) => {
     setBusy(true)
-    const p = new URLSearchParams({ limit: String(PAGE), offset: String(off), fields: "id,title,status,thumbnail,*variants,*categories" })
+    const p = new URLSearchParams({ limit: String(PAGE), offset: String(off), fields: "id,title,status,thumbnail,metadata,*options,*variants,*variants.options,*categories" })
     if (q.trim()) p.set("q", q.trim())
     if (catId) p.set("category_id", catId)
     if (status) p.set("status", status)
@@ -245,6 +245,36 @@ function GridPage() {
     setBusy(false); setNote(`${ok} produkt(er) kopplade till varugruppen.`); load(offset)
   }
 
+  const taBortProdukt = async (r: any) => {
+  if (!confirm(`Vill du verkligen ta bort produkten "${r.title}"?`)) return
+  setBusy(true)
+  let res = ""
+  try {
+  const resp = await fetch(`/admin/products/${r.id}`, { method: "DELETE", credentials: "include" })
+  const j: any = await resp.json().catch(() => ({}))
+  res = resp.ok ? `Produkten "${r.title}" har tagits bort.` : `Kunde inte ta bort produkten "${r.title}": ${(j && j.message) || resp.status}`
+  } catch (e: any) { res = `Kunde inte ta bort produkten "${r.title}": ${String((e && e.message) || e)}` }
+  setBusy(false)
+  await load(offset)
+  setNote(res)
+  }
+  const fmtLager = (a: any) => (a == null || a === "" ? "—" : String(a))
+  const lagerVariant = (v: any) => fmtLager(((v && v.metadata) || {}).antal)
+  const lagerProdukt = (r: any) => {
+  const vs = r.variants || []
+  if (vs.length > 1) {
+  const nums = vs.map((v: any) => Number(((v.metadata || {}).antal ?? ""))).filter((n: number) => Number.isFinite(n))
+  return nums.length ? String(nums.reduce((s: number, n: number) => s + n, 0)) : "—"
+  }
+  const m = r.metadata || {}
+  const vm = ((vs[0] || {}).metadata) || {}
+  return fmtLager(m.antal ?? m.stock ?? vm.antal)
+  }
+  const variantText = (v: any, r: any) => {
+  const opts = v.options || []
+  if (!opts.length) return v.title || ""
+  return opts.map((o: any) => { const ot = (r.options || []).find((x: any) => x.id === o.option_id); return (ot ? ot.title : "Val") + ": " + o.value }).join(", ")
+  }
   const catName = (row: any) => (row.categories || []).map((c: any) => c.name).join(", ") || "—"
   const th: any = { border: "1px solid #bbb", padding: "6px 8px", fontWeight: 700, fontSize: "11px", textAlign: "left", background: "#cccccc" }
   const td: any = { border: "1px solid #e2e2e2", padding: "5px 8px", fontSize: "12px" }
@@ -302,24 +332,45 @@ function GridPage() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead><tr>
             <th style={{ ...th, width: "28px", textAlign: "center" }}><input type="checkbox" checked={allChecked} onChange={toggleAll} /></th>
-            <th style={th}>Namn</th><th style={{ ...th, width: "120px" }}>SKU</th><th style={{ ...th, width: "90px" }}>Status</th>
-            <th style={{ ...th, width: "180px" }}>Varugrupp</th><th style={{ ...th, width: "120px" }}></th>
+            <th style={th}>Namn</th><th style={{ ...th, width: "120px" }}>SKU</th><th style={{ ...th, width: "180px" }}>Variant</th><th style={{ ...th, width: "60px", textAlign: "right" }}>Lager</th><th style={{ ...th, width: "90px" }}>Status</th>
+            <th style={{ ...th, width: "180px" }}>Varugrupp</th><th style={{ ...th, width: "270px" }}>Verktyg</th>
           </tr></thead>
           <tbody>
-            {rows.length === 0 ? <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#666" }}>{busy ? "Hämtar…" : "Inga produkter."}</td></tr> :
-              rows.map((r) => (
+            {rows.length === 0 ? <tr><td colSpan={8} style={{ ...td, textAlign: "center", color: "#666" }}>{busy ? "Hämtar…" : "Inga produkter."}</td></tr> :
+              rows.map((r) => (<Fragment key={r.id}>
                 <tr key={r.id} style={{ borderBottom: "1px solid #eee", background: checked[r.id] ? "#fffbe6" : "transparent" }}>
                   <td style={{ ...td, textAlign: "center" }}><input type="checkbox" checked={!!checked[r.id]} onChange={(e) => setChecked({ ...checked, [r.id]: e.target.checked })} /></td>
                   <td style={td}><a href={`${ADMIN}/products/${r.id}`} style={{ color: "#0060cc", textDecoration: "none" }}>{r.title}</a></td>
                   <td style={td}>{(r.variants || [])[0]?.sku || "—"}</td>
+                  <td style={{ ...td, color: "#555" }}>{(r.variants || []).length > 1 ? `${(r.variants || []).length} varianter` : ""}</td>
+                  <td style={{ ...td, textAlign: "right" }}>{lagerProdukt(r)}</td>
                   <td style={td}>{r.status === "published" ? <span style={{ color: "#2a7" }}>Publicerad</span> : <span style={{ color: "#a70" }}>Utkast</span>}</td>
                   <td style={td}>{catName(r)}</td>
                   <td style={{ ...td, whiteSpace: "nowrap" }}>
-                    <a href={`${ADMIN}/products/${r.id}`} style={{ color: "#0060cc" }}>Redigera</a>
+                    <a href={`${ADMIN}/produkt-form?id=${r.id}`} style={{ color: "#0060cc" }}>Redigera</a>
+                    <span style={{ color: "#bbb" }}> | </span>
+                    <a href={`${ADMIN}/valalternativ?id=${r.id}`} style={{ color: "#0060cc" }}>Valalternativ</a>
+                    <span style={{ color: "#bbb" }}> | </span>
+                    <a href={`${ADMIN}/associera?id=${r.id}`} style={{ color: "#0060cc" }}>Associera</a>
                     <span style={{ color: "#bbb" }}> | </span>
                     <a href={`${ADMIN}/hantera-produkter?action=copy&id=${r.id}`} style={{ color: "#0060cc" }}>Kopiera</a>
+                    <span style={{ color: "#bbb" }}> | </span>
+                    <a href="#" onClick={(e) => { e.preventDefault(); if (!busy) taBortProdukt(r) }} style={{ color: "#a00" }}>Ta bort</a>
                   </td>
                 </tr>
+                {(r.variants || []).length > 1 && (r.variants || []).map((v: any) => (
+                <tr key={v.id} style={{ borderBottom: "1px solid #eee", background: "#f6f8fb" }}>
+                <td style={td}></td>
+                <td style={{ ...td, paddingLeft: "22px", color: "#555" }}>↳ {v.title || r.title}</td>
+                <td style={td}>{v.sku || "—"}</td>
+                <td style={td}>{variantText(v, r)}</td>
+                <td style={{ ...td, textAlign: "right" }}>{lagerVariant(v)}</td>
+                <td style={td}></td>
+                <td style={td}></td>
+                <td style={{ ...td, whiteSpace: "nowrap" }}><a href={`${ADMIN}/valalternativ?id=${r.id}`} style={{ color: "#0060cc" }}>Valalternativ</a></td>
+                </tr>
+                ))}
+                </Fragment>
               ))}
           </tbody>
         </table>
