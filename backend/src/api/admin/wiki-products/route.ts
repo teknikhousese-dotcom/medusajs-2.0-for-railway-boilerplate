@@ -9,6 +9,36 @@ import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa
 
 function q(scope: any) { return scope.resolve(ContainerRegistrationKeys.QUERY) }
 
+const SALE_LIST_TITLE = "Kampanjpriser (import)"
+
+// Rea-pris: lägg/uppdatera/ta bort variantens pris i kampanjprislistan (typ "sale").
+async function syncSalePrice(scope: any, productId: string, amount: number) {
+  try {
+    const pricing: any = scope.resolve(Modules.PRICING)
+    const { data } = await q(scope).graph({
+      entity: "product",
+      fields: ["variants.id", "variants.price_set.id"],
+      filters: { id: productId },
+    })
+    const psId = data && data[0] && data[0].variants && data[0].variants[0] && data[0].variants[0].price_set && data[0].variants[0].price_set.id
+    if (!psId) return
+    const lists = await pricing.listPriceLists({}, { take: 100 })
+    const pl = (lists || []).find((x: any) => x.title === SALE_LIST_TITLE) || (lists || []).find((x: any) => x.type === "sale")
+    if (!pl) return
+    const existing = await pricing.listPrices({ price_list_id: pl.id, price_set_id: psId })
+    if (amount > 0) {
+      if (existing && existing.length) {
+        await pricing.updatePriceListPrices([{ price_list_id: pl.id, prices: [{ id: existing[0].id, price_set_id: psId, amount, currency_code: "sek" }] }])
+        if (existing.length > 1) await pricing.removePrices(existing.slice(1).map((p: any) => p.id))
+      } else {
+        await pricing.addPriceListPrices([{ price_list_id: pl.id, prices: [{ price_set_id: psId, amount, currency_code: "sek" }] }])
+      }
+    } else if (existing && existing.length) {
+      await pricing.removePrices(existing.map((p: any) => p.id))
+    }
+  } catch {}
+}
+
 async function firstId(scope: any, entity: string) {
   try {
     const { data } = await q(scope).graph({ entity, fields: ["id"], pagination: { take: 1 } })
@@ -82,8 +112,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const prices = v.prices || []
       const sek = prices.find((x: any) => (x.currency_code || "").toLowerCase() === "sek") || prices[0]
       const md: any = p.metadata || {}
-      // När kampanj är aktiv ligger kampanjpriset på varianten — visa det ordinarie priset i Utpris-fältet.
-      const utprisVal = md.kampanj && md.ordinarie_pris ? Number(md.ordinarie_pris) : (sek && sek.amount != null ? sek.amount : "")
+      // Variantens baspris är alltid ordinarie pris (Utpris). Kampanjpriset ligger i prislistan "Kampanjpriser (import)".
+      const utprisVal = sek && sek.amount != null ? sek.amount : (md.ordinarie_pris ? Number(md.ordinarie_pris) : "")
       return res.json({
         product: {
           id: p.id, artnr: v.sku || "", namn: p.title || "", googleNamn: p.subtitle || "",
@@ -122,7 +152,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const today = new Date().toISOString().slice(0, 10)
   const withinWindow = (!b.kampanjStart || String(b.kampanjStart) <= today) && (!b.kampanjSlut || String(b.kampanjSlut) >= today)
   const kampanjAktiv = kampanjChecked && withinWindow
-  const price = kampanjAktiv ? kampanjpris : utpris
+  // Baspris = ordinarie pris. Aktiv kampanj läggs i rea-prislistan så butiken visar "Ord. X kr, du sparar".
+  const price = utpris
   const weight = Number(String(b.weight ?? "").replace(",", ".")) || undefined
   const catIds: string[] = Array.isArray(b.category_ids) ? b.category_ids : []
   const images: any[] = Array.isArray(b.images) ? b.images.filter(Boolean).map((u: string) => ({ url: u })) : []
@@ -139,7 +170,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const variant: any = {
-    title: namn, sku: artnr, manage_inventory: !b.oandligt, allow_backorder: !!b.bestallningsvara,
+    title: namn, sku: artnr, manage_inventory: false, allow_backorder: !!b.bestallningsvara,
     options: { Variant: "Standard" },
     prices: [{ amount: price, currency_code: "sek" }],
     metadata: { inpris: metadata.inpris, momssats: metadata.momssats },
@@ -167,7 +198,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })
       const exVar: any = exData?.[0]?.variants?.[0]
       const upVariant: any = {
-        title: namn, sku: artnr, manage_inventory: !b.oandligt, allow_backorder: !!b.bestallningsvara,
+        title: namn, sku: artnr, manage_inventory: false, allow_backorder: !!b.bestallningsvara,
         metadata: { inpris: metadata.inpris, momssats: metadata.momssats },
       }
       if (b.ean) upVariant.barcode = String(b.ean).trim()
@@ -190,11 +221,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       if (upVariant.id) updateInput.variants = [upVariant]
       await updateProductsWorkflow(req.scope).run({ input: { products: [updateInput] } })
       await syncStock(req.scope, b.id, b)
+      await syncSalePrice(req.scope, b.id, kampanjAktiv ? kampanjpris : 0)
       return res.json({ ok: true, id: b.id })
     }
     const { result } = await createProductsWorkflow(req.scope).run({ input: { products: [productInput] } })
     const created = (result || [])[0]
     if (created) await syncStock(req.scope, created.id, b)
+    if (created) await syncSalePrice(req.scope, created.id, kampanjAktiv ? kampanjpris : 0)
     return res.json({ ok: true, id: created && created.id })
   } catch (e: any) {
     return res.status(500).json({ error: "Något gick fel. Försök igen." })
