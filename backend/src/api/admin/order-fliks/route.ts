@@ -121,12 +121,21 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     try {
       const { data } = await query(req.scope).graph({
         entity: "order",
-        fields: ["id", "display_id", "email", "total", "currency_code", "created_at", "payment_status", "fulfillment_status", "status", "shipping_address.first_name", "shipping_address.last_name", "shipping_address.country_code", "payment_collections.payments.provider_id", "metadata"],
+        fields: ["id", "display_id", "email", "total", "currency_code", "created_at", "payment_status", "fulfillment_status", "status", "shipping_address.first_name", "shipping_address.last_name", "shipping_address.country_code", "payment_collections.status", "payment_collections.payments.provider_id", "metadata"],
         filters: { id: ids },
       })
       const byId: any = {}
       for (const o of data || []) byId[o.id] = o
       orders = ids.map((id: string) => byId[id]).filter(Boolean)
+      /* query.graph ger inte orderns beräknade payment_status. Härled den ur betalningssamlingarna
+         så att listan kan färga nya ordrar (godkänd = authorized, dragen = captured). */
+      const PS: Record<string, string> = { completed: "captured", partially_captured: "partially_captured", authorized: "authorized", partially_authorized: "partially_authorized", canceled: "canceled", failed: "canceled", awaiting: "awaiting", not_paid: "not_paid" }
+      for (const o of orders) {
+        if (o.payment_status) continue
+        const sts = (o.payment_collections || []).map((pc: any) => String((pc && pc.status) || ""))
+        const pick = ["completed", "partially_captured", "authorized", "partially_authorized", "canceled", "failed", "awaiting", "not_paid"].find((k) => sts.includes(k))
+        o.payment_status = pick ? PS[pick] : "not_paid"
+      }
     } catch { orders = [] }
   }
   return res.json({ orders, count })
