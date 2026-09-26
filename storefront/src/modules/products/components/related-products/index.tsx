@@ -74,26 +74,31 @@ export default async function RelatedProducts({
 
   return (
     <div className="product-page-constraint">
-      <div className="flex flex-col items-center text-center mb-10">
-        <span className="text-base-regular text-gray-600 mb-2">
-          Fler produkter
-        </span>
-        <p
-          className="max-w-lg"
+      <div className="mb-5 flex flex-col items-start small:mb-8 small:items-center small:text-center">
+        <span className="mb-1 text-sm text-gray-600">Fler produkter</span>
+        <h2
           style={{
             fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif',
             fontWeight: 600,
-            fontSize: "22px",
+            fontSize: "clamp(19px, 5vw, 22px)",
             color: "#1b1714",
+            margin: 0,
           }}
         >
-          Du kanske också gillar
-        </p>
+          Relaterade produkter
+        </h2>
       </div>
 
-      <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-5 gap-x-6 gap-y-8">
+      {/* Phones and tablets: a swipeable rail. Desktop: a five column grid. */}
+      <ul
+        className="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden small:mx-0 small:grid small:grid-cols-5 small:gap-5 small:overflow-visible small:px-0 small:pb-0"
+        data-testid="related-products-list"
+      >
         {products.map((p) => (
-          <li key={p.id}>
+          <li
+            key={p.id}
+            className="w-[44%] min-w-[150px] max-w-[220px] shrink-0 snap-start small:w-auto small:min-w-0 small:max-w-none"
+          >
             <Product region={region} product={p} />
           </li>
         ))}
