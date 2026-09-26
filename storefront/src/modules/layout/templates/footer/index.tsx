@@ -19,7 +19,7 @@ const CSS = `
 .thf .addr{display:block;padding:5px 0;color:#98A1B0;font-style:normal}
 .thf .bot{border-top:1px solid #1f2530;margin-top:26px;padding-top:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:#6b7280}
 .thf .bot b{color:#98A1B0;font-weight:600}
-@media(max-width:820px){.thf .grid{grid-template-columns:1fr 1fr;gap:28px 20px}.thf .grid>div:first-child{grid-column:1/-1}.thf .desc{max-width:none}.thf a{display:flex;align-items:center;min-height:44px;padding:0}.thf .note a{display:inline;min-height:0;padding:12px 0}.thf .bot{flex-direction:column}}
+@media(max-width:820px){.thf .grid{grid-template-columns:1fr 1fr;gap:28px 20px}.thf .grid>div:first-child,.thf .grid>div:last-child{grid-column:1/-1}.thf .note{max-width:none}.thf .desc{max-width:none}.thf a{display:flex;align-items:center;min-height:44px;padding:0}.thf .note a{display:inline;min-height:0;padding:12px 0}.thf .bot{flex-direction:column}}
 `
 
 export default async function Footer() {
