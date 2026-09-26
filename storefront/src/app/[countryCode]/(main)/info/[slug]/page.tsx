@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-// Teknikhouse informationssidor — Nordic Teknik House AB.
+// Teknikhouse informationssidor, Nordic Teknik House AB.
 // Innehållet är kopierat frn teknikhouse.se (lätt redigerat). Dynamisk route som fångar alla /info/*.
 
 type Block = { h?: string; p?: string; ul?: string[] }
@@ -26,7 +26,7 @@ const PAGES: Record<string, Page> = {
         "ul": [
           "Vi har lång erfarenhet i branschen och högsta kvalitet på reservdelar och tillbehör.",
           "Vi hjälper företag och privatpersoner att reparera sina mobila enheter.",
-          "Vi testar alla produkter grundligt och utbudet uppdateras hela tiden — det finns alltid nya saker att upptäcka.",
+          "Vi testar alla produkter grundligt och utbudet uppdateras hela tiden, det finns alltid nya saker att upptäcka.",
           "Vi säljer produkter som är testade av experter, alltid till låga priser.",
           "Garanti ingår alltid. Det är säkert att handla hos oss.",
           "Alla begagnade mobiler och surfplattor är olåsta och säljs utan abonnemang, till lågt pris utan att kompromissa med kvaliteten.",
@@ -36,7 +36,7 @@ const PAGES: Record<string, Page> = {
       },
       {
         "h": "Kostnadsfri felsökning",
-        "p": "Vi erbjuder alltid kostnadsfri felsökning av din enhet. Posta den till oss så återkommer vi med ett kostnadsförslag på reparationen. Du väljer själv fraktsätt (PostNord eller DHL) — skicka enheten spårbart så att den är försäkrad under hela transporten."
+        "p": "Vi erbjuder alltid kostnadsfri felsökning av din enhet. Posta den till oss så återkommer vi med ett kostnadsförslag på reparationen. Du väljer själv fraktsätt (PostNord eller DHL), skicka enheten spårbart så att den är försäkrad under hela transporten."
       },
       {
         "h": "Företagsuppgifter",
@@ -71,24 +71,24 @@ const PAGES: Record<string, Page> = {
           "Vi tar inte ekonomiskt ansvar för eventuella förseningar som beror på fraktföretaget.",
           "Upptäcker du skador på paketet ska du omedelbart anmäla detta till postkontoret eller annan transportör och göra en skadeanmälan. Hämta inte ut ett skadat paket! Upptäcker du inte skadan förrän du öppnat paketet, och skadan kan hänföras till postens eller transportföretagets hantering, ska du kontakta dem och göra en skadeanmälan. Om en eventuell tvist med posten eller transportföretaget inte kan lösas tar du kontakt med oss.",
           "Outlösta paket / fel angiven adress: För ej utlösta paket med ett varuvärde under 500 kr debiterar vi en avgift på 199 kr; för ej utlösta paket med ett varuvärde över 500 kr debiterar vi 399 kr för att täcka uppkomna kostnader. Tänk därför på att alltid hämta ut dina beställningar inom 6 dagar från det att paketet ankommit till postombudet. Outlösta paket omfattas inte av ångerrätten. Om vi får tillbaka försändelsen pga okänd adress eller att du flyttat debiterar vi 49 kr för hanteringskostnaden.",
-          "Fraktkostnaden — vi bjuder på frakten vid alla beställningar över 999 kr. Detta sker automatiskt i webbutiken och kostnaden redovisas i kassan.",
+          "Fraktkostnad: vi bjuder på frakten vid alla beställningar över 999 kr. Detta sker automatiskt i webbutiken och kostnaden redovisas i kassan.",
           "För beställningar med produktvärde under 1000 kr erbjuder vi brev/varubrev 1:a klass för mindre vikt och volym; beställningar över 1000 kr skickas med DHL eller PostNord och går att spåra."
         ]
       },
       {
         "h": "Ångerrätt / Reklamation",
         "ul": [
-          "Du kan ångra ditt köp direkt via vår ångerfunktion på /return.",
+          "Du kan ångra ditt köp direkt via vår returanmälan på teknikhouse.se/return.",
           "Vi följer lagen om distansavtal enligt Konsumentverkets rekommendationer. Du har rätt att returnera beställda felfria varor utan att ange någon anledning. Meddelande ska lämnas så snart som möjligt, dock senast inom fjorton (14) dagar från det att varan mottagits (gäller ej specialbeställda varor). Det är alltid garanti på produkterna du köper. Kan man påvisa fabrikationsfel får man alltid nya delar; garantin gäller dock inte vid förslitningsskador. Du betalar själv returfrakten.",
           "Har du fått en trasig eller fellevererad vara kan du kontakta oss på info@teknikhouse.se och få en frisvarsadress så att du kan returnera utan kostnad.",
           "Ångerrätten gäller inte vissa produkter vid öppnad plomberad förpackning: reservdelar, minneskort, USB-stickor, batterier, hörlurar/headset samt andra plomberade produkter.",
-          "Vid ångerrätt/öppet köp ersätter vi inte fraktkostnader till oss, och ansvaret att försändelsen når oss ligger hos dig som kund. Vid defekt förpackning eller uppenbar åverkan görs prisavdrag på 30–100 % av produktens värde. Vid godkänd retur återbetalas varuvärdet, ej frakten.",
+          "Vid ångerrätt/öppet köp ersätter vi inte fraktkostnader till oss, och ansvaret att försändelsen når oss ligger hos dig som kund. Vid defekt förpackning eller uppenbar åverkan görs prisavdrag på 30 till 100 % av produktens värde. Vid godkänd retur återbetalas varuvärdet, ej frakten.",
           "Vid köp av begagnad enhet gäller ångerrätten/öppet köp endast om enheten är i obruten förpackning (att klistermärket över förpackningen är obrutet).",
           "Produkten måste vara oanvänd och i samma skick som när den mottogs, i sin förpackning med intakta skyddsmärken och etiketter. Om varan inte är i oförändrat skick kan vi göra ett prisavdrag som motsvarar värdeminskningen.",
           "Ångerrätten är ej tillämplig för företag. Vid retur rekommenderar vi transportemballage för extra skydd. Saknas tillbehör eller finns fysisk skada förbehåller vi oss rätten att ta ut en avgift för att återställa varan.",
-          "Nordic Teknik House AB förbehåller sig rätten att ta ut en avgift på 300–500 kr vid felbeställning; returfrakt bekostas då av konsument.",
+          "Nordic Teknik House AB förbehåller sig rätten att ta ut en avgift på 300 till 500 kr vid felbeställning; returfrakt bekostas då av konsument.",
           "För glasskärmar och displayer får skyddsfilmen/transportskyddet inte avlägsnats (skärmen får ej ha varit monterad), inga repor/sprickor på touchen. LCD-skärmar ska testas innan montering genom att koppla ihop kablarna utan att limma fast dem. Vid fel: skicka foto som visar defekten till info@teknikhouse.se tillsammans med en kort förklaring. Endast ursprungliga fel omfattas av reklamationsrätten (ej normalt slitage). Garanti för skärmar gäller endast touch- och skärmfunktion; kosmetiska fel täcks ej, och garantin går förlorad vid tappskador, slitage, felaktig montering eller yttre påverkan.",
-          "Reklamation ska göras inom skälig tid efter att felet upptäckts, dock senast inom sex (6) månader — utom uppladdningsbara batterier och begagnade mobiler & surfplattor som säljs med 3 månaders garanti. Vi avhjälper i första hand felet, i andra hand omleverans, i sista hand återköp. Vid reklamation skickar vi en fraktsedel för fri returfrakt.",
+          "Reklamation ska göras inom skälig tid efter att felet upptäckts, dock senast inom sex (6) månader, utom uppladdningsbara batterier och begagnade mobiler & surfplattor som säljs med 3 månaders garanti. Vi avhjälper i första hand felet, i andra hand omleverans, i sista hand återköp. Vid reklamation skickar vi en fraktsedel för fri returfrakt.",
           "Ditt garantibevis är orderbekräftelsen du får via e-post, som även bifogas i paketet.",
           "Alla produkter säljs med garanti mot fabrikationsfel enligt konsumentköplagen: ett år på nya produkter, tre månader på begagnade varor och uppladdningsbara batterier. Avvikande garantivillkor framgår i produktspecifikationen. En vara kan reklameras i upp till 3 år efter mottagandet men ska reklameras inom skälig tid.",
           "Felaktiga reklamationer som beror på handhavandefel eller bristande erfarenhet av reparationer debiteras med lägst 199 kr inkl. moms, plus kostnad för retur av den felfria produkten.",
@@ -110,9 +110,8 @@ const PAGES: Record<string, Page> = {
       {
         "h": "Betalningsalternativ",
         "ul": [
-          "Klarna Checkout — faktura, konto/delbetalning, kortbetalning eller direktbetalning via bank. Klarna hanterar betalningstransaktionen medan köpet görs hos butiken.",
-          "Swish — snabb betalning som verifieras med BankID/Mobilt BankID. Eventuell återbetalning sker via Swish.",
-          "Payson — betala tryggt med VISA, Mastercard eller svenska banker, eller dela upp betalningen."
+          "Swish: snabb betalning som du godkänner med BankID eller Mobilt BankID. Eventuell återbetalning sker via Swish.",
+          "Klarna: faktura, delbetalning, kortbetalning eller direktbetalning via bank. Klarna hanterar betalningen medan köpet görs hos oss."
         ]
       },
       {
@@ -135,11 +134,11 @@ const PAGES: Record<string, Page> = {
     ]
   },
   "oppet-kop-retur": {
-    "title": "Öppet köp & Retur",
-    "intro": "Handla tryggt online. Du har 30 dagars öppet köp från beställningsdatum. Ångra köp / anmäl retur på /return.",
+    "title": "Öppet köp och retur",
+    "intro": "Handla tryggt online. Du har 30 dagars öppet köp från beställningsdatum. Ångra ett köp eller anmäl en retur på teknikhouse.se/return.",
     "blocks": [
       {
-        "h": "Öppet köp & Retur",
+        "h": "Öppet köp och retur",
         "ul": [
           "Vi följer lagen om distansavtal enligt Konsumentverkets rekommendationer. Du har rätt att returnera beställda felfria varor utan att ange någon anledning. Meddelande ska lämnas så snart som möjligt, dock senast inom fjorton (14) dagar från det att varan mottagits (gäller ej specialbeställda varor). Öppet köp gäller i 30 dagar från beställningsdatum.",
           "Det är alltid garanti på produkterna du köper (standard 6 månader; se undantag nedan). Kan man påvisa fabrikationsfel får man alltid nya delar; garantin gäller inte vid förslitningsskador. Du betalar själv returfrakten. För återbetalning, ange ditt bankkontonummer."
@@ -147,32 +146,32 @@ const PAGES: Record<string, Page> = {
       },
       {
         "h": "Trasig eller fellevererad vara",
-        "p": "Har du fått en fellevererad vara, kontakta oss med bifogad bild på info@teknikhouse.se och få en frisvarsadress så att du kan returnera utan kostnad. Är varan trasig behöver du uppvisa detta innan du får en returfraktsedel — se till att bilderna är tydliga och skarpa. Vid felaktigt användande av frisvarsadressen debiteras den faktiska portokostnaden i efterhand."
+        "p": "Har du fått en fellevererad vara, kontakta oss med bifogad bild på info@teknikhouse.se och få en frisvarsadress så att du kan returnera utan kostnad. Är varan trasig behöver du uppvisa detta innan du får en returfraktsedel, se till att bilderna är tydliga och skarpa. Vid felaktigt användande av frisvarsadressen debiteras den faktiska portokostnaden i efterhand."
       },
       {
         "h": "Ångerrätt / Öppet köp",
         "ul": [
           "OBS: Ångerrätten är ej tillämplig för företag.",
           "Meddela oss så snart du vet att du vill ångra köpet och skicka sedan varan till vår returadress.",
-          "Ångerrätten gäller inte vissa produkter — reservdelar, minneskort, USB-stickor, batterier, hörlurar/headset och andra plomberade produkter — så att nästa kund får varan i nytt och hygieniskt skick.",
-          "Vid ångerrätt/öppet köp utgår ingen gratis fraktsedel; du står för kostnaden och ansvaret att försändelsen når oss. Vid godkänd retur återbetalas varuvärdet, ej frakten. Defekt förpackning eller uppenbar åverkan ger prisavdrag på 30–100 % av produktens värde.",
+          "Ångerrätten gäller inte vissa produkter (reservdelar, minneskort, USB-stickor, batterier, hörlurar/headset och andra plomberade produkter) så att nästa kund får varan i nytt och hygieniskt skick.",
+          "Vid ångerrätt/öppet köp utgår ingen gratis fraktsedel; du står för kostnaden och ansvaret att försändelsen når oss. Vid godkänd retur återbetalas varuvärdet, ej frakten. Defekt förpackning eller uppenbar åverkan ger prisavdrag på 30 till 100 % av produktens värde.",
           "Vid köp av begagnad enhet gäller ångerrätten/öppet köp endast om enheten är i obruten förpackning (klistermärket över förpackningen obrutet)."
         ]
       },
       {
         "h": "Förväntat skick",
-        "p": "Använd transportemballage för extra skydd — du står för risken om produkten skadas på vägen tillbaka. Produkten måste vara oanvänd och i samma skick som vid mottagandet, i sin förpackning med intakta skyddsmärken och etiketter. Saknas tillbehör eller finns fysisk skada förbehåller vi oss rätten att ta ut en avgift för att återställa varan."
+        "p": "Använd transportemballage för extra skydd, du står för risken om produkten skadas på vägen tillbaka. Produkten måste vara oanvänd och i samma skick som vid mottagandet, i sin förpackning med intakta skyddsmärken och etiketter. Saknas tillbehör eller finns fysisk skada förbehåller vi oss rätten att ta ut en avgift för att återställa varan."
       },
       {
         "h": "Vid felbeställning",
-        "p": "Nordic Teknik House AB förbehåller sig rätten att ta ut en avgift på 300–500 kr vid felbeställning. Returfrakt bekostas då av konsument."
+        "p": "Nordic Teknik House AB förbehåller sig rätten att ta ut en avgift på 300 till 500 kr vid felbeställning. Returfrakt bekostas då av konsument."
       },
       {
-        "h": "Reservdelar — krav för godkänd retur",
+        "h": "Reservdelar: krav för godkänd retur",
         "ul": [
           "Glasskärmar och displayer: skyddsfilmen/transportskyddet får inte ha avlägsnats, skärmen får ej ha varit monterad, inga repor/sprickor på touchen.",
           "LCD-skärmar ska testas innan montering genom att koppla ihop kablarna utan att limma fast dem. Vid fel, skicka foto som visar defekten (och eventuell synlig skada) till info@teknikhouse.se med en kort förklaring.",
-          "Endast ursprungliga fel omfattas av reklamationsrätten (ej normalt slitage). Reklamation ska göras inom skälig tid, dock senast inom sex (6) månader — utom uppladdningsbara batterier och begagnade mobiler & surfplattor som säljs med 3 månaders garanti. Vi avhjälper i första hand felet, i andra hand omleverans, i sista hand återköp. Vid reklamation skickar vi en fraktsedel för fri returfrakt."
+          "Endast ursprungliga fel omfattas av reklamationsrätten (ej normalt slitage). Reklamation ska göras inom skälig tid, dock senast inom sex (6) månader, utom uppladdningsbara batterier och begagnade mobiler & surfplattor som säljs med 3 månaders garanti. Vi avhjälper i första hand felet, i andra hand omleverans, i sista hand återköp. Vid reklamation skickar vi en fraktsedel för fri returfrakt."
         ]
       },
       {
@@ -188,7 +187,7 @@ const PAGES: Record<string, Page> = {
       {
         "h": "Skicka varor i retur",
         "ul": [
-          "Egen fraktsedel: välj valfri transportör och ange våra returuppgifter. Skicka paketet direkt till returadressen — vi hämtar inte ut paket hos ombud (t.ex. Rekommenderat Brev eller MyPack Collect). Avgifter för paket som hamnat hos ombud betalas av kund.",
+          "Egen fraktsedel: välj valfri transportör och ange våra returuppgifter. Skicka paketet direkt till returadressen, vi hämtar inte ut paket hos ombud (t.ex. Rekommenderat Brev eller MyPack Collect). Avgifter för paket som hamnat hos ombud betalas av kund.",
           "Bifoga returföljesedel, eller ett papper med: ordernummer, ditt namn, antal och namn på produkterna samt anledning/felbeskrivning.",
           "Packa säkert med gott om emballage utan för högt tryck.",
           "Returadress: Nordic Teknik House AB, Sveavägen 139, 113 46 Stockholm. Frågor? info@teknikhouse.se."
@@ -206,7 +205,7 @@ const PAGES: Record<string, Page> = {
       },
       {
         "h": "2. Vem är personuppgiftsansvarig?",
-        "p": "Nordic Teknik House AB (”Teknikhouse”), Sveavägen 139, 113 46 Stockholm, org.nr 559118-7488, är personuppgiftsansvarig för behandlingen av dina personuppgifter. Ansvaret gäller när Teknikhouse tillhandahåller och marknadsför produkter och tjänster samt vid köp — i webbutiken och vid kundtjänstärenden via e-post och telefon. Det är Teknikhouse ansvar att uppgifterna förvaras säkert."
+        "p": "Nordic Teknik House AB (”Teknikhouse”), Sveavägen 139, 113 46 Stockholm, org.nr 559118-7488, är personuppgiftsansvarig för behandlingen av dina personuppgifter. Ansvaret gäller när Teknikhouse tillhandahåller och marknadsför produkter och tjänster samt vid köp, i webbutiken och vid kundtjänstärenden via e-post och telefon. Det är Teknikhouse ansvar att uppgifterna förvaras säkert."
       },
       {
         "h": "3. Vilka personuppgifter behandlar vi?",
@@ -218,7 +217,7 @@ const PAGES: Record<string, Page> = {
           "Användargenererade data om interaktion med vår marknadskommunikation och webbplats: IP-adress, enhetsinformation, tidszon och operativsystem, samt om och hur du interagerar med våra nyhetsbrev.",
           "Medlemskap/avtal som ger tillgång till rabatter och erbjudanden, samt uppgifter som lämnats vid tävlingar.",
           "För företag sparas även organisationsnummer, för att kunna fakturera (särskilt för kommuner, regioner och företag).",
-          "Sparas EJ hos oss: personnummer, kortnummer, bankkontonummer eller liknande känsliga uppgifter — dessa hanteras av Klarna. Frågor om den datahanteringen ställs till Klarna."
+          "Sparas EJ hos oss: personnummer, kortnummer, bankkontonummer eller liknande känsliga uppgifter, dessa hanteras av Klarna. Frågor om den datahanteringen ställs till Klarna."
         ]
       },
       {
@@ -235,7 +234,7 @@ const PAGES: Record<string, Page> = {
       },
       {
         "h": "7. Hur länge sparas uppgifterna?",
-        "p": "Uppgifterna sparas så länge de behövs för att fullgöra våra förpliktelser mot kunder och rättsliga skyldigheter. När det inte längre finns skäl att spara dem gallras och raderas de. Är du inte aktiv tas uppgifterna bort — detta kan ta upp till 3 år efter genomfört köp."
+        "p": "Uppgifterna sparas så länge de behövs för att fullgöra våra förpliktelser mot kunder och rättsliga skyldigheter. När det inte längre finns skäl att spara dem gallras och raderas de. Är du inte aktiv tas uppgifterna bort, detta kan ta upp till 3 år efter genomfört köp."
       },
       {
         "h": "8. Delar ni mina uppgifter med andra?",
@@ -243,7 +242,7 @@ const PAGES: Record<string, Page> = {
       },
       {
         "h": "9. Vilka rättigheter har jag?",
-        "p": "Du har rätt att få felaktiga uppgifter rättade, kompletterade, avidentifierade eller raderade; att begära registerutdrag och en kopia av dina uppgifter under behandling; att i vissa fall begära begränsning av behandlingen; att få dina uppgifter i ett strukturerat, maskinläsbart format (dataportabilitet); samt att invända mot direktmarknadsföring — då upphör vi med bl.a. nyhetsbrev och erbjudanden. Radering kan begränsas av rättsliga förpliktelser (t.ex. bokföringslagen) eller rättsliga anspråk. Kontakta oss om du anser att vi hanterar dina uppgifter fel."
+        "p": "Du har rätt att få felaktiga uppgifter rättade, kompletterade, avidentifierade eller raderade; att begära registerutdrag och en kopia av dina uppgifter under behandling; att i vissa fall begära begränsning av behandlingen; att få dina uppgifter i ett strukturerat, maskinläsbart format (dataportabilitet); samt att invända mot direktmarknadsföring, då upphör vi med bl.a. nyhetsbrev och erbjudanden. Radering kan begränsas av rättsliga förpliktelser (t.ex. bokföringslagen) eller rättsliga anspråk. Kontakta oss om du anser att vi hanterar dina uppgifter fel."
       },
       {
         "h": "10. Hur skyddar ni personuppgifter?",
@@ -266,22 +265,22 @@ const PAGES: Record<string, Page> = {
       {
         "h": "Vad betyder klassificeringarna?",
         "ul": [
-          "Klass A+ — Perfekt skick. Ser ut och fungerar som ny. Inga märkbara skador. För dig som är perfektionist.",
-          "Klass A — Toppskick. Ser ny ut, kan finnas något enstaka märke men då får man leta. För dig som vill glida runt med stil.",
-          "Klass B — Bra skick. Något använd med utrymme för några repor, men inte för stora. Bra val för den genomsnittlige användaren.",
-          "Klass C — Okej skick. Tydliga spår av användning. Grymt val för den budgetinställde som är okej med att enheten ser använd ut."
+          "Klass A+: Perfekt skick. Ser ut och fungerar som ny. Inga märkbara skador. För dig som är perfektionist.",
+          "Klass A: Toppskick. Ser ny ut, kan finnas något enstaka märke men då får man leta. För dig som vill glida runt med stil.",
+          "Klass B: Bra skick. Något använd med utrymme för några repor, men inte för stora. Bra val för den genomsnittlige användaren.",
+          "Klass C: Okej skick. Tydliga spår av användning. Grymt val för den budgetinställde som är okej med att enheten ser använd ut."
         ]
       },
       {
-        "h": "20-punkterstest — begagnad smartmobil",
+        "h": "20-punkterstest för begagnad smartmobil",
         "p": "1) Enheten startar  2) Displayen  3) Touchscreen  4) Mikrofon  5) Huvudhögtalare  6) Samtalshögtalare  7) Skärm  8) Bluetooth  9) Wifi  10) Fingeravtrycksläsare  11) Ansiktsidentifiering  12) Simkortshållare  13) Bakre kamera  14) Främre kamera  15) Volymknappar  16) Låsknapp  17) Hemknapp  18) Batteri (minst 80 % maxkapacitet)  19) Hölje  20) Övriga komponenter."
       },
       {
-        "h": "20-punkterstest — begagnad surfplatta",
+        "h": "20-punkterstest för begagnad surfplatta",
         "p": "1) Enheten startar  2) Displayen  3) Touchscreen  4) Mikrofon  5) Huvudhögtalare  6) Skärmlås  7) Skärm  8) Bluetooth  9) Wifi  10) Fingeravtrycksläsare  11) Ansiktsidentifiering  12) Simkortshållare  13) Bakre kamera  14) Främre kamera  15) Volymknappar  16) Låsknapp  17) Hemknapp  18) Batteri (minst 80 % maxkapacitet)  19) Hölje  20) Övriga komponenter."
       },
       {
-        "h": "20-punkterstest — begagnad laptop",
+        "h": "20-punkterstest för begagnad laptop",
         "p": "1) Enheten startar  2) Displayen  3) Touchpad  4) Knappar för touchpad  5) Tangentbord  6) Mikrofon  7) Bluetooth  8) Wifi  9) Fingeravtrycksläsare  10) Webbkamera  11) Huvudhögtalare  12) Lysindikatorer  13) Fästen för skärm  14) Operativsystem  15) Ev. bakgrundsljus för knappar  16) Strömbrytare  17) Laddningsadapter  18) Batteri (minst 80 % maxkapacitet)  19) Hölje  20) Övriga komponenter."
       }
     ]
@@ -296,11 +295,11 @@ const PAGES: Record<string, Page> = {
       },
       {
         "h": "Våra tjänster",
-        "p": "Vårt erfarna team av tekniker hjälper dig med alla dina teknikproblem — oavsett om det är en trasig skärm, ett batteribyte eller ett mjukvarufel får vi din enhet att fungera som ny igen. Vi erbjuder även reparationer för datorer, så att du kan få hjälp med både mobila och stationära enheter."
+        "p": "Vårt erfarna team av tekniker hjälper dig med alla dina teknikproblem, oavsett om det är en trasig skärm, ett batteribyte eller ett mjukvarufel får vi din enhet att fungera som ny igen. Vi erbjuder även reparationer för datorer, så att du kan få hjälp med både mobila och stationära enheter."
       },
       {
         "h": "Våra tillbehör",
-        "p": "För att komplettera din enhet erbjuder vi ett brett sortiment av högkvalitativa tillbehör — från skyddande skal och skärmskydd till kraftfulla laddare och hörlurar av hög kvalitet."
+        "p": "För att komplettera din enhet erbjuder vi ett brett sortiment av högkvalitativa tillbehör, från skyddande skal och skärmskydd till kraftfulla laddare och hörlurar av hög kvalitet."
       },
       {
         "h": "Begagnade mobiltelefoner",
@@ -313,9 +312,9 @@ const PAGES: Record<string, Page> = {
       {
         "h": "Öppettider",
         "ul": [
-          "Måndag–Fredag: 10:00–18:00",
-          "Lördag: 11:00–17:00",
-          "Söndag: 12:00–16:00"
+          "Måndag till fredag: 10.00 till 18.00",
+          "Lördag: 11.00 till 17.00",
+          "Söndag: 12.00 till 16.00"
         ]
       },
       {
@@ -326,38 +325,38 @@ const PAGES: Record<string, Page> = {
   },
   "salj-din-enhet": {
     "title": "Sälj din enhet",
-    "intro": "Sälj din iPhone, MacBook, iPad, Apple Watch eller Android-mobil till Teknikhouse — marknadens högsta bud sedan 2014. Kostnadsfri och oförbindande värdering, och pengarna in på ditt konto så fort vi testat din enhet.",
+    "intro": "Sälj din iPhone, MacBook, iPad, Apple Watch eller Android-mobil till Teknikhouse, marknadens högsta bud sedan 2014. Kostnadsfri och oförbindande värdering, och pengarna in på ditt konto så fort vi testat din enhet.",
     "blocks": [
-      { "p": "Inget pris visas online. Du skickar in uppgifterna om din enhet — sedan går vi igenom dem och mejlar dig ett personligt prisförslag, helt utan förpliktelser. Mejla info@teknikhouse.se för att komma igång." },
+      { "p": "Inget pris visas online. Du skickar in uppgifterna om din enhet, sedan går vi igenom dem och mejlar dig ett personligt prisförslag, helt utan förpliktelser. Mejla info@teknikhouse.se för att komma igång." },
       { "h": "Så funkar det", "ul": [
-        "1. Du fyller i — svara på några snabba frågor om din enhet och bifoga gärna bilder. Vi skräddarsyr budet efter modell och skick.",
-        "2. Vi mejlar bud — du får ett personligt prisförslag på mejl, utan förpliktelser.",
-        "3. Du skickar — tacka ja och skicka in enheten. Märk paketet med 'SÄLJ' så går det extra snabbt.",
-        "4. Vi betalar — stämmer skicket får du pengarna direkt via banköverföring in på ditt konto."
+        "1. Du fyller i: svara på några snabba frågor om din enhet och bifoga gärna bilder. Vi skräddarsyr budet efter modell och skick.",
+        "2. Vi mejlar bud: du får ett personligt prisförslag på mejl, utan förpliktelser.",
+        "3. Du skickar: tacka ja och skicka in enheten. Märk paketet med 'SÄLJ' så går det extra snabbt.",
+        "4. Vi betalar: stämmer skicket får du pengarna direkt via banköverföring in på ditt konto."
       ] },
       { "h": "Varför sälja till Teknikhouse?", "ul": [
-        "Högsta budet på marknaden — vi väger in allt och ger dig det högsta värdet, inte ett standardpris.",
-        "Kostnadsfri värdering — gratis och helt oförbindande. Du bestämmer själv om du vill sälja.",
-        "Snabb betalning — så snart vi testat din enhet får du pengarna via banköverföring.",
-        "Säker dataradering — all din data raderas säkert och permanent."
+        "Högsta budet på marknaden: vi väger in allt och ger dig det högsta värdet, inte ett standardpris.",
+        "Kostnadsfri värdering: gratis och helt oförbindande. Du bestämmer själv om du vill sälja.",
+        "Snabb betalning: så snart vi testat din enhet får du pengarna via banköverföring.",
+        "Säker dataradering: all din data raderas säkert och permanent."
       ] },
-      { "h": "Vi köper alla märken och modeller", "p": "iPhone, Android, surfplatta, klocka eller dator — fungerande, trasig eller gammal. Vi köper det." },
-      { "h": "Sälj MacBook till specialister", "p": "Vi är specialister på Mac och köper alla modeller av MacBook Air och MacBook Pro, även äldre årsmodeller. Oavsett om din MacBook är i toppskick eller har ett trött batteri får du ett rättvist expertbud — ofta mer än vad inbytesprogram och marknadsplatser erbjuder." },
-      { "h": "Sälj iPhone — fungerande eller trasig", "p": "Vi köper alla iPhone-modeller, från iPhone 7 till de allra senaste. Operatörslåst, sprucken skärm, dåligt batteri eller defekt — vi ger bud ändå, eftersom vi själva reparerar och återanvänder delar. Det betyder högre bud till dig." },
-      { "h": "Sälj Samsung och Android", "p": "Vi köper alla Samsung Galaxy och andra Android-mobiler — Sony Xperia, Huawei, OnePlus, Xiaomi och fler. Du får marknadens högsta bud och snabb betalning in på ditt konto." },
+      { "h": "Vi köper alla märken och modeller", "p": "iPhone, Android, surfplatta, klocka eller dator, fungerande, trasig eller gammal. Vi köper det." },
+      { "h": "Sälj MacBook till specialister", "p": "Vi är specialister på Mac och köper alla modeller av MacBook Air och MacBook Pro, även äldre årsmodeller. Oavsett om din MacBook är i toppskick eller har ett trött batteri får du ett rättvist expertbud, ofta mer än vad inbytesprogram och marknadsplatser erbjuder." },
+      { "h": "Sälj iPhone, fungerande eller trasig", "p": "Vi köper alla iPhone-modeller, från iPhone 7 till de allra senaste. Operatörslåst, sprucken skärm, dåligt batteri eller defekt, vi ger bud ändå, eftersom vi själva reparerar och återanvänder delar. Det betyder högre bud till dig." },
+      { "h": "Sälj Samsung och Android", "p": "Vi köper alla Samsung Galaxy och andra Android-mobiler, till exempel Sony Xperia, Huawei, OnePlus, Xiaomi och fler. Du får marknadens högsta bud och snabb betalning in på ditt konto." },
       { "h": "Vanliga frågor", "ul": [
         "Hur snabbt får jag betalt? När din enhet kommit fram testar vi den, ofta samma dag. Stämmer skicket betalar vi ut direkt via banköverföring.",
-        "Kostar det något att få ett bud? Nej — det är helt kostnadsfritt och oförbindande.",
+        "Kostar det något att få ett bud? Nej, det är helt kostnadsfritt och oförbindande.",
         "Köper ni trasiga eller operatörslåsta enheter? Ja. Vi köper enheter med sprucken skärm, dåligt batteri, operatörslås eller andra fel.",
         "Vad händer med min data? All data raderas säkert och permanent. Logga gärna ut från iCloud/Google och stäng av 'Hitta min' innan du skickar.",
         "Hur får jag det högsta budet? Beskriv skicket ärligt och bifoga tydliga bilder på fram- och baksida samt laddningsport i god belysning."
       ] },
-      { "h": "Besök oss i butiken", "p": "Hellre direkt över disk? Kom förbi så värderar vi din enhet på plats medan du väntar — och du får betalt direkt. Sveavägen 139, 113 46 Stockholm. Öppet mån–fre 10–20, lör 11–17." },
+      { "h": "Besök oss i butiken", "p": "Hellre direkt över disk? Kom förbi så värderar vi din enhet på plats medan du väntar, och du får betalt direkt. Sveavägen 139, 113 46 Stockholm. Öppet måndag till fredag 10 till 18, lördag 11 till 17 och söndag 12 till 16." },
       { "h": "Kontakt", "p": "Mejla info@teknikhouse.se så hjälper vi dig igång." }
     ]
   },  "kundtjanst": {
     "title": "Kundtjänst",
-    "intro": "Vi finns här för att hjälpa dig — före, under och efter köpet.",
+    "intro": "Vi hjälper dig gärna, före, under och efter köpet.",
     "blocks": [
       {
         "h": "Kontakta oss",
@@ -366,14 +365,14 @@ const PAGES: Record<string, Page> = {
       {
         "h": "Vanliga frågor",
         "ul": [
-          "Var är min order? Alla leveranser med PostNord/DHL är spårbara — kontakta oss med ditt ordernummer.",
-          "Retur eller reklamation? Se Öppet köp & Retur.",
-          "Garanti? Garanti ingår alltid, med livstidsgaranti på skärmar."
+          "Var är min order? Alla paket skickas spårbart med PostNord eller DHL. Spåra din order på teknikhouse.se/orderstatus med ordernummer och e-post.",
+          "Retur eller reklamation? Anmäl den på teknikhouse.se/return.",
+          "Garanti? Garanti ingår alltid. Villkoren hittar du under Öppet köp och retur."
         ]
       },
       {
         "h": "Besök butiken",
-        "p": "Phone Rep, Sveavägen 139, 113 46 Stockholm. Öppet mån–fre 10–18, lör 11–17, sön 12–16."
+        "p": "Phone Rep, Sveavägen 139, 113 46 Stockholm. Öppet måndag till fredag 10 till 18, lördag 11 till 17 och söndag 12 till 16."
       }
     ]
   }
@@ -436,7 +435,7 @@ export default async function InfoPage(props: {
             <span className="mx-2">/</span>
             <span className="text-gray-600">{__title}</span>
           </nav>
-          <h1 className="text-4xl font-semibold text-gray-900 tracking-tight max-w-3xl">{__title}</h1>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight max-w-3xl break-words hyphens-auto" lang="sv">{__title}</h1>
         </div>
         <div className="content-container pb-20">
           <div className={__showToc ? "grid lg:grid-cols-[240px_1fr] gap-10 items-start" : ""}>
@@ -454,7 +453,7 @@ export default async function InfoPage(props: {
             )}
             <div className="max-w-3xl">
               <div
-                className="text-[15px] text-gray-600 leading-7 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h2]:mt-10 [&_h2]:mb-3 [&_h2]:scroll-mt-28 [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-3 [&_ul]:my-3 [&_ul]:space-y-2 [&_li]:list-disc [&_li]:ml-5 [&_li]:pl-1 [&_a]:text-[#D10000] [&_a]:underline"
+                className="text-[15px] text-gray-600 leading-7 break-words [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_img]:max-w-full [&_img]:h-auto [&_iframe]:max-w-full [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h2]:mt-10 [&_h2]:mb-3 [&_h2]:scroll-mt-28 [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-3 [&_ul]:my-3 [&_ul]:space-y-2 [&_li]:list-disc [&_li]:ml-5 [&_li]:pl-1 [&_a]:text-[#D10000] [&_a]:underline"
                 dangerouslySetInnerHTML={{ __html: __html }}
               />
               <div className="mt-14 rounded-2xl border border-gray-200 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -489,8 +488,8 @@ export default async function InfoPage(props: {
           <span className="text-gray-600">{page.title}</span>
         </nav>
         <div className="max-w-3xl">
-          <h1 className="text-4xl font-semibold text-gray-900 tracking-tight mb-4">{page.title}</h1>
-          {page.intro && <p className="text-lg text-gray-600 leading-relaxed">{page.intro}</p>}
+          <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight mb-4 break-words hyphens-auto" lang="sv">{page.title}</h1>
+          {page.intro && <p className="text-base sm:text-lg text-gray-600 leading-relaxed">{page.intro}</p>}
         </div>
       </div>
 
