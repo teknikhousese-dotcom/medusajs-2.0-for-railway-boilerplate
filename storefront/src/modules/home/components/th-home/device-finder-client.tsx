@@ -2,9 +2,16 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { sdk } from "@lib/config"
-import { getProductPrice } from "@lib/util/get-product-price"
-import { PART_TYPES, foldText, partIndexOf } from "./device-parts"
+import { PART_TYPES, foldText } from "./device-parts"
+import {
+  PART_WORDS,
+  cachedDeviceItems,
+  deviceStore,
+  loadDeviceItems,
+  partCtaLabel,
+  partSearchHref,
+} from "./hero-device-visual"
+import type { DVModel } from "./hero-device-visual"
 import type { DFData, DFModel } from "./device-finder-data"
 
 type M = DFModel & { b: string; bn: string; path: string; nf: string; hay: string; i: number }
@@ -13,9 +20,42 @@ type Section = { title: string; items: M[] }
 
 const SAVE_KEY = "th:device"
 const RECENT_KEY = "th:devices"
-const POPULAR = ["iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11", "Galaxy S24", "Galaxy S23", "Galaxy S22", "Galaxy S21 5G"]
+const POPULAR = ["iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11", "Galaxy S24", "Galaxy S23", "Galaxy S22", "Galaxy S21", "Galaxy A54", "Galaxy A53"]
 const TOP_BRANDS = 5
-const PARTS_CACHE = new Map<string, Item[]>()
+
+/* Märkesfärger som liten accent på märkesknapparna (bara färg, inga logotyper). */
+const BRAND_COLORS: Record<string, string> = {
+  apple: "#1b1714",
+  samsung: "#1428A0",
+  huawei: "#CF0A2C",
+  oneplus: "#EB0028",
+  google: "#4285F4",
+  "sony-xperia": "#5a5a5a",
+  xiaomi: "#FF6900",
+  motorola: "#5C92FA",
+  lg: "#A50034",
+  htc: "#69BE28",
+  nokia: "#124191",
+  asus: "#00539B",
+}
+
+const toDV = (m: M): DVModel => ({ id: m.id, n: m.n, bn: m.bn, b: m.b, path: m.path, k: m.k || [], c: m.c })
+
+function findPopular(all: M[]): M[] {
+  const found: M[] = []
+  for (const name of POPULAR) {
+    const f = foldText(name)
+    const hit = all.find((m) => m.nf === f) || all.find((m) => m.nf === f + " 5g") || all.find((m) => m.nf === f + " 4g")
+    if (hit && !found.includes(hit)) found.push(hit)
+  }
+  if (found.length < 6) {
+    for (const m of all.slice().sort((a, b) => b.c - a.c)) {
+      if (found.length >= 10) break
+      if (!found.includes(m)) found.push(m)
+    }
+  }
+  return found
+}
 
 const CSS = `
 .dfx{position:relative;background:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 50px rgba(27,23,20,.12);max-width:600px;contain:inline-size;color:#1b1714;font-family:system-ui,"SF Pro Text",Inter,"Segoe UI",Arial,sans-serif}
@@ -54,7 +94,7 @@ button.dfx-in{display:block;line-height:50px}
 .dfx-go:hover svg{transform:translateX(3px)}
 .dfx-hint{margin-top:10px;font-size:13px;color:#6f685f;height:20px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dfx-hint b{color:#1b1714;font-weight:600}
-.dfx-pop{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:60;background:#fff;border-radius:16px;box-shadow:0 24px 60px -12px rgba(27,23,20,.3),0 0 0 1px rgba(27,23,20,.06);max-height:min(380px,60vh);overflow:auto;overscroll-behavior:contain;padding:6px;opacity:0;transform:translateY(-6px) scale(.99);transform-origin:top center;pointer-events:none;visibility:hidden;transition:opacity .16s,transform .16s,visibility 0s .16s}
+.dfx-pop{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:60;background:#fff;border-radius:16px;box-shadow:0 24px 60px -12px rgba(27,23,20,.3),0 0 0 1px rgba(27,23,20,.06);max-height:min(420px,60vh);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:6px;opacity:0;transform:translateY(-6px) scale(.99);transform-origin:top center;pointer-events:none;visibility:hidden;transition:opacity .16s,transform .16s,visibility 0s .16s}
 .dfx-pop.on{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .16s,transform .16s,visibility 0s}
 .dfx-gh{position:sticky;top:-6px;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);padding:10px 12px 6px;font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#9a9187;z-index:1}
 .dfx-op{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:8px 12px;border-radius:10px;cursor:pointer;font-size:14.5px;color:#1b1714;user-select:none}
@@ -76,7 +116,11 @@ button.dfx-in{display:block;line-height:50px}
 .dfx-pc span{color:#9a9187;font-weight:500}
 .dfx-pc[aria-pressed=true]{background:#F50000;border-color:#F50000;color:#fff}
 .dfx-pc[aria-pressed=true] span{color:rgba(255,255,255,.85)}
-.dfx-list{margin-top:8px;display:flex;flex-direction:column;gap:2px;max-height:292px;overflow:auto;overscroll-behavior:contain}
+.dfx-list{margin-top:8px;display:flex;flex-direction:column;gap:2px;max-height:min(360px,56vh);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;position:relative;scrollbar-width:thin}
+.dfx-lh{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:9px 8px 5px;background:rgba(255,255,255,.97);font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#9a9187}
+.dfx-lh span{letter-spacing:0;font-weight:500}
+.dfx-chip .bd{width:8px;height:8px;border-radius:50%;margin-right:8px;flex:0 0 auto}
+.dfx-chip[aria-pressed=true] .bd{box-shadow:0 0 0 2px rgba(255,255,255,.9)}
 .dfx-it{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:6px 8px;border-radius:12px;text-decoration:none;color:#1b1714;transition:background .15s;animation:dfxin .28s ease both}
 .dfx-it:hover{background:#faf8f6}
 .dfx-it img,.dfx-it .ph{width:52px;height:52px;border-radius:10px;object-fit:contain;background:#faf8f6;display:block}
@@ -157,7 +201,7 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
           bn: b.n,
           path: b.p + "/" + m.s,
           nf,
-          hay: foldText(b.n + " " + m.n + " " + m.g) + " " + nf.replace(/\s+/g, ""),
+          hay: foldText(b.n + " " + m.n + " " + m.g) + " " + nf.replace(/\s+/g, "") + " " + foldText(b.n + m.n).replace(/\s+/g, ""),
           i: out.length,
         })
       }
@@ -185,6 +229,50 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
   const sheetInputRef = useRef<HTMLInputElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
+  const modelRef = useRef<M | null>(null)
+  const chooseRef = useRef<(m: M, expand?: boolean, from?: string, p?: number) => void>(() => {})
+  modelRef.current = model
+
+  /* Dela populära modeller, region och sparad enhet med visningen i heron. */
+  useEffect(() => {
+    if (!all.length) return
+    const pop = findPopular(all)
+    let savedId: string | null = null
+    try {
+      const raw = localStorage.getItem(SAVE_KEY)
+      const sv = raw ? JSON.parse(raw) : null
+      const hit = sv ? all.find((m) => m.id === sv.id) || all.find((m) => m.path === sv.path) : null
+      if (hit) {
+        savedId = hit.id
+        if (!pop.includes(hit)) pop.unshift(hit)
+      }
+    } catch {
+      savedId = null
+    }
+    deviceStore.set({ popular: pop.map(toDV), regionId: regionId || null, savedId }, "finder")
+  }, [all, regionId])
+
+  /* Val som görs i visningen (populär modell eller en del) speglas här. */
+  useEffect(() => {
+    return deviceStore.subscribe(() => {
+      const st = deviceStore.get()
+      if (st.src !== "visual" || !st.model) return
+      const cur = modelRef.current
+      if (!cur || cur.id !== st.model.id) {
+        const id = st.model.id
+        const hit = all.find((x) => x.id === id)
+        if (hit) chooseRef.current(hit, true, "visual", st.part)
+      } else {
+        setPart(st.part)
+        setExpanded(true)
+      }
+    })
+  }, [all])
+
+  /* Töms väljaren går visningen tillbaka till populära modeller. */
+  useEffect(() => {
+    if (!model && deviceStore.get().model) deviceStore.set({ model: null, part: -1 }, "finder")
+  }, [model])
 
   /* Mobil: bottom sheet i stället för rullgardin. */
   useEffect(() => {
@@ -233,8 +321,9 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
   const sections: Section[] = useMemo(() => {
     if (searching) {
       const tokens = qf.split(" ")
+      const qc = qf.replace(/\s+/g, "")
       const hits = all
-        .filter((m) => (!brand || m.b === brand) && tokens.every((t) => m.hay.includes(t)))
+        .filter((m) => (!brand || m.b === brand) && (tokens.every((t) => m.hay.includes(t)) || (qc.length > 1 && m.hay.includes(qc))))
         .map((m) => ({ m, s: scoreOf(m, qf, tokens) }))
         .sort((a, b) => a.s - b.s || a.m.n.length - b.m.n.length || a.m.i - b.m.i)
         .slice(0, 60)
@@ -250,18 +339,7 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
       }
       return Array.from(groups, ([title, items]) => ({ title, items }))
     }
-    const pop: M[] = []
-    for (const name of POPULAR) {
-      const f = foldText(name)
-      const hit = all.find((m) => m.nf === f)
-      if (hit && !pop.includes(hit)) pop.push(hit)
-    }
-    if (pop.length < 6) {
-      for (const m of all.slice().sort((a, b) => b.c - a.c)) {
-        if (pop.length >= 10) break
-        if (!pop.includes(m)) pop.push(m)
-      }
-    }
+    const pop = findPopular(all)
     const rest = pop.filter((m) => !recentM.includes(m))
     const out: Section[] = []
     if (recentM.length) out.push({ title: "Dina senaste enheter", items: recentM })
@@ -321,58 +399,15 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
   const loadItems = useCallback(
     async (m: M) => {
       setFailed(false)
-      const hit = PARTS_CACHE.get(m.id)
+      const hit = cachedDeviceItems(m.id, regionId)
       if (hit) {
         setItems(hit)
         return
       }
       setItems(null)
       try {
-        const res: any = await sdk.client.fetch("/store/products", {
-          method: "GET",
-          query: {
-            category_id: [m.id],
-            limit: 100,
-            ...(regionId ? { region_id: regionId } : {}),
-            fields: regionId
-              ? "id,title,handle,thumbnail,+metadata,*variants.calculated_price"
-              : "id,title,handle,thumbnail,+metadata",
-          },
-        })
-        const prefix = [foldText(m.bn + " " + m.n), foldText(m.n), foldText(m.bn)]
-        const list: Item[] = (res?.products || []).map((p: any) => {
-          let price: string | null = null
-          let amt = 0
-          try {
-            const cp: any = getProductPrice({ product: p }).cheapestPrice
-            price = cp?.calculated_price || null
-            amt = Number(cp?.calculated_price_number || 0)
-          } catch {
-            price = null
-          }
-          const title = String(p.title || "")
-          let t = title
-          const tf = foldText(title)
-          for (const pf of prefix) {
-            if (pf && tf.startsWith(pf + " ")) {
-              t = title.slice(pf.length).replace(/^[\s/,:-]+/, "")
-              break
-            }
-          }
-          const v = p?.metadata?.in_stock
-          return {
-            id: p.id,
-            t: t ? t.charAt(0).toUpperCase() + t.slice(1) : title,
-            href: m.path + "/" + p.handle,
-            img: p.thumbnail || null,
-            price,
-            oos: v === false || v === "false" || v === 0 || v === "0",
-            pi: partIndexOf(title),
-            amt,
-          }
-        })
-        list.sort((a, b) => Number(a.oos) - Number(b.oos) || a.pi - b.pi || a.amt - b.amt)
-        PARTS_CACHE.set(m.id, list)
+        const list = await loadDeviceItems(m, regionId)
+        if (modelRef.current && modelRef.current.id !== m.id) return
         setItems(list)
       } catch {
         setFailed(true)
@@ -382,13 +417,15 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
     [regionId]
   )
 
-  const choose = (m: M, expand = true) => {
+  const choose = (m: M, expand = true, from = "finder", p = -1) => {
     setModel(m)
+    modelRef.current = m
     setBrand(m.b)
     setQuery(m.n)
     setOpen(false)
-    setPart(-1)
+    setPart(p)
     setSaved(m)
+    if (from !== "visual") deviceStore.set({ model: toDV(m), part: p, savedId: m.id }, "finder")
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({ id: m.id, path: m.path, n: m.n }))
       const nextRecent = [m, ...recentM.filter((x) => x.id !== m.id)].slice(0, 4)
@@ -401,7 +438,14 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
       setExpanded(true)
       loadItems(m)
     }
-    if (isSheet) window.setTimeout(() => triggerRef.current?.focus(), 30)
+    if (isSheet && from !== "visual") window.setTimeout(() => triggerRef.current?.focus(), 30)
+  }
+
+  chooseRef.current = choose
+
+  const pickPart = (i: number) => {
+    setPart(i)
+    deviceStore.set({ part: i }, "finder")
   }
 
   const openPicker = () => {
@@ -510,18 +554,37 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
   const shown: Item[] = useMemo(() => {
     if (!items) return []
     if (part >= 0) return items.filter((x) => x.pi === part)
-    const pick: Item[] = []
-    for (const pi of [0, 1, 2, 4, 3]) {
-      const x = items.find((it) => it.pi === pi && !it.oos)
-      if (x) pick.push(x)
-      if (pick.length >= 4) break
-    }
-    for (const x of items) {
-      if (pick.length >= 4) break
-      if (!pick.includes(x)) pick.push(x)
-    }
-    return pick
+    return items.slice().sort((a, b) => a.pi - b.pi || Number(a.oos) - Number(b.oos) || a.amt - b.amt)
   }, [items, part])
+
+  /* Alla delar, grupperade per typ med en rubrik som stannar kvar när man scrollar. */
+  const renderItems = (list: Item[]) => {
+    const out: React.ReactNode[] = []
+    let last = -2
+    for (const x of list) {
+      if (part < 0 && x.pi !== last) {
+        last = x.pi
+        const pt = PART_TYPES[x.pi]
+        out.push(
+          <div key={"h" + x.pi} className="dfx-lh r">
+            {pt ? pt.n : "Övrigt"}
+            <span>{partCounts[x.pi] || ""}</span>
+          </div>
+        )
+      }
+      out.push(
+        <a key={x.id} className="dfx-it" href={x.href}>
+          {x.img ? <img src={x.img} alt="" loading="lazy" width={52} height={52} /> : <span className="ph" />}
+          <span className="t">{x.t}</span>
+          <span className="p r">
+            {x.price || ""}
+            {x.oos ? <span className="o">Tillfälligt slut</span> : null}
+          </span>
+        </a>
+      )
+    }
+    return out
+  }
 
   const renderOptions = (inSheet: boolean) => {
     if (!flat.length) {
@@ -580,8 +643,9 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
           aria-pressed={brand === b.s}
           onClick={() => pickBrand(b.s)}
         >
-          {b.n}
-        </button>
+            <span className="bd" aria-hidden="true" style={{ background: BRAND_COLORS[b.s] || "#a49c92" }} />
+            {b.n}
+          </button>
       ))}
       {!inSheet && brands.length > TOP_BRANDS && !showAllBrands ? (
         <button type="button" className="dfx-chip fler r" onClick={() => setShowAllBrands(true)} aria-label="Visa fler märken">
@@ -667,7 +731,7 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
           ) : null}
         </div>
         {model ? (
-          <a className="dfx-go r" href={model.path}>Visa delar <Arrow /></a>
+          <a className="dfx-go r" href={part >= 0 ? partSearchHref(model.n, part) : model.path}>{part >= 0 ? "Visa " + (PART_WORDS[part] ? PART_WORDS[part][1] : "delar") + " (" + (partCounts[part] || 0) + ")" : "Visa delar"} <Arrow /></a>
         ) : (
           <button type="button" className="dfx-go r" onClick={go}>Visa delar <Arrow /></button>
         )}
@@ -686,11 +750,11 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
             <>
               {partChips.length > 1 ? (
                 <div className="dfx-parts" role="group" aria-label="Typ av del">
-                  <button type="button" className="dfx-pc r" aria-pressed={part === -1} onClick={() => setPart(-1)}>
+                  <button type="button" className="dfx-pc r" aria-pressed={part === -1} onClick={() => pickPart(-1)}>
                     Allt <span>{totalParts}</span>
                   </button>
                   {partChips.map((p) => (
-                    <button key={p.k} type="button" className="dfx-pc r" aria-pressed={part === p.i} onClick={() => setPart(part === p.i ? -1 : p.i)}>
+                    <button key={p.k} type="button" className="dfx-pc r" aria-pressed={part === p.i} onClick={() => pickPart(part === p.i ? -1 : p.i)}>
                       {p.n} <span>{p.c}</span>
                     </button>
                   ))}
@@ -706,23 +770,14 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
                 ) : failed ? (
                   <div className="dfx-note">Vi kunde inte hämta delarna just nu. Du hittar alla på modellens sida.</div>
                 ) : shown.length ? (
-                  shown.map((x) => (
-                    <a key={x.id} className="dfx-it" href={x.href}>
-                      {x.img ? <img src={x.img} alt="" loading="lazy" width={52} height={52} /> : <span className="ph" />}
-                      <span className="t">{x.t}</span>
-                      <span className="p r">
-                        {x.price || ""}
-                        {x.oos ? <span className="o">Tillfälligt slut</span> : null}
-                      </span>
-                    </a>
-                  ))
+                  renderItems(shown)
                 ) : (
                   <div className="dfx-note">Just nu finns inga delar av den typen här.</div>
                 )}
               </div>
-              <a className="dfx-all r" href={model.path}>
+              <a className="dfx-all r" href={part >= 0 ? partSearchHref(model.n, part) : model.path}>
                 <span>
-                  {totalParts > 1 ? `Visa alla ${delar(totalParts)} till ${model.n}` : `Visa alla delar till ${model.n}`}
+                  {part >= 0 ? partCtaLabel(model.n, part, partCounts[part] || 0) : totalParts > 1 ? "Visa alla " + delar(totalParts) + " till " + model.n : "Visa alla delar till " + model.n}
                 </span>
                 <Arrow />
               </a>
