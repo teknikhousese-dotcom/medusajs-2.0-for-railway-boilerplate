@@ -9,8 +9,9 @@ import { getProductsList } from "@lib/data/products"
 import ProductPreview from "@modules/products/components/product-preview"
 
 export const metadata: Metadata = {
-  title: "Varukorg",
-  description: "Visa din varukorg",
+  title: "Varukorg | Teknikhouse",
+  description: "Din varukorg hos Teknikhouse.",
+  robots: { index: false, follow: true },
 }
 
 const TRUST = [
