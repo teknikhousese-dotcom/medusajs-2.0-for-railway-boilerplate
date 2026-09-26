@@ -59,7 +59,7 @@ export default async function KampanjerPage({
   }
 
   return (
-    <div className="content-container py-8">
+    <div className="content-container py-6 small:py-8">
       <div className="flex flex-col items-center text-center mb-8">
         <span style={{ color: "#F50000", fontWeight: 700, letterSpacing: ".06em", fontSize: "13px" }}>
           ★ VÅRA ERBJUDANDEN ★
@@ -68,21 +68,21 @@ export default async function KampanjerPage({
           style={{
             fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif',
             fontWeight: 600,
-            fontSize: "28px",
+            fontSize: "clamp(24px, 6vw, 30px)",
             color: "#1b1714",
             margin: "6px 0 4px",
           }}
         >
           Kampanjer
         </h1>
-        <p style={{ color: "#6f685f", fontSize: "15px" }}>
+        <p style={{ color: "#6f685f", fontSize: "15px", maxWidth: "36rem" }}>
           Ett stort urval av populära produkter till kampanjpris.
         </p>
       </div>
 
       {found.length ? (
         <ul
-          className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
+          className="grid grid-cols-2 min-[768px]:grid-cols-3 medium:grid-cols-4 large:grid-cols-5 gap-3 min-[768px]:gap-4 medium:gap-5"
           data-testid="kampanjer-grid"
         >
           {found.map((p) => (
@@ -93,7 +93,7 @@ export default async function KampanjerPage({
         </ul>
       ) : (
         <p style={{ textAlign: "center", color: "#6f685f", padding: "48px 0" }}>
-          Inga aktiva kampanjer just nu — kika in snart igen!
+          Inga aktiva kampanjer just nu. Kika in snart igen!
         </p>
       )}
     </div>
