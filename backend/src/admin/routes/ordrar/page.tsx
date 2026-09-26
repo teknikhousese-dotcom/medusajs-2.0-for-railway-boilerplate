@@ -154,6 +154,18 @@ function payBadge(pm?: string) {
   const b = map[k] || { t: pm, bg: "#eee", fg: "#333" }
   return <span title={pm} style={{ display: "inline-block", textAlign: "center", fontSize: "9px", fontWeight: 700, padding: "1px 5px", borderRadius: "3px", background: b.bg, color: b.fg, marginRight: "6px", verticalAlign: "middle" }}>{b.t}</span>
 }
+const retTypeText = (t?: string): string => {
+  const k = String(t || "").toLowerCase()
+  if (k === "retur" || k === "return") return "Retur"
+  if (k === "reklamation" || k === "claim" || k === "complaint") return "Reklamation"
+  if (k === "byte" || k === "exchange") return "Byte"
+  return t ? String(t) : "-"
+}
+const retStatusText = (st?: string): string => {
+  const k = String(st || "").toLowerCase()
+  const map: Record<string, string> = { pending: "Inväntar hantering", requested: "Inväntar hantering", received: "Mottagen", approved: "Godkänd", completed: "Avslutad", closed: "Avslutad", rejected: "Avslagen", denied: "Avslagen", canceled: "Avbruten", cancelled: "Avbruten", refunded: "Återbetald" }
+  return map[k] || (st ? String(st) : "-")
+}
 const flikOf = (o: any): string => o.metadata?.orderflik || "nya"
 const deviceOf = (o: any): string => { const v = (o.metadata?.ordered_via || "").toLowerCase(); return /dator|desktop|surf|tablet/.test(v) ? "🖥" : "📱" }
 
@@ -383,6 +395,9 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
         {page < pages && <span onClick={() => setPage(page + 1)} style={{ cursor: "pointer", padding: "2px 6px", marginLeft: "4px", color: "#06c" }}>Nästa »</span>}
         <span style={{ marginLeft: "10px", color: "#666" }}>{loading ? "Laddar…" : `${count} ordrar${submittedQ ? " (sökresultat)" : ""}`}</span>
       </div>
+      <div style={{ fontSize: "11px", marginTop: "6px", color: "#444" }}>
+        <b>Fet</b> = oläst · <span style={{ color: ID_BLUE, fontWeight: 700 }}>Blått ID</span> = Klarna ej aktiverad · <span style={{ color: ID_RED, fontWeight: 700 }}>Rött ID</span> = avbrutet/ej slutfört
+      </div>
 
       {showTips && (
       <div style={{ marginTop: "14px", border: "1px solid #ccc", borderRadius: "4px", background: "#f7f7f7", padding: "10px 14px", fontSize: "11px", lineHeight: 1.6, maxWidth: "820px" }}>
@@ -421,6 +436,8 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   const [stat, setStat] = useState(true)
   const [saved, setSaved] = useState("")
   const [klarna, setKlarna] = useState<any>(null)
+  const [prodBySku, setProdBySku] = useState<Record<string, string>>({})
+  const [returns, setReturns] = useState<any[]>([])
   const klarnaAction = async (action: string) => {
     if (action === "capture" && !confirm("Aktivera och leverera - Klarna-transaktionen debiteras kunden. Fortsatt?")) return
     if (action === "cancel" && !confirm("Avbryt Klarna-transaktionen? Kunden debiteras inte.")) return
@@ -437,11 +454,19 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
     let alive = true
     ;(async () => {
       try {
-        const f = "*items,*shipping_address,*billing_address,*shipping_methods,payment_collections.payments.provider_id,payment_collections.payments.data,+metadata,+display_id,+email,+currency_code,+total,+item_total,+item_subtotal,+shipping_total,+tax_total,+payment_status,+created_at"
+        const f = "*items,items.tax_lines.*,*shipping_address,*billing_address,*shipping_methods,payment_collections.payments.provider_id,payment_collections.payments.data,+metadata,+display_id,+email,+currency_code,+total,+subtotal,+item_total,+item_subtotal,+item_tax_total,+shipping_total,+shipping_subtotal,+tax_total,+payment_status,+created_at"
         const r = await fetch(`/admin/orders/${id}?fields=${f}`, { credentials: "include" })
         const d = await r.json()
         if (!alive) return
-        setO(d.order); setLoading(false); fetch("/admin/kustom-order?order_id=" + id, { credentials: "include" }).then((kr) => kr.json()).then((kj) => { if (alive) setKlarna(kj) }).catch(() => {})
+        setO(d.order); setLoading(false)
+        fetch("/admin/returns?order_id=" + encodeURIComponent(id), { credentials: "include" }).then((rr) => rr.json()).then((rj) => { if (alive) setReturns(Array.isArray(rj && rj.returns) ? rj.returns : []) }).catch(() => {})
+        /* Wiki-ordrar saknar product_id på raderna: slå upp produkten via artikelnumret (SKU) så att namnet kan länka till produktformuläret. */
+        const skus: string[] = Array.from(new Set(((d.order && d.order.items) || []).filter((it: any) => !it.product_id).map((it: any) => String(it.variant_sku || (it.metadata && it.metadata.sku) || "")).filter((x: string) => !!x)))
+        if (skus.length) {
+          Promise.all(skus.map((sk) => fetch("/admin/product-variants?limit=5&fields=id,sku,product_id&sku=" + encodeURIComponent(sk), { credentials: "include" }).then((vr) => vr.json()).then((vj) => { const v = ((vj && vj.variants) || []).find((x: any) => x && x.sku === sk && x.product_id); return [sk, v ? String(v.product_id) : ""] as [string, string] }).catch(() => [sk, ""] as [string, string])))
+            .then((pairs) => { if (!alive) return; const mp: Record<string, string> = {}; pairs.forEach(([k, v]) => { if (v) mp[k] = v }); setProdBySku(mp) })
+        }
+        fetch("/admin/kustom-order?order_id=" + id, { credentials: "include" }).then((kr) => kr.json()).then((kj) => { if (alive) setKlarna(kj) }).catch(() => {})
         const m = d.order?.metadata || {}
         setNote(m.internal_comment || ""); setFlik(m.orderflik || "nya"); setStat(m.counts_in_stats !== false)
         /* Markera som läst (olästa = fet stil i listan). Nya ordrar utan betalsätt/Klarna-id i metadata får det här från betalningen. */
@@ -492,7 +517,23 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   const telefon = m.wiki_order_id ? (m.phone || "") : (sa.phone || m.phone || "")
 
   const r2 = (n: number) => Math.round(Number(n || 0) * 100) / 100
-  const itemsExcl = (o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity), 0)
+  /* Nya Medusa-ordrar lagrar priser INKL. moms (is_tax_inclusive) med momsrader och beräknade totaler.
+     Wiki-importerade ordrar lagrar priser EXKL. moms utan momsrader. Priser räknas därför per ordertyp. */
+  const isNative = !m.wiki_order_id && ((o.items || []).some((it: any) => it.is_tax_inclusive === true) || Number(o.tax_total) > 0)
+  const itRate = (it: any): number => {
+    const tl = it && it.tax_lines && it.tax_lines[0]
+    if (tl && tl.rate != null && !isNaN(Number(tl.rate))) return Number(tl.rate)
+    return isNative ? 25 : -1
+  }
+  const itExclUnit = (it: any): number => {
+    const up = Number(it.unit_price) || 0
+    if (!it.is_tax_inclusive) return up
+    const q = Number(it.quantity) || 0
+    if (it.subtotal != null && q > 0 && !isNaN(Number(it.subtotal))) return Number(it.subtotal) / q
+    const rt = itRate(it)
+    return up / (1 + (rt < 0 ? 25 : rt) / 100)
+  }
+  const itemsExcl = (o.items || []).reduce((s: number, it: any) => s + itExclUnit(it) * Number(it.quantity), 0)
   /* Wiki: frakt, expeditionsavgift och kreditering visas som egna rader i varutabellen (SHIP25/HAND25/CRED).
      Momssats för dessa rader: 0 % om hela ordern är momsfri (export), annars 25 %. */
   const vb = m.vat_breakdown || null
@@ -509,11 +550,13 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   if (feeExcl !== 0) extraLines.push({ code: "HAND" + lineVat, title: m.payment_fee_name || "Expeditionsavgift", excl: feeExcl, vat: lineVat })
   if (credExcl !== 0) extraLines.push({ code: m.wiki_credit_code || "CRED", title: m.wiki_credit_text || "Kreditering", excl: credExcl, vat: lineVat })
   const extraExcl = extraLines.reduce((s, l) => s + l.excl, 0)
-  const totalExcl = r2(itemsExcl + extraExcl)
-  const itVat = (it: any) => (it.tax_lines && it.tax_lines[0] ? Number(it.tax_lines[0].rate) : lineVat)
-  const grand = Number(o.tax_total) > 0 ? Number(o.total ?? 0) : r2((o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity) * (1 + itVat(it) / 100), 0) + extraLines.reduce((s, l) => s + l.excl * (1 + l.vat / 100), 0))
-  const taxTotal = r2(grand - totalExcl)
+  const itVat = (it: any) => { const rt = itRate(it); return rt < 0 ? lineVat : rt }
   const incl = (excl: number, vat: number) => Number(excl) * (1 + (vat === 0 ? 0 : (Number(vat) || 25)) / 100)
+  const itInclUnit = (it: any): number => (it.is_tax_inclusive ? Number(it.unit_price) || 0 : incl(Number(it.unit_price) || 0, itVat(it)))
+  const nativeGrand = isNative && o.total != null && !isNaN(Number(o.total))
+  const grand = nativeGrand ? r2(Number(o.total)) : r2((o.items || []).reduce((s: number, it: any) => s + itInclUnit(it) * Number(it.quantity), 0) + extraLines.reduce((s, l) => s + l.excl * (1 + l.vat / 100), 0))
+  const totalExcl = nativeGrand && o.tax_total != null ? r2(Number(o.total) - Number(o.tax_total)) : r2(itemsExcl + extraExcl)
+  const taxTotal = r2(grand - totalExcl)
 
   /* Betalningstatus som i Wiki: betalsättets namn, sedan statustext (Wikis exakta formuleringar), sedan Klarna-uppgifter. */
   const pmKey = (betalsatt || "").toUpperCase().replace(/[^A-Z]/g, "")
@@ -649,13 +692,16 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
             <td style={{ ...thTd, textAlign: "right" }}>Summa inkl. moms</td>
           </tr>
           {(o.items || []).map((it: any) => {
-            const vat = itVat(it)
-            const pi = incl(it.unit_price, vat)
+            const pe = itExclUnit(it)
+            const pi = itInclUnit(it)
+            const sku = it.variant_sku || (it.metadata && it.metadata.sku) || ""
+            const pid = it.product_id || (sku ? prodBySku[sku] : "") || ""
+            const name = <>{it.title}{it.subtitle ? ` · ${it.subtitle}` : ""}</>
             return (
               <tr key={it.id}>
-                <td style={cellTd}>{it.variant_sku || (it.metadata && it.metadata.sku) || "-"}</td>
-                <td style={cellTd}>{it.title}{it.subtitle ? ` · ${it.subtitle}` : ""}</td>
-                <td style={{ ...cellTd, textAlign: "right" }}>{wkr(it.unit_price)}</td>
+                <td style={cellTd}>{sku || "-"}</td>
+                <td style={cellTd}>{pid ? <a href={`${ADMIN}/produkt-form?id=${pid}`} title="Redigera produkten" style={{ color: "#06c", textDecoration: "none" }}>{name}</a> : name}</td>
+                <td style={{ ...cellTd, textAlign: "right" }}>{wkr(pe)}</td>
                 <td style={{ ...cellTd, textAlign: "right" }}>{wkr(pi)}</td>
                 <td style={{ ...cellTd, textAlign: "center" }}>{it.quantity} st.</td>
                 <td style={{ ...cellTd, textAlign: "right" }}>{wkr(pi * Number(it.quantity))}</td>
@@ -677,6 +723,35 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
           <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }} colSpan={5}>Totalt inkl. moms »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }}>{wkr(grand)}</td></tr>
           {lineVat > 0 || taxTotal !== 0 ? <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }} colSpan={5}>{"Varav moms (" + (lineVat || 25) + "%) »"}</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }}>{wkr(taxTotal)}</td></tr> : null}
         </tbody></table>
+
+        {returns.length > 0 ? (
+          <table style={{ ...tbl }}><tbody>
+            <tr><td style={secTd} colSpan={6}>Returer/Reklamationer</td></tr>
+            <tr>
+              <td style={thTd}>Referens</td><td style={thTd}>Typ</td><td style={thTd}>Datum</td>
+              <td style={thTd}>Varor</td><td style={thTd}>Orsak</td><td style={thTd}>Status</td>
+            </tr>
+            {returns.map((rt: any) => {
+              const its: any[] = Array.isArray(rt.items) ? rt.items : []
+              const reasons = Array.from(new Set(its.map((x: any) => String((x && x.reason) || "")).filter((x: string) => !!x)))
+              return (
+                <tr key={rt.id}>
+                  <td style={{ ...cellTd, whiteSpace: "nowrap" }}>{rt.reference || "-"}</td>
+                  <td style={cellTd}>{retTypeText(rt.type)}</td>
+                  <td style={{ ...cellTd, whiteSpace: "nowrap" }}>{dt(rt.created_at)}</td>
+                  <td style={cellTd}>{its.length ? its.map((x: any, i: number) => <div key={i}>{(Number(x && x.quantity) || 1) + " st. " + String((x && x.title) || "") + (x && x.sku ? " (" + x.sku + ")" : "")}</div>) : "-"}</td>
+                  <td style={cellTd}>{reasons.length ? reasons.join(", ") : "-"}{rt.message ? <div style={{ color: "#666", marginTop: "2px" }}>{"Meddelande: " + rt.message}</div> : null}</td>
+                  <td style={{ ...cellTd, whiteSpace: "nowrap" }}>{retStatusText(rt.status)}</td>
+                </tr>
+              )
+            })}
+          </tbody></table>
+        ) : ((m.wiki_has_return === true || m.wiki_has_return === "true") ? (
+          <table style={{ ...tbl }}><tbody>
+            <tr><td style={secTd}>Returer/Reklamationer</td></tr>
+            <tr><td style={cellTd}>Ordern har en retur registrerad i Wikinggruppen (detaljer finns inte i Medusa).</td></tr>
+          </tbody></table>
+        ) : null)}
 
         <div style={{ marginTop: "4px" }}>
           <div style={{ fontSize: "13px", fontWeight: 700, marginBottom: "6px" }}>Meddelanden/loggar från ändringar</div>
