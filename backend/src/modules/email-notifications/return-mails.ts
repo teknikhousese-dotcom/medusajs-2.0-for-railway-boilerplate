@@ -61,7 +61,21 @@ export async function sendReturnMails(inp: ReturnMailInput): Promise<{ customer:
     "{{meddelande_block}}": msg ? "<strong>Ditt meddelande:</strong><br/>" + nl2br(msg) : "",
     "{{adminlank}}": esc(adminLink),
     "{{datum}}": esc(datum),
+    /* Wiki-style placeholders used by the imported Epostmallar templates */
+    "%referenceNumber%": esc(inp.reference),
+    "%requestedDateTime%": esc(datum),
+    "%orderID%": esc(inp.orderNumber),
+    "%customerEmail%": esc(inp.email),
+    "%customerName%": esc(namn),
+    "%items%": label("Anmälda varor") + itemsTable(inp.items),
+    "%comment%": msg ? label("Meddelande") + `<div style="font-size:14px">${nl2br(msg)}</div>` : "",
+    "%nextSteps%": label("Så går det till nu") + para(`Vi går igenom din anmälan och mejlar dig bekräftelse och returinstruktioner inom 1 till 2 vardagar. Vänta gärna med att skicka tillbaka varan tills du fått instruktionerna, och märk paketet med <strong>${esc(inp.reference)}</strong>.`),
+    "%shopName%": "Teknikhouse.se",
+    "%shopEmail%": SHOP_EMAIL,
+    "%shopURL%": "https://www.teknikhouse.se",
   }
+  /* Imported Wiki templates are bare HTML fragments: give them the shop frame. */
+  const framed = (html: string) => (/teknik<span/i.test(html) || /<html/i.test(html) ? html : brandedHtml(html))
 
   /* Customer receipt */
   let customer = false
@@ -71,7 +85,7 @@ export async function sendReturnMails(inp: ReturnMailInput): Promise<{ customer:
     let html: string
     if (tpl) {
       subject = fillTemplate(tpl.subject || "Vi har tagit emot din {{anmalan}} {{referens}}", map).replace(/<[^>]+>/g, "")
-      html = fillTemplate(tpl.body_html, map).replace(/<p[^>]*>\s*<\/p>/g, "")
+      html = framed(fillTemplate(tpl.body_html, map).replace(/<p[^>]*>\s*<\/p>/g, ""))
     } else {
       subject = `Vi har tagit emot din ${anmalan} ${inp.reference}`
       html = brandedHtml(
@@ -102,7 +116,7 @@ export async function sendReturnMails(inp: ReturnMailInput): Promise<{ customer:
     let html: string
     if (tpl) {
       subject = fillTemplate(tpl.subject || "Ny {{typ}} {{referens}}, order {{ordernummer}} ({{kundnamn}})", map).replace(/<[^>]+>/g, "")
-      html = fillTemplate(tpl.body_html, map)
+      html = framed(fillTemplate(tpl.body_html, map) + button("Öppna ordern i admin", adminLink))
     } else {
       subject = `Ny ${typ} ${inp.reference}, order ${inp.orderNumber} (${namn || inp.email})`
       html = brandedHtml(
