@@ -1,7 +1,6 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 import { cache } from "react"
-import { getCacheDirectives } from "./cookies"
 
 type Cat = HttpTypes.StoreProductCategory
 
@@ -110,7 +109,7 @@ export const getCategoriesList = cache(async function (
     {
       method: "GET",
       query: { limit, offset },
-      ...(await getCacheDirectives("categories")),
+      ...NAV_CACHE,
     }
   )
 })
@@ -123,7 +122,7 @@ export const getCategoryByHandle = cache(async function (
     {
       method: "GET",
       query: { handle: categoryHandle },
-      ...(await getCacheDirectives("categories")),
+      ...NAV_CACHE,
     }
   )
 })
