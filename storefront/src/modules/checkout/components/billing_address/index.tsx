@@ -35,7 +35,7 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 small:gap-4">
         <Input
           label="Förnamn"
           name="billing_address.first_name"
@@ -54,23 +54,27 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           required
           data-testid="billing-last-name-input"
         />
-        <Input
-          label="Adress"
-          name="billing_address.address_1"
-          autoComplete="address-line1"
-          value={formData["billing_address.address_1"]}
-          onChange={handleChange}
-          required
-          data-testid="billing-address-input"
-        />
-        <Input
-          label="Företag"
-          name="billing_address.company"
-          value={formData["billing_address.company"]}
-          onChange={handleChange}
-          autoComplete="organization"
-          data-testid="billing-company-input"
-        />
+        <div className="col-span-2 small:col-span-1">
+          <Input
+            label="Gatuadress"
+            name="billing_address.address_1"
+            autoComplete="address-line1"
+            value={formData["billing_address.address_1"]}
+            onChange={handleChange}
+            required
+            data-testid="billing-address-input"
+          />
+        </div>
+        <div className="col-span-2 small:col-span-1">
+          <Input
+            label="Företag"
+            name="billing_address.company"
+            value={formData["billing_address.company"]}
+            onChange={handleChange}
+            autoComplete="organization"
+            data-testid="billing-company-input"
+          />
+        </div>
         <Input
           label="Postnummer"
           name="billing_address.postal_code"
@@ -89,32 +93,38 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           required
           data-testid="billing-city-input"
         />
-        <CountrySelect
-          name="billing_address.country_code"
-          autoComplete="country"
-          region={cart?.region}
-          value={formData["billing_address.country_code"]}
-          onChange={handleChange}
-          required
-          data-testid="billing-country-select"
-        />
+        <div className="col-span-2 small:col-span-1">
+          <CountrySelect
+            name="billing_address.country_code"
+            autoComplete="country"
+            region={cart?.region}
+            value={formData["billing_address.country_code"]}
+            onChange={handleChange}
+            required
+            data-testid="billing-country-select"
+          />
+        </div>
         {/* Optional, for the same reason as the shipping address form. */}
-        <Input
-          label="Län"
-          name="billing_address.province"
-          autoComplete="address-level1"
-          value={formData["billing_address.province"]}
-          onChange={handleChange}
-          data-testid="billing-province-input"
-        />
-        <Input
-          label="Telefon"
-          name="billing_address.phone"
-          autoComplete="tel"
-          value={formData["billing_address.phone"]}
-          onChange={handleChange}
-          data-testid="billing-phone-input"
-        />
+        <div className="col-span-2 small:col-span-1">
+          <Input
+            label="Län (valfritt)"
+            name="billing_address.province"
+            autoComplete="address-level1"
+            value={formData["billing_address.province"]}
+            onChange={handleChange}
+            data-testid="billing-province-input"
+          />
+        </div>
+        <div className="col-span-2 small:col-span-1">
+          <Input
+            label="Telefon"
+            name="billing_address.phone"
+            autoComplete="tel"
+            value={formData["billing_address.phone"]}
+            onChange={handleChange}
+            data-testid="billing-phone-input"
+          />
+        </div>
       </div>
     </>
   )
