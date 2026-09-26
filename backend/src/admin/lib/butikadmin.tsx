@@ -198,7 +198,7 @@ export function installGlobalMenu() {
   const render = (host: HTMLElement) => {
     const path = window.location.pathname + window.location.search
     const isA = (h: string) => path.split("?")[0] === h.split("?")[0]
-    let html = '<div style="padding:10px 12px;border-bottom:1px solid #ccc;background:#fff"><div style="font-size:12px;font-weight:700">Statistik</div><div style="font-size:11px;color:#444;margin-top:4px">Besökare online: <b>— st</b></div><div style="font-size:11px;color:#444">Olästa ordrar: <b id="bm-unread">' + unread + '</b></div></div><nav style="font-size:12px">'
+    let html = '<div style="padding:10px 12px;border-bottom:1px solid #ccc;background:#fff"><div style="font-size:12px;font-weight:700">Statistik</div><div style="font-size:11px;color:#444;margin-top:4px">Besökare online: <b>- st</b></div><div style="font-size:11px;color:#444">Olästa ordrar: <b id="bm-unread">' + unread + '</b></div></div><nav style="font-size:12px">'
     for (const m of MENU) {
       html += '<a href="' + esc(m.href) + '" style="' + rowCss(isA(m.href), false) + '"><span style="width:18px;text-align:center">' + (m.emo || "") + '</span><span>' + m.lab + '</span></a>'
       if (m.children) for (const c of m.children) html += '<a href="' + esc(c.href) + '" style="' + rowCss(isA(c.href), true) + '"><span style="width:18px;text-align:center;color:#999">›</span><span>' + c.lab + '</span></a>'
@@ -290,7 +290,7 @@ export function Snabbmeny({ active }: { active?: string }) {
     <aside data-bm="menu" style={{ width: "220px", flexShrink: 0, borderRight: "1px solid #ccc", background: "#f4f4f4", fontFamily: WF }}>
       <div style={{ padding: "10px 12px", borderBottom: "1px solid #ccc", background: "#fff" }}>
         <div style={{ fontSize: "12px", fontWeight: 700 }}>Statistik</div>
-        <div style={{ fontSize: "11px", color: "#444", marginTop: "4px" }}>Besökare online: <b>— st</b></div>
+        <div style={{ fontSize: "11px", color: "#444", marginTop: "4px" }}>Besökare online: <b>- st</b></div>
         <div style={{ fontSize: "11px", color: "#444" }}>Olästa ordrar: <b>{unread} st</b></div>
       </div>
       <nav style={{ fontSize: "12px" }}>
