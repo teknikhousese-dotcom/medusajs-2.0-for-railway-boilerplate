@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 import Wrapper from "@modules/checkout/components/payment-wrapper"
 import CheckoutForm from "@modules/checkout/templates/checkout-form"
@@ -31,11 +31,30 @@ const fetchCart = async () => {
 
 export default async function Checkout({
   params,
+  searchParams,
 }: {
   params: Promise<{ countryCode: string }>
+  searchParams: Promise<{ step?: string }>
 }) {
   const { countryCode } = await params
+  const { step } = await searchParams
   const cart = await fetchCart()
+  /*
+   * Klarna-first checkout: 1 Leverans -> 2 Betalning -> 3 Leveransadress
+   * (Swish only). Start at step 1; the address step is only reachable once a
+   * payment method (other than Klarna) has been chosen in step 2.
+   */
+  const hasSession = !!cart?.payment_collection?.payment_sessions?.some(
+    (s: any) => s.status === "pending"
+  )
+  const hasShipping = (cart?.shipping_methods?.length ?? 0) > 0
+  if (
+    !step ||
+    (step !== "delivery" && !hasShipping) ||
+    ((step === "address" || step === "review") && !hasSession)
+  ) {
+    redirect("/checkout?step=delivery")
+  }
   const customer = await getCustomer()
 
   // Source the region from the cart (always present in checkout) with the
