@@ -187,6 +187,23 @@ export async function middleware(request: NextRequest) {
       }
     }
   } catch (e301) {}
+  {
+    const lp = request.nextUrl.pathname
+    const lsp = request.nextUrl.searchParams
+    if (/^\/butikadmin\/googleshopping\.php$/i.test(lp) && BACKEND_URL) {
+      const act = String(lsp.get("action") || "feed").toLowerCase()
+      const feedPath = act.indexOf("inventory") >= 0 ? "/google-feed-inventory" : "/google-feed"
+      return NextResponse.rewrite(new URL(BACKEND_URL.replace(/\/$/, "") + feedPath))
+    }
+    const blogOld = lp.match(/^\/blogg\/\d{4}\/[a-z]{3}\/([^\/]+)\/?$/i)
+    if (blogOld) {
+      return NextResponse.redirect(new URL("/blogg/" + blogOld[1], request.url), 301)
+    }
+    if (/^\/search\/?$/i.test(lp)) {
+      const q = String(lsp.get("q") || lsp.get("query") || "").trim()
+      if (q) return NextResponse.redirect(new URL("/results/" + encodeURIComponent(q), request.url), 301)
+    }
+  }
   const searchParams = request.nextUrl.searchParams
   const cartId = searchParams.get("cart_id")
   const checkoutStep = searchParams.get("step")
