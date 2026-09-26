@@ -6,7 +6,9 @@ import { updateLineItem } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import CartItemSelect from "@modules/cart/components/cart-item-select"
 import ErrorMessage from "@modules/checkout/components/error-message"
-import DeleteButton from "@modules/common/components/delete-button"
+import DeleteButton, {
+  isStaleActionError,
+} from "@modules/common/components/delete-button"
 import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
 import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
@@ -38,11 +40,16 @@ const Item = ({ item, type = "full" }: ItemProps) => {
       quantity,
     })
       .then(() => {
-        // Belt and braces on top of the scoped cache tag the action
-        // revalidates. See the note in product-actions.
+        /* Belt and braces on top of the scoped cache tag the action
+           revalidates. See the note in product-actions. */
         startTransition(() => router.refresh())
       })
       .catch((err) => {
+        /* Tab opened before a deploy: stale Server Action id, reload once. */
+        if (isStaleActionError(err) && typeof window !== "undefined") {
+          window.location.reload()
+          return
+        }
         setError(err.message)
       })
       .finally(() => {
@@ -50,7 +57,7 @@ const Item = ({ item, type = "full" }: ItemProps) => {
       })
   }
 
-  // TODO: Update this to grab the actual max inventory
+  /* TODO: Update this to grab the actual max inventory */
   const maxQtyFromInventory = 10
   const maxQuantity = item.variant?.manage_inventory ? 10 : maxQtyFromInventory
 
