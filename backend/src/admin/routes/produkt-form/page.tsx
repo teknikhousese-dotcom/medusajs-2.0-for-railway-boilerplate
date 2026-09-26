@@ -9,6 +9,13 @@ const BoxIcon = () => (
   </svg>
 )
 
+/** metadata keys that /admin/wiki-products POST writes from the form fields */
+const FORM_KEYS = new Set([
+  "skick", "momssats", "inpris", "leverantor", "tillverkare", "color", "modell", "lagerplats", "sokord", "google_namn", "html_falt",
+  "seo_title", "seo_desc", "meta_title", "meta_description", "h1", "visning", "kampanj", "kampanjpris", "kampanj_start", "kampanj_slut",
+  "ordinarie_pris", "antal", "oandligt", "lagervarning", "skrymmande", "bestallningsvara", "empty_stock_text", "custom_text",
+])
+
 function ProduktFormPage() {
   const [cats, setCats] = useState<any[]>([])
   const [suppliers, setSuppliers] = useState<string[]>([])
@@ -16,6 +23,8 @@ function ProduktFormPage() {
   const [msg, setMsg] = useState("")
   const [busy, setBusy] = useState(false)
   const [editId, setEditId] = useState("")
+  const [alts, setAlts] = useState<string[]>([])
+  const [origMeta, setOrigMeta] = useState<any>(null)
 
   const [f, setF] = useState<any>({
     artnr: "", namn: "", googleNamn: "", category_ids: [] as string[],
@@ -38,7 +47,7 @@ function ProduktFormPage() {
           const n = file.name || "bild.jpg"
           const dot = n.lastIndexOf(".")
           const ext = dot >= 0 ? n.slice(dot).toLowerCase() : ".jpg"
-          let base = (dot >= 0 ? n.slice(0, dot) : n).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+          let base = (dot >= 0 ? n.slice(0, dot) : n).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
           return (base || "bild") + ext
         })()
         fd.append("files", new File([file], cleanName, { type: file.type }))
@@ -71,6 +80,11 @@ function ProduktFormPage() {
       fetch("/admin/wiki-products?id=" + encodeURIComponent(id), { credentials: "include" }).then((r) => r.json()).then((j) => {
         const p = j.product; if (!p) return
         const m = p.metadata || {}
+        setOrigMeta(m)
+        const wi: any[] = Array.isArray(m.wiki_images) ? m.wiki_images : []
+        const ia: any[] = Array.isArray(m.image_alts) ? m.image_alts : []
+        setAlts((p.images || []).map((_: any, i: number) => String(ia[i] ?? (wi[i] && wi[i].alt) ?? "")))
+        if (p.namn) document.title = "Redigera produkt: " + p.namn
         setF((prev: any) => ({
           ...prev, artnr: p.artnr, namn: p.namn, googleNamn: p.googleNamn, beskrivning: p.beskrivning,
           ean: p.ean, weight: p.weight, utpris: p.utpris, category_ids: p.category_ids || [],
@@ -86,15 +100,36 @@ function ProduktFormPage() {
   }, [])
 
   const toggleCat = (id: string) => set("category_ids", f.category_ids.includes(id) ? f.category_ids.filter((x: string) => x !== id) : [...f.category_ids, id])
+  const imageList = (): string[] => String(f.images || "").split("\n").map((s: string) => s.trim()).filter(Boolean)
+
+  /** After the main save: store image alt texts and keep metadata keys the form does not handle (wiki_id, wiki_images …). */
+  const saveExtraMeta = async (pid: string) => {
+    const cur = await fetch(`/admin/products/${pid}?fields=id,metadata`, { credentials: "include" }).then((r) => r.json())
+    const am: any = (cur.product && cur.product.metadata) || {}
+    const md: any = { ...am }
+    for (const k of Object.keys(origMeta || {})) if (!(k in md) && !FORM_KEYS.has(k)) md[k] = origMeta[k]
+    const imgs = imageList()
+    const a = imgs.map((_, i) => String(alts[i] || "").trim())
+    const wi: any[] = Array.isArray(md.wiki_images) ? md.wiki_images.map((x: any) => ({ ...x })) : []
+    a.forEach((alt, i) => { if (wi[i]) wi[i].alt = alt; else wi[i] = { alt } })
+    if (wi.length) md.wiki_images = wi.slice(0, Math.max(imgs.length, 0) || wi.length)
+    md.image_alts = a
+    await fetch(`/admin/products/${pid}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: md }) })
+  }
 
   const save = async () => {
     if (!f.artnr.trim() || !f.namn.trim()) { setMsg("Fyll i artikelnummer och produktnamn."); return }
     setBusy(true); setMsg("Sparar…")
-    const body = { ...f, id: editId || undefined, images: f.images.split("\n").map((s: string) => s.trim()).filter(Boolean) }
+    const body = { ...f, id: editId || undefined, images: imageList() }
     try {
       const r = await fetch("/admin/wiki-products", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
       const j = await r.json()
-      if (r.ok && j.ok) { setMsg("✔ Produkten sparades."); if (!editId && j.id) setEditId(j.id) }
+      if (r.ok && j.ok) {
+        const pid = editId || j.id
+        let extraErr = ""
+        if (pid) { try { await saveExtraMeta(pid) } catch (e: any) { extraErr = " (alt-texter kunde inte sparas)" } }
+        setMsg("✔ Produkten sparades." + extraErr); if (!editId && j.id) setEditId(j.id)
+      }
       else setMsg("Fel: " + (j.error || "kunde inte spara"))
     } catch (e: any) { setMsg("Fel: " + String(e && e.message || e)) }
     setBusy(false)
@@ -117,7 +152,7 @@ function ProduktFormPage() {
       <Snabbmeny active="Hantera produkter" />
       <div style={{ flex: 1 }}>
         <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden", margin: "0 0 12px" }}>
-          <div style={{ background: "#f4f4f4", borderBottom: "1px solid #ddd", padding: "10px 16px", fontWeight: 700, fontSize: "14px" }}>🛍 {editId ? "Redigera produkt" : "Ny produkt"}</div>
+          <div style={{ background: "#f4f4f4", borderBottom: "1px solid #ddd", padding: "10px 16px", fontWeight: 700, fontSize: "14px" }}>🛍 {editId ? "Redigera produkt" + (f.namn ? ": " + f.namn : "") : "Ny produkt"}</div>
           <div style={{ padding: "16px", maxWidth: "820px" }}>
             {msg && <div style={{ padding: "8px 10px", marginBottom: "10px", borderRadius: "3px", background: msg.startsWith("Fel") ? "#fdecea" : "#e8f5e9", color: msg.startsWith("Fel") ? "#a00" : "#256029", fontSize: "12px" }}>{msg}</div>}
 
@@ -206,7 +241,9 @@ function ProduktFormPage() {
             </div>
 
             <label style={{ ...lbl, fontWeight: 400 }}><input type="checkbox" checked={f.bestallningsvara} onChange={(e) => set("bestallningsvara", e.target.checked)} /> Beställningsvara (går att köpa även när den är slut i lager)</label>
-            {f.bestallningsvara && (<><label style={lbl}>Text som visas när varan är slut i lager</label><input style={inp} value={f.emptyStockText} onChange={(e) => set("emptyStockText", e.target.value)} placeholder="t.ex. Beställningsvara – leverans 5–7 dagar" /></>)}
+            <label style={lbl}>Visa text när produkten är slut i lager</label>
+            <div style={hint}>Visas i butiken när lagersaldot är 0, t.ex. "Finns ej i lagret" eller "Beställningsvara – leverans 5–7 dagar".</div>
+            <input style={inp} value={f.emptyStockText} onChange={(e) => set("emptyStockText", e.target.value)} placeholder="t.ex. Finns ej i lagret" />
 
             <label style={lbl}>Produktbeskrivning</label>
             <RichText value={f.beskrivning} onChange={(html) => set("beskrivning", html)} minHeight={180} />
@@ -223,11 +260,17 @@ function ProduktFormPage() {
               <span style={{ fontSize: "12px", color: "#6f685f" }}>Välj en eller flera bilder — de laddas upp och läggs till automatiskt.</span>
             </div>
             {String(f.images || "").trim() ? (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
-                {f.images.split("\n").map((s: string) => s.trim()).filter(Boolean).map((url: string, i: number) => (
-                  <div key={i} style={{ position: "relative", width: "64px", height: "64px", border: "1px solid #e5e5e5", borderRadius: "8px", overflow: "hidden", background: "#faf8f6" }}>
-                    <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                    <button type="button" title="Ta bort" onClick={() => setF((p: any) => ({ ...p, images: String(p.images || "").split("\n").map((x: string) => x.trim()).filter(Boolean).filter((_: string, j: number) => j !== i).join("\n") }))} style={{ position: "absolute", top: "2px", right: "2px", width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", fontSize: "12px", lineHeight: "1" }}>×</button>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px" }}>
+                {imageList().map((url: string, i: number) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ position: "relative", width: "64px", height: "64px", flex: "0 0 64px", border: "1px solid #e5e5e5", borderRadius: "8px", overflow: "hidden", background: "#faf8f6" }}>
+                      <img src={url} alt={alts[i] || ""} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      <button type="button" title="Ta bort" onClick={() => { setF((p: any) => ({ ...p, images: String(p.images || "").split("\n").map((x: string) => x.trim()).filter(Boolean).filter((_: string, j: number) => j !== i).join("\n") })); setAlts((a) => a.filter((_, j) => j !== i)) }} style={{ position: "absolute", top: "2px", right: "2px", width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", fontSize: "12px", lineHeight: "1" }}>×</button>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "11px", color: "#555", marginBottom: "2px" }}>Alt-text bild {i + 1}</div>
+                      <input style={inp} value={alts[i] || ""} onChange={(e) => { const v = e.target.value; setAlts((a) => { const n = [...a]; while (n.length <= i) n.push(""); n[i] = v; return n }) }} placeholder="Beskriv bilden (för sökmotorer och skärmläsare)" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -236,7 +279,8 @@ function ProduktFormPage() {
             <label style={lbl}>HTML-fält (t.ex. YouTube-embed, max bredd 400px)</label>
             <textarea style={{ ...inp, height: "50px", fontFamily: "monospace" }} value={f.htmlFalt} onChange={(e) => set("htmlFalt", e.target.value)} />
 
-            <label style={lbl}>Egen text (visas på produktsidan)</label>
+            <label style={lbl}>Extra fält för köparen att fylla i</label>
+            <div style={hint}>Ett fält per rad. Köparen fyller i fälten när produkten läggs i varukorgen (t.ex. "IMEI-nummer").</div>
             <textarea style={{ ...inp, height: "60px" }} value={f.customText} onChange={(e) => set("customText", e.target.value)} />
 
             <div style={{ display: "block" }}>
@@ -302,5 +346,5 @@ function ProduktFormPage() {
   )
 }
 
-export const config = defineRouteConfig({ label: "Ny produkt (Wiki)", icon: BoxIcon })
+export const config = defineRouteConfig({ label: "Ny produkt", icon: BoxIcon })
 export default ProduktFormPage
