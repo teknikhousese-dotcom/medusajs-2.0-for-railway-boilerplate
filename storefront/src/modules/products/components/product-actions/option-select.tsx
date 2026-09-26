@@ -20,26 +20,30 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   disabled,
 }) => {
   const filteredOptions = option.values?.map((v) => v.value)
+  const label = /^(valalternativ|alternativ|default.*|option|title)$/i.test(title.trim())
+    ? "alternativ"
+    : title.toLowerCase()
 
   return (
-    <div className="flex flex-col gap-y-3">
-      <span className="text-sm">Välj {title}</span>
-      <div
-        className="flex flex-wrap justify-between gap-2"
-        data-testid={dataTestId}
-      >
+    <div className="flex flex-col gap-y-2.5">
+      <span className="text-sm font-semibold text-ui-fg-base">
+        Välj {label}
+        {current ? <span className="font-normal text-ui-fg-subtle">: {current}</span> : null}
+      </span>
+      <div className="flex flex-wrap gap-2" data-testid={dataTestId}>
         {filteredOptions?.map((v) => {
+          const on = v === current
           return (
             <button
+              type="button"
               onClick={() => updateOption(option.title ?? "", v ?? "")}
               key={v}
+              aria-pressed={on}
               className={clx(
-                "border-ui-border-base bg-ui-bg-subtle border text-small-regular h-10 rounded-rounded p-2 flex-1 ",
-                {
-                  "border-ui-border-interactive": v === current,
-                  "hover:shadow-elevation-card-rest transition-shadow ease-in-out duration-150":
-                    v !== current,
-                }
+                "min-h-[44px] grow basis-[calc(50%-4px)] min-[512px]:basis-auto rounded-xl border px-3.5 py-2 text-left text-[13.5px] leading-snug break-words transition-colors",
+                on
+                  ? "border-[#F50000] bg-[#fff5f5] font-semibold text-ui-fg-base ring-2 ring-[#F50000]/15"
+                  : "border-ui-border-base bg-white text-ui-fg-base hover:border-ui-border-strong"
               )}
               disabled={disabled}
               data-testid="option-button"
