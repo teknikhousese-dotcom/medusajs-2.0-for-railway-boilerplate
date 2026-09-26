@@ -7,8 +7,18 @@ function esc(s: any) {
     .replace(/"/g, "&quot;").replace(/'/g, "&apos;")
 }
 
+function isOutOfStock(p: any): boolean {
+  const m: any = (p && p.metadata) || {}
+  const isv = m.in_stock
+  if (isv === false || isv === "false" || isv === 0 || isv === "0") return true
+  if (isv === true || isv === "true" || isv === 1 || isv === "1") return false
+  if (m.oandligt === true || m.oandligt === "true") return false
+  const q = Number(m.antal)
+  return Number.isFinite(q) ? q <= 0 : false
+}
+
 async function fetchProducts(query: any) {
-  const base = ["id", "status", "variants.sku", "variants.barcode"]
+  const base = ["id", "status", "metadata", "variants.sku", "variants.barcode"]
   try {
     const { data } = await query.graph({
       entity: "product",
@@ -46,7 +56,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     items.push(
       "<item>" +
       `<g:id>${esc(v.sku || p.id)}</g:id>` +
-      "<g:availability>in_stock</g:availability>" +
+      "<g:availability>" + (isOutOfStock(p) ? "out_of_stock" : "in_stock") + "</g:availability>" +
       (price ? `<g:price>${esc(price)}</g:price>` : "") +
       "</item>"
     )
