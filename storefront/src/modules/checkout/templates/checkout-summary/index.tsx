@@ -55,11 +55,11 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-gray-200 pt-4 txt-small text-ui-fg-subtle">
-          <span>Trygg e-handel</span>
+          <span>Garanti ingår</span>
           <span>·</span>
           <span>30 dagars öppet köp</span>
           <span>·</span>
-          <span>4,6 av 5 på Trustpilot</span>
+          <a href="https://www.trustindex.io/reviews/teknikhouse.se" target="_blank" rel="noreferrer" className="hover:underline">Verifierad butik hos Trustindex</a>
         </div>
       </div>
     </div>
