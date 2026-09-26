@@ -1,30 +1,23 @@
-import { ArrowUpRightMini } from "@medusajs/icons"
-import { Text } from "@medusajs/ui"
 import { Metadata } from "next"
-import Link from "next/link"
+
+import Footer from "@modules/layout/templates/footer"
+import Nav from "@modules/layout/templates/nav"
+import NotFoundBody from "@modules/common/components/not-found-body"
 
 export const metadata: Metadata = {
   title: "Sidan hittades inte | Teknikhouse",
-  description: "Något gick fel",
+  description: "Sidan du letar efter finns inte längre eller har flyttat.",
+  robots: { index: false, follow: true },
 }
 
+/* Okända adresser hamnar här (utanför (main)-layouten), så sidhuvud och
+   sidfot läggs till här för att 404-sidan ska se ut som resten av butiken. */
 export default function NotFound() {
   return (
-    <div className="flex flex-col gap-4 items-center justify-center min-h-[calc(100vh-64px)]">
-      <h1 className="text-2xl-semi text-ui-fg-base">Sidan hittades inte</h1>
-      <p className="text-small-regular text-ui-fg-base">
-        Sidan du försökte nå finns inte.
-      </p>
-      <Link
-        className="flex gap-x-1 items-center group"
-        href="/"
-      >
-        <Text className="text-ui-fg-interactive">Till startsidan</Text>
-        <ArrowUpRightMini
-          className="group-hover:rotate-45 ease-in-out duration-150"
-          color="var(--fg-interactive)"
-        />
-      </Link>
-    </div>
+    <>
+      <Nav />
+      <NotFoundBody />
+      <Footer />
+    </>
   )
 }
