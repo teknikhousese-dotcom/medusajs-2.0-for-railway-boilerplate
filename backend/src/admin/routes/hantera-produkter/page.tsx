@@ -187,13 +187,85 @@ function CopyPage() {
 }
 
 /* ------------------------------------------------------------------- GRID VIEW */
+type CatOpt = { id: string; name: string; label: string }
+async function loadCatTree(): Promise<CatOpt[]> {
+  const all: any[] = []
+  for (let off = 0; off < 5000; off += 1000) {
+    const d = await jget(`/admin/product-categories?limit=1000&offset=${off}&fields=id,name,parent_category_id,rank`)
+    const list = d.product_categories || []
+    all.push(...list)
+    if (list.length < 1000 || all.length >= (d.count || 0)) break
+  }
+  const kids: Record<string, any[]> = {}
+  const ids = new Set(all.map((c) => c.id))
+  for (const c of all) { const p = c.parent_category_id && ids.has(c.parent_category_id) ? c.parent_category_id : ""; (kids[p] = kids[p] || []).push(c) }
+  for (const k of Object.keys(kids)) kids[k].sort((a, b) => (Number(a.rank) || 0) - (Number(b.rank) || 0) || String(a.name).localeCompare(String(b.name), "sv"))
+  const out: CatOpt[] = []
+  const seen = new Set<string>()
+  const walk = (pid: string, prefix: string, depth: number) => {
+    if (depth > 12) return
+    for (const c of kids[pid] || []) {
+      if (seen.has(c.id)) continue
+      seen.add(c.id)
+      const label = prefix ? prefix + " - " + c.name : c.name
+      out.push({ id: c.id, name: c.name, label })
+      walk(c.id, label, depth + 1)
+    }
+  }
+  walk("", "", 0)
+  for (const c of all) if (!seen.has(c.id)) out.push({ id: c.id, name: c.name, label: c.name })
+  return out
+}
+
+const BULK: { k: string; t: string; type: string }[] = [
+  { k: "utpris", t: "Utpris (inkl moms)", type: "num" },
+  { k: "kampanj", t: "Kampanjpris (inkl moms)", type: "kampanj" },
+  { k: "inpris", t: "Inpris (exkl moms)", type: "num" },
+  { k: "antal", t: "Lagersaldo", type: "num" },
+  { k: "lagerplats", t: "Lagerplats", type: "text" },
+  { k: "bestallningsvara", t: "Beställningsvara", type: "bool" },
+  { k: "weight", t: "Vikt (g)", type: "num" },
+  { k: "skrymmande", t: "Skrymmande", type: "bool" },
+  { k: "visning", t: "Dold/synlig (visning i butiken)", type: "visning" },
+  { k: "leverantor", t: "Leverantör", type: "supplier" },
+  { k: "tillverkare", t: "Tillverkare", type: "text" },
+  { k: "ean", t: "EAN-kod", type: "text" },
+  { k: "unlink", t: "Koppla bort från varugrupp", type: "cat" },
+]
+const VISNING: [string, string][] = [["show", "Visa produkten"], ["hide_shop", "Dölj i butiken men inte för sökmotorer"], ["hide_full", "Dölj fullständigt"]]
+const visningStatus = (v: string) => (v === "hide_full" ? "draft" : v === "hide_shop" ? "proposed" : "published")
+const numOk = (v: string) => v.trim() !== "" && Number.isFinite(Number(v.trim().replace(",", ".")))
+const numVal = (v: string) => Number(v.trim().replace(",", "."))
+const truthy = (v: any) => v === true || v === "true"
+
+/** Same field mapping as produkt-form uses when it loads a product, so the
+ *  /admin/wiki-products POST round-trip keeps every other field unchanged. */
+function formFromWiki(p: any) {
+  const m = p.metadata || {}
+  const vis = m.visning || (p.status === "draft" ? "hide_full" : p.status === "proposed" ? "hide_shop" : "show")
+  return {
+    id: p.id, artnr: p.artnr, namn: p.namn, googleNamn: p.googleNamn, beskrivning: p.beskrivning,
+    ean: p.ean, weight: p.weight, utpris: p.utpris, category_ids: p.category_ids || [], images: p.images || [],
+    skick: m.skick || "Nyskick", momssats: m.momssats || "25", inpris: m.inpris ?? "", leverantor: m.leverantor || "",
+    tillverkare: m.tillverkare || m.producer || "", color: m.color || "", modell: m.modell || "", lagerplats: m.lagerplats || "",
+    sokord: m.sokord || "", antal: m.antal ?? m.stock ?? "", oandligt: truthy(m.oandligt), lagervarning: m.lagervarning ?? "",
+    skrymmande: truthy(m.skrymmande), visning: vis, metaTitle: m.seo_title || m.meta_title || "", metaDesc: m.seo_desc || m.meta_description || "",
+    h1: m.h1 || "", kampanj: truthy(m.kampanj), kampanjpris: m.kampanjpris || "", kampanjStart: m.kampanj_start || "", kampanjSlut: m.kampanj_slut || "",
+    htmlFalt: m.html_falt || "", bestallningsvara: truthy(m.bestallningsvara), emptyStockText: m.empty_stock_text || "", customText: m.custom_text || "",
+  }
+}
+
 function GridPage() {
   useHideNativeNav()
   const [meta, setMeta] = useState<{ online: number | null; unread: number }>({ online: null, unread: 0 })
-  const [cats, setCats] = useState<any[]>([])
+  const [cats, setCats] = useState<CatOpt[]>([])
   const [catId, setCatId] = useState("")
   const [q, setQ] = useState("")
   const [status, setStatus] = useState("")
+  const [lev, setLev] = useState("")
+  const [urval, setUrval] = useState("")
+  const [levList, setLevList] = useState<{ name: string; count: number }[]>([])
+  const [allSuppliers, setAllSuppliers] = useState<string[]>([])
   const [rows, setRows] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [offset, setOffset] = useState(0)
@@ -201,21 +273,55 @@ function GridPage() {
   const [connectCat, setConnectCat] = useState("")
   const [note, setNote] = useState("")
   const [busy, setBusy] = useState(false)
+  const [act, setAct] = useState("")
+  const [val, setVal] = useState("")
+  const [val2, setVal2] = useState("")
+  const [val3, setVal3] = useState("")
 
   useEffect(() => {
     jget("/admin/orders?limit=1").then((o) => setMeta((s) => ({ ...s, unread: o.count || 0 }))).catch(() => {})
-    jget("/admin/product-categories?limit=1000&fields=id,name,parent_category_id").then((d) => setCats(d.product_categories || [])).catch(() => {})
+    loadCatTree().then(setCats).catch(() => {})
+    jget("/admin/wiki-product-filter?suppliers=1").then((d) => {
+      const l = d.suppliers || []
+      setLevList(l)
+      setAllSuppliers((prev) => Array.from(new Set([...prev, ...l.map((x: any) => x.name)])).sort((a, b) => a.localeCompare(b, "sv", { sensitivity: "base" })))
+    }).catch(() => {})
+    jget("/admin/wiki-products").then((d) => setAllSuppliers((prev) => Array.from(new Set([...prev, ...(d.suppliers || [])])).sort((a, b) => a.localeCompare(b, "sv", { sensitivity: "base" })))).catch(() => {})
+    jget("/admin/purchasing/suppliers").then((d) => setAllSuppliers((prev) => Array.from(new Set([...prev, ...(d.suppliers || []).map((x: any) => x.name).filter(Boolean)])).sort((a, b) => a.localeCompare(b, "sv", { sensitivity: "base" })))).catch(() => {})
   }, [])
 
+  const FIELDS = "id,title,status,thumbnail,metadata,*options,*variants,*variants.options,*categories"
   const load = async (off = 0) => {
     setBusy(true)
-    const p = new URLSearchParams({ limit: String(PAGE), offset: String(off), fields: "id,title,status,thumbnail,metadata,*options,*variants,*variants.options,*categories" })
-    if (q.trim()) p.set("q", q.trim())
-    if (catId) p.set("category_id", catId)
-    if (status) p.set("status", status)
     try {
-      const d = await jget("/admin/products?" + p.toString())
-      setRows(d.products || []); setTotal(d.count || 0); setOffset(off); setChecked({})
+      if (lev || urval) {
+        const fp = new URLSearchParams({ limit: String(PAGE), offset: String(off) })
+        if (q.trim()) fp.set("q", q.trim())
+        if (catId) fp.set("category_id", catId)
+        if (status) fp.set("status", status)
+        if (lev) fp.set("leverantor", lev)
+        if (urval) fp.set("urval", urval)
+        const f = await jget("/admin/wiki-product-filter?" + fp.toString())
+        if (f.error) throw new Error(f.error)
+        const idList: string[] = f.ids || []
+        let prods: any[] = []
+        if (idList.length) {
+          const p = new URLSearchParams({ limit: String(idList.length), fields: FIELDS })
+          idList.forEach((id) => p.append("id[]", id))
+          const d = await jget("/admin/products?" + p.toString())
+          const by: Record<string, any> = {}
+          for (const x of d.products || []) by[x.id] = x
+          prods = idList.map((id) => by[id]).filter(Boolean)
+        }
+        setRows(prods); setTotal(f.count || 0); setOffset(off); setChecked({})
+      } else {
+        const p = new URLSearchParams({ limit: String(PAGE), offset: String(off), fields: FIELDS })
+        if (q.trim()) p.set("q", q.trim())
+        if (catId) p.set("category_id", catId)
+        if (status) p.set("status", status)
+        const d = await jget("/admin/products?" + p.toString())
+        setRows(d.products || []); setTotal(d.count || 0); setOffset(off); setChecked({})
+      }
     } catch { setNote("Kunde inte hämta produkter.") }
     setBusy(false)
   }
@@ -243,6 +349,139 @@ function GridPage() {
       try { const r = await jsend(`/admin/products/${id}`, "POST", { categories: next.map((cid) => ({ id: cid })) }); if (r.product) ok++ } catch {}
     }
     setBusy(false); setNote(`${ok} produkt(er) kopplade till varugruppen.`); load(offset)
+  }
+
+  const bulkDef = BULK.find((x) => x.k === act)
+  const chooseAct = (k: string) => {
+    setAct(k); setVal2(""); setVal3("")
+    const d = BULK.find((x) => x.k === k)
+    setVal(d?.type === "bool" ? "true" : d?.type === "visning" ? "show" : d?.type === "cat" ? catId : "")
+  }
+  const valText = () => {
+    if (!bulkDef) return ""
+    if (bulkDef.type === "bool") return val === "true" ? "Ja" : "Nej"
+    if (bulkDef.type === "visning") return (VISNING.find((x) => x[0] === val) || ["", val])[1]
+    if (bulkDef.type === "cat") return (cats.find((c) => c.id === val) || { label: val }).label
+    if (bulkDef.type === "kampanj") return val.trim() === "" || numVal(val) <= 0 ? "ingen kampanj (avsluta)" : `${val} kr${val2 ? " från " + val2 : ""}${val3 ? " till " + val3 : ""}`
+    return val === "" ? "(tomt)" : val
+  }
+
+  /** Apply one bulk change to one product. Returns "" on success or an error text. */
+  const applyOne = async (id: string, k: string): Promise<string> => {
+    const cur = await jget(`/admin/products/${id}?fields=id,status,thumbnail,metadata,*variants`)
+    const prod = cur.product
+    if (!prod) return "hittades inte"
+    const md: any = { ...(prod.metadata || {}) }
+    const v0 = (prod.variants || [])[0]
+
+    // Price, campaign, purchase price and stock go through the same API as produkt-form
+    // (/admin/wiki-products) so the sale price list and the inventory level stay in sync.
+    if (k === "utpris" || k === "kampanj" || k === "inpris" || k === "antal") {
+      const w = await jget(`/admin/wiki-products?id=${encodeURIComponent(id)}`)
+      if (!w.product) return "kunde inte läsa produkten"
+      const body: any = formFromWiki(w.product)
+      const extra: any = {}
+      if (k === "utpris") body.utpris = String(numVal(val))
+      if (k === "inpris") body.inpris = String(numVal(val))
+      if (k === "antal") {
+        body.antal = String(Math.round(numVal(val)))
+        if ("stock" in md) extra.stock = Math.round(numVal(val))
+        if ("in_stock" in md) extra.in_stock = Math.round(numVal(val)) > 0 || truthy(md.oandligt) || truthy(md.bestallningsvara)
+      }
+      if (k === "kampanj") {
+        const kp = val.trim() === "" ? 0 : numVal(val)
+        if (kp > 0) {
+          body.kampanj = true; body.kampanjpris = String(kp); body.kampanjStart = val2.trim(); body.kampanjSlut = val3.trim()
+          const today = new Date().toISOString().slice(0, 10)
+          const aktiv = (!body.kampanjStart || body.kampanjStart <= today) && (!body.kampanjSlut || body.kampanjSlut >= today)
+          if ("wiki_kampanj_aktiv" in md) extra.wiki_kampanj_aktiv = aktiv
+        } else {
+          body.kampanj = false; body.kampanjpris = ""; body.kampanjStart = ""; body.kampanjSlut = ""
+          if ("wiki_kampanj_aktiv" in md) extra.wiki_kampanj_aktiv = false
+        }
+      }
+      const r = await fetch("/admin/wiki-products", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      const j: any = await r.json().catch(() => ({}))
+      if (!r.ok || !j.ok) return j.error || "HTTP " + r.status
+      // Keep every metadata key the form does not know about (wiki_id, wiki_images …),
+      // and keep the original status and thumbnail.
+      const after = await jget(`/admin/products/${id}?fields=id,metadata`)
+      const am: any = (after.product && after.product.metadata) || {}
+      const changed: any = {}
+      if (k === "utpris") { changed.ordinarie_pris = am.ordinarie_pris ?? "" }
+      if (k === "inpris") changed.inpris = am.inpris ?? body.inpris
+      if (k === "antal") changed.antal = body.antal
+      if (k === "kampanj") {
+        changed.kampanj = !!body.kampanj; changed.kampanjpris = body.kampanj ? body.kampanjpris : ""
+        changed.kampanj_start = body.kampanjStart; changed.kampanj_slut = body.kampanjSlut
+        changed.ordinarie_pris = body.kampanj ? String(body.utpris ?? "") : ""
+      }
+      const merged = { ...md, ...am, ...changed, ...extra }
+      const upd: any = { metadata: merged, status: prod.status }
+      if (prod.thumbnail) upd.thumbnail = prod.thumbnail
+      const r2 = await jsend(`/admin/products/${id}`, "POST", upd)
+      return r2.product ? "" : (r2.message || "metadata kunde inte återställas")
+    }
+
+    if (k === "unlink") {
+      const r = await jsend(`/admin/product-categories/${val}/products`, "POST", { remove: [id] })
+      return r.product_category ? "" : (r.message || "fel")
+    }
+
+    if (k === "ean") {
+      if (!v0) return "saknar variant"
+      const r = await jsend(`/admin/products/${id}/variants/${v0.id}`, "POST", { barcode: val.trim() || null })
+      if (!r.product) return r.message || "fel"
+      if ("ean" in md) { const r2 = await jsend(`/admin/products/${id}`, "POST", { metadata: { ...md, ean: val.trim() } }); if (!r2.product) return r2.message || "fel" }
+      return ""
+    }
+
+    const upd: any = {}
+    if (k === "lagerplats") md.lagerplats = val.trim()
+    if (k === "leverantor") md.leverantor = val.trim()
+    if (k === "tillverkare") {
+      md.tillverkare = val.trim()
+      if ("producer" in md) md.producer = val.trim()
+      if ("brand" in md) md.brand = val.trim()
+    }
+    if (k === "skrymmande") md.skrymmande = val === "true"
+    if (k === "bestallningsvara") md.bestallningsvara = val === "true"
+    if (k === "weight") { upd.weight = Math.round(numVal(val)); if ("weight" in md) md.weight = String(upd.weight) }
+    if (k === "visning") { md.visning = val; upd.status = visningStatus(val) }
+    upd.metadata = md
+    const r = await jsend(`/admin/products/${id}`, "POST", upd)
+    if (!r.product) return r.message || "fel"
+    if (k === "bestallningsvara" && v0) {
+      const rv = await jsend(`/admin/products/${id}/variants/${v0.id}`, "POST", { allow_backorder: val === "true" })
+      if (!rv.product) return rv.message || "variant kunde inte uppdateras"
+    }
+    return ""
+  }
+
+  const runBulk = async () => {
+    const sel = ids()
+    if (!sel.length) { setNote("Inga produkter markerade."); return }
+    if (!bulkDef) { setNote("Välj vad som ska ändras."); return }
+    const t = bulkDef.type
+    if ((t === "num") && !numOk(val)) { setNote(`Ange ett giltigt värde för ${bulkDef.t}.`); return }
+    if (bulkDef.k === "utpris" && numVal(val) <= 0) { setNote("Utpriset måste vara större än 0."); return }
+    if (t === "kampanj" && val.trim() !== "" && !numOk(val)) { setNote("Ange ett giltigt kampanjpris (eller lämna tomt för att avsluta kampanjen)."); return }
+    if (t === "kampanj" && [val2, val3].some((d) => d.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(d.trim()))) { setNote("Datum ska anges som ÅÅÅÅ-MM-DD."); return }
+    if (t === "cat" && !val) { setNote("Välj varugrupp att koppla bort från."); return }
+    if (!confirm(`Ändra ${sel.length} produkter?\n\n${bulkDef.t}: ${valText()}`)) return
+    setBusy(true)
+    let ok = 0
+    const errs: string[] = []
+    for (let i = 0; i < sel.length; i++) {
+      setNote(`Ändrar ${i + 1} av ${sel.length}…`)
+      const id = sel[i]
+      let e = ""
+      try { e = await applyOne(id, bulkDef.k) } catch (x: any) { e = String((x && x.message) || x) }
+      if (e) { const row = rows.find((r) => r.id === id); errs.push(`${row ? row.title : id}: ${e}`) } else ok++
+    }
+    setBusy(false)
+    await load(offset)
+    setNote(`${bulkDef.t}: ${ok} av ${sel.length} produkter ändrades.` + (errs.length ? ` Fel (${errs.length}): ` + errs.slice(0, 5).join("; ") + (errs.length > 5 ? " …" : "") : ""))
   }
 
   const taBortProdukt = async (r: any) => {
@@ -275,7 +514,10 @@ function GridPage() {
   if (!opts.length) return v.title || ""
   return opts.map((o: any) => { const ot = (r.options || []).find((x: any) => x.id === o.option_id); return (ot ? ot.title : "Val") + ": " + o.value }).join(", ")
   }
+  const catLabel: Record<string, string> = {}
+  for (const c of cats) catLabel[c.id] = c.label
   const catName = (row: any) => (row.categories || []).map((c: any) => c.name).join(", ") || "—"
+  const catTitle = (row: any) => (row.categories || []).map((c: any) => catLabel[c.id] || c.name).join("\n") || ""
   const GRID = "1px solid #d4d4d4"
   const th: any = { borderBottom: "1px solid #aaa", borderRight: "1px solid #bbb", padding: "4px 8px", fontWeight: 700, fontSize: "12px", lineHeight: 1.3, textAlign: "left", background: "#cccccc", color: "#222", position: "sticky", top: 0, zIndex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }
   const td: any = { borderBottom: GRID, borderRight: GRID, padding: "4px 8px", fontSize: "13px", lineHeight: 1.3, verticalAlign: "middle", overflow: "hidden" }
@@ -287,6 +529,7 @@ function GridPage() {
   const sep = <span style={{ color: "#bbb", margin: "0 3px" }}>|</span>
   const dot = (c: string) => <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: c, marginRight: "3px", verticalAlign: "middle", position: "relative", top: "-1px" }} />
   const sel = ids()
+  const catOptions = cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)
 
   return (
     <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: "6px", overflow: "hidden", display: "flex", minHeight: "600px", fontFamily: WF }}>
@@ -311,9 +554,20 @@ function GridPage() {
         <div style={{ border: "1px solid #ddd", background: "#fafafa", borderRadius: "4px", padding: "10px 14px", marginBottom: "12px" }}>
           <div style={{ fontWeight: 700, fontSize: "12px", marginBottom: "6px" }}>Urval</div>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
-            <label style={{ fontSize: "12px" }}>Varugrupp: <select style={{ ...inp, maxWidth: "260px" }} value={catId} onChange={(e) => setCatId(e.target.value)}>
+            <label style={{ fontSize: "12px" }}>Varugrupp: <select style={{ ...inp, maxWidth: "420px" }} value={catId} onChange={(e) => setCatId(e.target.value)}>
               <option value="">Alla varugrupper</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {catOptions}
+            </select></label>
+            <label style={{ fontSize: "12px" }}>Leverantör: <select style={{ ...inp, maxWidth: "200px" }} value={lev} onChange={(e) => setLev(e.target.value)}>
+              <option value="">Alla leverantörer</option>
+              {levList.map((l) => <option key={l.name} value={l.name}>{l.name} ({l.count})</option>)}
+              <option value="__none__">(Ingen leverantör angiven)</option>
+            </select></label>
+            <label style={{ fontSize: "12px" }}>Annat urval: <select style={inp} value={urval} onChange={(e) => setUrval(e.target.value)}>
+              <option value="">Inget</option>
+              <option value="kampanj">Kampanjprodukter</option>
+              <option value="dolda">Dolda produkter</option>
+              <option value="nya">Nya produkter</option>
             </select></label>
             <label style={{ fontSize: "12px" }}>Status: <select style={inp} value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">Alla</option><option value="published">Publicerade</option><option value="draft">Utkast</option>
@@ -329,11 +583,46 @@ function GridPage() {
           <button style={btn} onClick={() => bulkStatus("draft")} disabled={busy || !sel.length}>Avpublicera</button>
           <span style={{ color: "#bbb" }}>|</span>
           <span style={{ fontSize: "12px" }}>Koppla till:</span>
-          <select style={{ ...inp, maxWidth: "220px" }} value={connectCat} onChange={(e) => setConnectCat(e.target.value)}>
+          <select style={{ ...inp, maxWidth: "380px" }} value={connectCat} onChange={(e) => setConnectCat(e.target.value)}>
             <option value="">Välj varugrupp…</option>
-            {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {catOptions}
           </select>
           <button style={btn} onClick={bulkConnectCat} disabled={busy || !sel.length}>Koppla</button>
+        </div>
+
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center", marginBottom: "8px", padding: "6px 8px", border: "1px solid #e2e2e2", background: "#f7f7f7", borderRadius: "3px" }}>
+          <span style={{ fontSize: "12px", fontWeight: 700 }}>Med förkryssade produkter:</span>
+          <select style={inp} value={act} onChange={(e) => chooseAct(e.target.value)}>
+            <option value="">Välj åtgärd…</option>
+            {BULK.map((b) => <option key={b.k} value={b.k}>{b.t}</option>)}
+          </select>
+          {bulkDef && (bulkDef.type === "num" || bulkDef.type === "text") && (
+            <input style={{ ...inp, width: bulkDef.type === "num" ? "90px" : "200px" }} value={val} placeholder={bulkDef.type === "num" ? "Värde" : "Nytt värde"} onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runBulk() }} />
+          )}
+          {bulkDef && bulkDef.type === "kampanj" && (<>
+            <input style={{ ...inp, width: "90px" }} value={val} placeholder="Pris (tomt = avsluta)" onChange={(e) => setVal(e.target.value)} />
+            <input style={{ ...inp, width: "100px" }} value={val2} placeholder="Start ÅÅÅÅ-MM-DD" onChange={(e) => setVal2(e.target.value)} />
+            <input style={{ ...inp, width: "100px" }} value={val3} placeholder="Slut ÅÅÅÅ-MM-DD" onChange={(e) => setVal3(e.target.value)} />
+          </>)}
+          {bulkDef && bulkDef.type === "bool" && (
+            <select style={inp} value={val} onChange={(e) => setVal(e.target.value)}><option value="true">Ja</option><option value="false">Nej</option></select>
+          )}
+          {bulkDef && bulkDef.type === "visning" && (
+            <select style={inp} value={val} onChange={(e) => setVal(e.target.value)}>{VISNING.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select>
+          )}
+          {bulkDef && bulkDef.type === "supplier" && (
+            <select style={{ ...inp, maxWidth: "220px" }} value={val} onChange={(e) => setVal(e.target.value)}>
+              <option value="">(Ingen leverantör)</option>
+              {allSuppliers.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          )}
+          {bulkDef && bulkDef.type === "cat" && (
+            <select style={{ ...inp, maxWidth: "380px" }} value={val} onChange={(e) => setVal(e.target.value)}>
+              <option value="">Välj varugrupp…</option>
+              {catOptions}
+            </select>
+          )}
+          <button style={btn} onClick={runBulk} disabled={busy || !sel.length || !bulkDef}>Utför</button>
         </div>
         {note && <div style={{ fontSize: "12px", color: "#036", marginBottom: "8px" }}>{note}</div>}
 
@@ -364,8 +653,8 @@ function GridPage() {
                   </td>
                   <td style={{ ...tdOne, fontSize: "12px" }} title={(r.variants || [])[0]?.sku || ""}>{(r.variants || [])[0]?.sku || "—"}</td>
                   <td style={tdNum}>{lagerProdukt(r)}</td>
-                  <td style={{ ...tdOne, fontSize: "11px", padding: "4px 6px", textAlign: "center" }} title={r.status === "published" ? "Publicerad" : "Utkast"}>{r.status === "published" ? <span style={{ color: "#1d7f4e" }}>{dot("#2a7")}Publicerad</span> : <span style={{ color: "#8a5a00" }}>{dot("#e0a000")}Utkast</span>}</td>
-                  <td style={{ ...tdOne, fontSize: "12px", color: "#444" }} title={catName(r)}>{catName(r)}</td>
+                  <td style={{ ...tdOne, fontSize: "11px", padding: "4px 6px", textAlign: "center" }} title={r.status === "published" ? "Publicerad" : r.status === "proposed" ? "Dold i butiken" : "Utkast"}>{r.status === "published" ? <span style={{ color: "#1d7f4e" }}>{dot("#2a7")}Publicerad</span> : r.status === "proposed" ? <span style={{ color: "#555" }}>{dot("#999")}Dold</span> : <span style={{ color: "#8a5a00" }}>{dot("#e0a000")}Utkast</span>}</td>
+                  <td style={{ ...tdOne, fontSize: "12px", color: "#444" }} title={catTitle(r)}>{catName(r)}</td>
                   <td style={{ ...tdLast, whiteSpace: "nowrap", fontSize: "12px" }}>
                     <a href={`${ADMIN}/produkt-form?id=${r.id}`} style={lnk}>Redigera</a>{sep}
                     <a href={`${ADMIN}/valalternativ?id=${r.id}`} style={lnk}>Valalternativ</a>{sep}
@@ -392,7 +681,7 @@ function GridPage() {
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", fontSize: "12px" }}>
-          <span>{total > 0 ? `${offset + 1}–${Math.min(offset + PAGE, total)} av ${total}` : "0 produkter"}</span>
+          <span>{total > 0 ? `Just nu visas ${offset + 1}–${Math.min(offset + PAGE, total)} av totalt ${total}` : busy ? "Hämtar…" : "0 produkter"}</span>
           <span>
             <button style={btn} onClick={() => load(Math.max(0, offset - PAGE))} disabled={busy || offset === 0}>◄ Föregående</button>
             <button style={{ ...btn, marginLeft: "6px" }} onClick={() => load(offset + PAGE)} disabled={busy || offset + PAGE >= total}>Nästa ►</button>
