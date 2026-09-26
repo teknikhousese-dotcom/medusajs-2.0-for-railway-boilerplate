@@ -1,171 +1,177 @@
 import type { MetadataRoute } from "next"
 
-import { getCollectionsList } from "@lib/data/collections"
-import { listCategories } from "@lib/data/categories"
-import { getProductsList } from "@lib/data/products"
-import { listRegions } from "@lib/data/regions"
-import { getBaseURL } from "@lib/util/env"
+import { absUrl } from "@lib/seo"
+import { buildCategoryPathMap, productHref } from "@lib/util/teknik-url"
 
 /**
  * /sitemap.xml
  *
- * The template shipped a `next-sitemap.js` config for a package that is not in
- * package.json and never has been, so every store deployed from it advertised a
- * sitemap and served none. This is the replacement, using Next's own metadata
- * route, which needs no dependency.
+ * Lists the clean public URLs exactly as the site links them:
+ * /<dept>/<brand>/<model> for categories and /<category-path>/<handle> for
+ * products (the old teknikhouse.se structure, see lib/util/teknik-url.ts),
+ * always on https://www.teknikhouse.se. No /se prefix, no query strings.
  *
- * Never pinned at build time. A merchant who adds a product should not have to
- * redeploy the storefront for it to become crawlable, which is the same class
- * of staleness that made every /collections/* URL return 500 until a rebuild.
- *
- * In practice the build reports this route as server-rendered on demand rather
- * than revalidated on a timer, because the shared data layer touches request
- * APIs. That is fine and it is why the ceiling below exists: a sitemap is
- * fetched by crawlers, not by shoppers, so a handful of API calls per request
- * costs nothing. The declaration stays as the intent, and as the behaviour this
- * route would get if the data layer ever stopped being request-scoped.
+ * Talks to the Store API directly with a minimal field set, so the whole
+ * catalogue fits in one request per 200 products and no price calculation
+ * is triggered. One file holds up to 50,000 URLs, far above the catalogue.
  */
 export const revalidate = 3600
 
-/**
- * Products are fetched a page at a time and this is where it stops.
- *
- * 20 pages of 100 is 2,000 products, which is far beyond what a store deployed
- * from this template typically carries, and is a bound rather than a judgement
- * about what belongs in a sitemap. Hitting it logs, because a silently
- * truncated sitemap looks exactly like a complete one.
- */
-const MAX_PRODUCT_PAGES = 20
-const PRODUCTS_PER_PAGE = 100
+const BACKEND = (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "").replace(/\/+$/, "")
+const PUBKEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+const PAGE_SIZE = 200
+const MAX_PAGES = 200
 
 type Entry = MetadataRoute.Sitemap[number]
 
-const lastModified = (value?: string | null): Date | undefined => {
+type Cat = {
+  id: string
+  handle?: string | null
+  parent_category_id?: string | null
+  updated_at?: string | null
+  metadata?: Record<string, unknown> | null
+}
+
+type Prod = {
+  handle?: string | null
+  updated_at?: string | null
+  thumbnail?: string | null
+  metadata?: Record<string, unknown> | null
+  categories?: { handle?: string | null }[] | null
+}
+
+const INFO_PAGES = [
+  "om-oss",
+  "villkor",
+  "oppet-kop-retur",
+  "integritetspolicy",
+  "produktklassificering",
+  "phone-rep",
+  "salj-din-enhet",
+]
+
+const date = (value?: string | null): Date | undefined => {
   if (!value) return undefined
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? undefined : date
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? undefined : d
 }
 
-/**
- * The one country code the sitemap is written for.
- *
- * Every URL in this storefront is region-prefixed, so `/gb/products/x` and
- * `/de/products/x` are the same product at two addresses. Listing all of them
- * would submit the entire catalogue several times over as duplicate content,
- * with no hreflang to disambiguate it, since the regions differ by currency
- * rather than by language. One region is listed instead, chosen the same way
- * middleware.ts chooses: the configured default when a region covers it, and
- * otherwise the first country served.
- */
-const sitemapCountryCode = async (): Promise<string | null> => {
-  const regions = await listRegions()
-  const served = (regions ?? [])
-    .flatMap((region) => region.countries?.map((country) => country.iso_2) ?? [])
-    .filter((code): code is string => Boolean(code))
-
-  if (!served.length) return null
-
-  const configured = process.env.NEXT_PUBLIC_DEFAULT_REGION?.toLowerCase()
-  return configured && served.includes(configured) ? configured : served[0]
+const store = async <T,>(path: string): Promise<T> => {
+  const res = await fetch(`${BACKEND}${path}`, {
+    headers: { "x-publishable-api-key": PUBKEY },
+    next: { revalidate: 3600 },
+  })
+  if (!res.ok) throw new Error(`${path} answered ${res.status}`)
+  return res.json() as Promise<T>
 }
 
-const allProducts = async (countryCode: string) => {
-  const products = []
+const allCategories = async (): Promise<Cat[]> => {
+  const data = await store<{ product_categories: Cat[] }>(
+    "/store/product-categories?limit=1000&fields=id,handle,parent_category_id,updated_at,metadata"
+  )
+  return data.product_categories || []
+}
 
-  for (let page = 1; page <= MAX_PRODUCT_PAGES; page++) {
-    const { response, nextPage } = await getProductsList({
-      pageParam: page,
-      queryParams: { limit: PRODUCTS_PER_PAGE },
-      countryCode,
-    })
-
-    products.push(...response.products)
-
-    if (!nextPage) return products
-
-    if (page === MAX_PRODUCT_PAGES) {
-      console.warn(
-        `sitemap: stopped after ${products.length} products of ${response.count}. ` +
-          `Raise MAX_PRODUCT_PAGES in src/app/sitemap.ts to list the rest.`
-      )
-    }
+const allProducts = async (): Promise<Prod[]> => {
+  const out: Prod[] = []
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const data = await store<{ products: Prod[]; count: number }>(
+      `/store/products?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}` +
+        "&fields=handle,updated_at,thumbnail,metadata,categories.handle"
+    )
+    const batch = data.products || []
+    out.push(...batch)
+    if (batch.length < PAGE_SIZE || out.length >= (data.count || 0)) break
   }
+  return out
+}
 
-  return products
+const allPosts = async (): Promise<{ slug?: string; published_at?: string; updated_at?: string }[]> => {
+  const data = await store<{ posts?: { slug?: string; published_at?: string; updated_at?: string }[] }>(
+    "/store/blog"
+  )
+  return Array.isArray(data?.posts) ? data.posts : []
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = getBaseURL().replace(/\/+$/, "")
-
-  const countryCode = await sitemapCountryCode().catch(() => null)
-
-  // No reachable backend means no regions, and a region prefix is the one thing
-  // every URL here needs. An empty sitemap is a truthful answer; a 500 is not.
-  if (!countryCode) {
-    console.warn(
-      "sitemap: no regions available, so no URLs could be generated. Is the backend reachable?"
-    )
-    return []
-  }
-
-  const root = `${base}/${countryCode}`
+  const now = new Date()
 
   const entries: Entry[] = [
-    { url: root, changeFrequency: "daily", priority: 1 },
-    { url: `${root}/store`, changeFrequency: "daily", priority: 0.9 },
+    { url: absUrl("/"), lastModified: now, changeFrequency: "daily", priority: 1 },
+    { url: absUrl("/store"), changeFrequency: "daily", priority: 0.8 },
+    { url: absUrl("/kampanjer"), changeFrequency: "daily", priority: 0.7 },
+    { url: absUrl("/blogg"), changeFrequency: "weekly", priority: 0.6 },
+    { url: absUrl("/contact"), changeFrequency: "yearly", priority: 0.4 },
+    { url: absUrl("/retail-application"), changeFrequency: "yearly", priority: 0.3 },
+    ...INFO_PAGES.map(
+      (slug): Entry => ({
+        url: absUrl(`/info/${slug}`),
+        changeFrequency: "monthly",
+        priority: slug === "salj-din-enhet" || slug === "phone-rep" ? 0.6 : 0.4,
+      })
+    ),
   ]
 
-  /*
-   * Each source is fetched independently and its failure is contained.
-   *
-   * A store with no collections, or a categories endpoint having a bad minute,
-   * should cost the sitemap that section and nothing else. Promise.all would
-   * throw the whole route away over one of them.
-   */
-  const [products, categories, collections] = await Promise.all([
-    allProducts(countryCode).catch((error) => {
-      console.warn("sitemap: could not list products:", error)
+  if (!BACKEND) {
+    console.warn("sitemap: NEXT_PUBLIC_MEDUSA_BACKEND_URL is not set, only static pages listed.")
+    return entries
+  }
+
+  const [categories, products, posts] = await Promise.all([
+    allCategories().catch((e) => {
+      console.warn("sitemap: could not list categories:", e)
+      return [] as Cat[]
+    }),
+    allProducts().catch((e) => {
+      console.warn("sitemap: could not list products:", e)
+      return [] as Prod[]
+    }),
+    allPosts().catch((e) => {
+      console.warn("sitemap: could not list blog posts:", e)
       return []
     }),
-    listCategories().catch((error) => {
-      console.warn("sitemap: could not list categories:", error)
-      return []
-    }),
-    getCollectionsList(0, 100)
-      .then(({ collections }) => collections)
-      .catch((error) => {
-        console.warn("sitemap: could not list collections:", error)
-        return []
-      }),
   ])
 
-  for (const product of products) {
-    if (!product.handle) continue
-    entries.push({
-      url: `${root}/products/${product.handle}`,
-      lastModified: lastModified(product.updated_at),
+  const pathMap = buildCategoryPathMap(categories)
+  const seen = new Set(entries.map((e) => e.url))
+  const push = (e: Entry) => {
+    if (seen.has(e.url)) return
+    seen.add(e.url)
+    entries.push(e)
+  }
+
+  for (const c of categories) {
+    if (!c.handle) continue
+    if (String(c.metadata?.noindex ?? "") === "1") continue
+    const path = pathMap.get(c.handle)
+    if (!path) continue
+    push({
+      url: absUrl(`/${path}`),
+      lastModified: date(c.updated_at),
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: path.includes("/") ? 0.6 : 0.8,
     })
   }
 
-  for (const category of categories ?? []) {
-    if (!category.handle) continue
-    entries.push({
-      url: `${root}/categories/${category.handle}`,
-      lastModified: lastModified(category.updated_at),
+  for (const p of products) {
+    if (!p.handle) continue
+    const img = p.thumbnail && /^https?:\/\//.test(p.thumbnail) ? [p.thumbnail] : undefined
+    push({
+      url: absUrl(productHref(p, pathMap)),
+      lastModified: date(p.updated_at),
       changeFrequency: "weekly",
       priority: 0.7,
+      ...(img ? { images: img } : {}),
     })
   }
 
-  for (const collection of collections ?? []) {
-    if (!collection.handle) continue
-    entries.push({
-      url: `${root}/collections/${collection.handle}`,
-      lastModified: lastModified(collection.updated_at),
-      changeFrequency: "weekly",
-      priority: 0.7,
+  for (const post of posts) {
+    if (!post?.slug) continue
+    push({
+      url: absUrl(`/blogg/${post.slug}`),
+      lastModified: date(post.updated_at || post.published_at),
+      changeFrequency: "monthly",
+      priority: 0.5,
     })
   }
 

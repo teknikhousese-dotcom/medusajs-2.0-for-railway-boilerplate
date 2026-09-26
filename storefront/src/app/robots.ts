@@ -1,24 +1,15 @@
 import type { MetadataRoute } from "next"
 
-import { getBaseURL } from "@lib/util/env"
+import { SITE_URL } from "@lib/seo"
 
 /**
  * /robots.txt
  *
- * Pairs with src/app/sitemap.ts. Without the `sitemap:` line a crawler has no
- * way to discover the sitemap short of guessing the path.
- *
- * The disallow list is about crawl budget, not secrecy. None of these pages
- * expose anything (they are all per-visitor and behind a cookie or a session),
- * but they are infinite in the way that matters to a crawler: every search
- * query is a distinct URL, and cart and checkout pages are unique per visitor
- * and worthless in an index. The patterns carry a leading `/*` because every
- * route in this storefront is region-prefixed, so the paths are `/gb/cart`,
- * `/de/cart` and so on.
+ * Public URLs are clean (no /se prefix), so the private and infinite paths are
+ * listed without it. The /se/ tree itself only 308-redirects to the clean URL.
+ * Everything else, including product and category pages, stays crawlable.
  */
 export default function robots(): MetadataRoute.Robots {
-  const base = getBaseURL().replace(/\/+$/, "")
-
   return {
     rules: [
       {
@@ -26,15 +17,21 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           "/api/",
-          "/*/account",
-          "/*/cart",
-          "/*/checkout",
-          "/*/order/",
-          "/*/results/",
-          "/*/search",
+          "/cart",
+          "/checkout",
+          "/kassa-klar",
+          "/account",
+          "/order/",
+          "/results/",
+          "/search",
+          "/wishlist",
+          "/reset-password",
+          "/*?*cart_id=",
+          "/*?*sortBy=",
         ],
       },
     ],
-    sitemap: `${base}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   }
 }
