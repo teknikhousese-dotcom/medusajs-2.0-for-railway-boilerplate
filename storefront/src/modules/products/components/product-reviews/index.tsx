@@ -22,23 +22,8 @@ export default async function ProductReviews({ productId, productTitle }: { prod
   } catch (e) {}
   if (!data || !data.count) return null
 
-  const schema: any = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": productTitle || "",
-    "aggregateRating": { "@type": "AggregateRating", "ratingValue": data.average, "reviewCount": data.count },
-    "review": (data.reviews || []).slice(0, 20).map((r) => ({
-      "@type": "Review",
-      "reviewRating": { "@type": "Rating", "ratingValue": r.rating || 5, "bestRating": 5 },
-      "author": { "@type": "Person", "name": r.author || "Kund" },
-      "reviewBody": r.comment || "",
-      "datePublished": String(r.created_at || "").slice(0, 10),
-    })),
-  }
-
   return (
     <div className="content-container" style={{ paddingTop: "8px", paddingBottom: "24px" }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <div style={{ borderTop: "1px solid #eee", paddingTop: "20px" }}>
         <h2 style={{ fontSize: "18px", fontWeight: 700, margin: "0 0 4px" }}>Kundomdömen</h2>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
