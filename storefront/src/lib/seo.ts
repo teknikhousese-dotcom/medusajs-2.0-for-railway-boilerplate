@@ -142,7 +142,7 @@ export const siteGraph = () => ({
           availableLanguage: ["sv", "en"],
         },
       ],
-      sameAs: ["https://se.trustpilot.com/review/teknikhouse.se"],
+      sameAs: ["https://se.trustpilot.com/review/teknikhouse.se", "https://www.trustindex.io/reviews/teknikhouse.se"],
       hasMerchantReturnPolicy: RETURN_POLICY,
     },
     {
