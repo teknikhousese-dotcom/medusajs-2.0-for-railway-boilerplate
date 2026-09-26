@@ -286,6 +286,7 @@ function matchToken(q: QTok, d: Doc, prefix: boolean): number {
     if (q.g !== PROTECT) {
       for (const w of d.tt) {
         if (q.g === SCREEN && (GROUP_OF.get(w) === PROTECT || w.startsWith("skarmskydd") || w.startsWith("skydd"))) continue
+        if (GROUP_OF.has(w) && GROUP_OF.get(w) !== q.g) continue
         for (const s of GROUPS[q.g]) if (s.length >= 5 && w.startsWith(s)) return 60
       }
     }
@@ -293,6 +294,7 @@ function matchToken(q: QTok, d: Doc, prefix: boolean): number {
   if (!q.num && t.length >= 3) {
     for (const w of d.tt) {
       if (q.g === SCREEN && w.startsWith("skarmskydd")) continue
+      if (q.g >= 0 && GROUP_OF.has(w) && GROUP_OF.get(w) !== q.g) continue
       if (w.startsWith(t)) return 58
     }
   }
@@ -397,8 +399,9 @@ function searchCats(ix: Index, qt: QTok[], prefix: boolean): CatDoc[] {
   const out: CatDoc[] = []
   const seen = new Set<string>()
   for (const x of scored) {
-    if (seen.has(x.c.path)) continue
-    seen.add(x.c.path)
+    const key = x.c.name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
     out.push(x.c)
     if (out.length >= 6) break
   }
