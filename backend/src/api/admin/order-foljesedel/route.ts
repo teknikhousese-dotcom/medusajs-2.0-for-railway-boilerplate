@@ -18,6 +18,15 @@ const kr = (n: number | string | null | undefined) =>
     maximumFractionDigits: 2,
   }).format(Number(n || 0)) + " kr"
 
+/* Wiki-format: "790 kr", "79,20 kr", "4 792 kr", "-70 kr". */
+const wkr = (n: number) => {
+  const cents = Math.round(Math.abs(Number(n || 0)) * 100)
+  const neg = Number(n || 0) < 0 && cents > 0
+  const i = String(Math.floor(cents / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  const c = cents % 100
+  return (neg ? "-" : "") + i + (c ? "," + String(c).padStart(2, "0") : "") + " kr"
+}
+
 const esc = (s: unknown) =>
   String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -95,6 +104,8 @@ async function loadOrder(scope: any, id: string) {
       "shipping_address.country_code",
       "shipping_address.phone",
       "shipping_methods.name",
+      "shipping_methods.amount",
+      "shipping_methods.is_tax_inclusive",
       "payment_collections.payments.provider_id",
     ],
     filters: { id: [id] },
@@ -141,13 +152,26 @@ function renderFoljesedel(order: any): string {
   const inkom = wikiTime ? String(wikiTime).replace("T", " ").slice(0, 19) : formatDateTime(order.created_at)
 
   const grossFactor = Number(order.tax_total) > 0 ? 1 : 1.25
-  const itemRows = items
+  /* Som Wiki: varurader (inkl. kreditering CRED), sedan Fraktkostnad, Expeditionsavgift, Totalt, Varav moms. */
+  const r2 = (n: number) => Math.round(Number(n || 0) * 100) / 100
+  const vb = m.vat_breakdown || null
+  const lineVat = vb && Number(vb["25"] && vb["25"].base) === 0 && Number(vb["0"] && vb["0"].base) > 0 ? 0 : 25
+  const lineFactor = Number(order.tax_total) > 0 ? 1 : 1 + lineVat / 100
+  const itemsExcl = items.reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity || 0), 0)
+  const feeExcl = r2(Number(m.payment_fee_excl_vat) || 0)
+  const credExcl = r2(Number(m.wiki_credit_excl_vat) || 0)
+  const sm0 = (order.shipping_methods || [])[0]
+  const smAmt = Number(sm0 ? sm0.amount : (order.shipping_total ?? 0)) || 0
+  let shipExcl = r2(sm0 && sm0.is_tax_inclusive ? smAmt / (1 + lineVat / 100) : smAmt)
+  const wikiTe = m.wiki_total_excl_vat != null && m.wiki_total_excl_vat !== "" ? Number(m.wiki_total_excl_vat) : NaN
+  if (credExcl !== 0 && !isNaN(wikiTe) && Math.abs(itemsExcl + shipExcl + feeExcl - wikiTe) < 0.01 && shipExcl - credExcl > 0) shipExcl = r2(shipExcl - credExcl)
+  const itemRowsHtml = items
     .map((it: any) => {
       const artikelnr = esc(it.variant_sku || (it.metadata && it.metadata.sku) || it.product_id || "-")
       let vara = esc(it.title || it.product_title || "")
       if (it.subtitle) vara += ` <span class="muted">(${esc(it.subtitle)})</span>`
       const antal = `${Number(it.quantity || 0)} st`
-      const summa = kr((Number(it.unit_price) || 0) * Number(it.quantity || 0) * grossFactor)
+      const summa = wkr((Number(it.unit_price) || 0) * Number(it.quantity || 0) * grossFactor)
       return `
         <tr>
           <td class="col-sku">${artikelnr}</td>
@@ -157,9 +181,35 @@ function renderFoljesedel(order: any): string {
         </tr>`
     })
     .join("")
-
-  const totalt = kr((Number(order.total) || 0) * grossFactor)
-  const moms = kr(Number(order.tax_total) > 0 ? Number(order.tax_total) : (Number(order.total) || 0) * 0.25)
+  const credRow = credExcl !== 0 ? `
+        <tr>
+          <td class="col-sku">${esc(m.wiki_credit_code || "CRED")}</td>
+          <td class="col-vara">${esc(m.wiki_credit_text || "Kreditering")}</td>
+          <td class="col-antal">1 st</td>
+          <td class="col-summa">${wkr(credExcl * lineFactor)}</td>
+        </tr>` : ""
+  const itemRows = itemRowsHtml + credRow
+  const grand = Number(order.tax_total) > 0
+    ? Number(order.total) || 0
+    : r2(itemsExcl * 1.25 + (shipExcl + feeExcl + credExcl) * (1 + lineVat / 100))
+  const totalExcl = r2(itemsExcl + shipExcl + feeExcl + credExcl)
+  const totalt = wkr(grand)
+  const moms = wkr(Number(order.tax_total) > 0 ? Number(order.tax_total) : grand - totalExcl)
+  const shipRow = shipExcl > 0 ? `
+          <tr>
+            <td class="tot-label">Fraktkostnad</td>
+            <td class="tot-value">${wkr(shipExcl * lineFactor)}</td>
+          </tr>` : ""
+  const feeRow = feeExcl !== 0 ? `
+          <tr>
+            <td class="tot-label">${esc(m.payment_fee_name || "Expeditionsavgift")}</td>
+            <td class="tot-value">${wkr(feeExcl * lineFactor)}</td>
+          </tr>` : ""
+  const momsRow = lineVat > 0 ? `
+          <tr>
+            <td class="tot-label">Varav moms (25%)</td>
+            <td class="tot-value">${moms}</td>
+          </tr>` : ""
 
   return `<!DOCTYPE html>
 <html lang="sv">
@@ -316,14 +366,11 @@ function renderFoljesedel(order: any): string {
       </table>
       <div class="totals">
         <table>
-          <tr>
-            <td class="tot-label">Varav moms (25%)</td>
-            <td class="tot-value">${moms}</td>
-          </tr>
+${shipRow}${feeRow}
           <tr class="grand">
             <td class="tot-label">Totalt</td>
             <td class="tot-value">${totalt}</td>
-          </tr>
+          </tr>${momsRow}
         </table>
       </div>
       <div class="legal">
