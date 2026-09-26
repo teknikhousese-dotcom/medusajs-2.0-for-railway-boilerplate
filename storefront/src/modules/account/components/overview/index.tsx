@@ -94,7 +94,12 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                                 Totalt belopp
                               </span>
                               <span data-testid="order-created-date">
-                                {new Date(order.created_at).toDateString()}
+                                {new Date(order.created_at).toLocaleDateString("sv-SE", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        timeZone: "Europe/Stockholm",
+                      })}
                               </span>
                               <span
                                 data-testid="order-id"
@@ -114,7 +119,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                               data-testid="open-order-button"
                             >
                               <span className="sr-only">
-                                Go to order #{order.display_id}
+                                Gå till order #{order.display_id}
                               </span>
                               <ChevronDown className="-rotate-90" />
                             </button>
