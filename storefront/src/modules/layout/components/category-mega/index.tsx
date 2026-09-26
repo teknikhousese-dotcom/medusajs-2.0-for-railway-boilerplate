@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
@@ -32,11 +32,11 @@ function DeptIcon({ name }: { name: string }) {
   else if (n.includes("reparation")) path = <><path d="M14 6.5a3.5 3.5 0 00-4.6 4.6L4 16.5 7 19l5.4-5.4A3.5 3.5 0 0017 9l-2 2-2-2z" {...p} /></>
   else if (n.includes("outlet") || n.includes("fynd")) path = <><path d="M4 4h7l9 9-7 7-9-9z" {...p} /><circle cx="8.5" cy="8.5" r="1.2" {...p} /></>
   else if (n.includes("hem") || n.includes("fritid")) path = <><path d="M4 11l8-7 8 7" {...p} /><path d="M6 10v9h12v-9" {...p} /></>
-  return <svg viewBox="0 0 24 24" width="26" height="26">{path}</svg>
+  return <svg className="shrink-0" viewBox="0 0 24 24" width="24" height="24">{path}</svg>
 }
 
 /**
- * teknikhouse category navigation — icon department bar (Teknikdelar-style).
+ * teknikhouse category navigation: icon department bar, one row (scrolls sideways if it does not fit).
  * Each department shows an outline icon above its label; hovering opens a
  * full-width mega-panel with its brands (columns) and each brand's models.
  */
@@ -50,6 +50,29 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
   useEffect(() => {
     setOpenId(null)
   }, [pathname])
+
+  /* One row of departments. If it does not fit, it scrolls sideways and arrow buttons appear. */
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [edges, setEdges] = useState({ l: false, r: false })
+  const updateEdges = () => {
+    const el = scrollRef.current
+    if (!el) return
+    const l = el.scrollLeft > 2
+    const r = el.scrollLeft + el.clientWidth < el.scrollWidth - 2
+    setEdges((prev) => (prev.l === l && prev.r === r ? prev : { l, r }))
+  }
+  useEffect(() => {
+    updateEdges()
+    window.addEventListener("resize", updateEdges)
+    return () => window.removeEventListener("resize", updateEdges)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories])
+  const nudge = (dir: number) => {
+    const el = scrollRef.current
+    if (!el) return
+    setOpenId(null)
+    el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.7), behavior: "smooth" })
+  }
 
   const byParent = new Map<string | null, Cat[]>()
   for (const c of categories) {
@@ -72,7 +95,28 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
       onMouseLeave={() => setOpenId(null)}
     >
       <div className="content-container relative">
-        <ul className="flex flex-wrap items-stretch justify-center gap-x-1 gap-y-1">
+        {edges.l && (
+          <button
+            type="button"
+            aria-label="Visa fler kategorier"
+            onClick={() => nudge(-1)}
+            className="absolute left-0 top-0 bottom-0 z-10 w-12 flex items-center justify-start pl-2 bg-gradient-to-r from-white via-white to-transparent text-ui-fg-base hover:text-[#F50000]"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+        )}
+        {edges.r && (
+          <button
+            type="button"
+            aria-label="Visa fler kategorier"
+            onClick={() => nudge(1)}
+            className="absolute right-0 top-0 bottom-0 z-10 w-12 flex items-center justify-end pr-2 bg-gradient-to-l from-white via-white to-transparent text-ui-fg-base hover:text-[#F50000]"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+        )}
+        <div ref={scrollRef} onScroll={updateEdges} className="overflow-x-auto no-scrollbar">
+        <ul className="flex flex-nowrap items-stretch w-max mx-auto">
           {departments.map((dep) => {
             const brands = childrenOf(dep.id)
             const isOpen = openId === dep.id
@@ -86,14 +130,14 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                 <Link
                   href={depHref}
                   className={
-                    "group flex flex-col items-center justify-center gap-1 min-w-[92px] px-3 py-2.5 border-b-2 transition-colors " +
+                    "group flex flex-col items-center justify-start gap-1 min-w-[64px] max-w-[100px] px-1 pt-2 pb-1.5 border-b-2 transition-colors " +
                     (isOpen
                       ? "border-[#F50000] text-[#F50000]"
                       : "border-transparent text-ui-fg-subtle hover:text-[#F50000]")
                   }
                 >
                   <DeptIcon name={niceCategoryName(dep.name, dep.handle)} />
-                  <span className="text-[12px] font-medium leading-tight text-center whitespace-nowrap">
+                  <span className="text-[11.5px] font-medium leading-[1.2] text-center">
                     {dep.name}
                   </span>
                 </Link>
@@ -140,13 +184,14 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
           <li className="flex">
             <Link
               href="/kampanjer"
-              className="group flex flex-col items-center justify-center gap-1 min-w-[92px] px-3 py-2.5 border-b-2 border-transparent text-[#F50000] hover:text-[#D10000]"
+              className="group flex flex-col items-center justify-start gap-1 min-w-[64px] max-w-[100px] px-1 pt-2 pb-1.5 border-b-2 border-transparent text-[#F50000] hover:text-[#D10000]"
             >
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4v7.2L12 21l8.6-5.4z" /><path d="M12 8v5M9.5 10.5h5" /></svg>
-              <span className="text-[12px] font-semibold leading-tight text-center whitespace-nowrap">Kampanjer</span>
+              <svg className="shrink-0" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4v7.2L12 21l8.6-5.4z" /><path d="M12 8v5M9.5 10.5h5" /></svg>
+              <span className="text-[11.5px] font-semibold leading-[1.2] text-center">Kampanjer</span>
             </Link>
           </li>
         </ul>
+        </div>
       </div>
     </nav>
   )
