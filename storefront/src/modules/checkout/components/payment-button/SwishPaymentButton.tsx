@@ -127,7 +127,7 @@ const SwishPaymentButton = ({
           </>
         ) : (
           <Text className="txt-medium text-ui-fg-subtle text-center">
-            Öppnar Swish-appen… godkänn betalningen i appen.
+            Vi öppnar Swish-appen. Godkänn betalningen där.
           </Text>
         )}
         <div className="flex items-center gap-2 text-ui-fg-subtle">
@@ -146,6 +146,7 @@ const SwishPaymentButton = ({
         isLoading={submitting}
         onClick={handlePayment}
         size="large"
+        className="w-full small:w-auto"
         data-testid={dataTestId || "submit-order-button"}
       >
         Betala med Swish
