@@ -21,8 +21,8 @@ type ProductTemplateProps = {
 const USP = [
   { t: "Snabb leverans", s: "Skickas idag · 1-3 dagar", p: "M3 13h6l2-8 3 16 2-6h5" },
   { t: "Öppet köp 30 dagar", s: "Enkelt att returnera", p: "M4 8a8 8 0 0116 0M20 4v4h-4|M20 16a8 8 0 01-16 0M4 20v-4h4" },
-  { t: "Garanti ingår", s: "Trygg e-handel", p: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z|M9 12l2 2 4-4" },
-  { t: "Trygg betalning", s: "Swish · Klarna · Kort", p: "M3 6h18v12H3z|M3 10h18" },
+  { t: "Garanti ingår", s: "Handla tryggt och säkert hos oss", p: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z|M9 12l2 2 4-4" },
+  { t: "Säker betalning", s: "Swish · Klarna · Kort", p: "M3 6h18v12H3z|M3 10h18" },
 ]
 
 const ProductTemplate: React.FC<ProductTemplateProps> = ({
