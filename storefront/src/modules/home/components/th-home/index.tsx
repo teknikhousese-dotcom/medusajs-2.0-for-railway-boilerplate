@@ -4,6 +4,7 @@ import RecentlyViewed from "./recently-viewed"
 import DeviceFinder from "./device-finder"
 import TrustindexReviews from "./trustindex-reviews"
 import HeroDeviceVisual from "./hero-device-visual"
+import { getTrustindex, formatRating, formatCount, TRUSTINDEX_URL } from "./trustindex-data"
 
 // Teknikhouse 2027 homepage: light, warm Swedish-retail styling
 // (modelled on power.se / teknikdelar.se / 24.se). Scoped under .th.
@@ -232,8 +233,11 @@ const FAQ_LD = {
   ],
 }
 
-export default function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
+export default async function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
   const has = (n: number) => region && products && products.length > n
+  const ti = await getTrustindex()
+  const tiRating = formatRating(ti.rating)
+  const tiCount = formatCount(ti.count)
   return (
     <div className="th">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -241,7 +245,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* HERO */}
       <div className="hero"><div className="wrap">
         <div>
-          <span className="badge safe"><svg viewBox="0 0 24 24" aria-hidden="true" style={{ fill: "#f5b301", stroke: "#f5b301" }}><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z" /></svg>4,6 av 5 från 2 100+ omdömen</span>
+          <a className="badge safe" href={TRUSTINDEX_URL} target="_blank" rel="noopener" title="Läs alla omdömen om Teknikhouse hos Trustindex"><svg viewBox="0 0 24 24" aria-hidden="true" style={{ fill: "#f5b301", stroke: "#f5b301" }}><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z" /></svg>{tiRating} av 5 från {tiCount} omdömen</a>
           <DeviceFinder regionId={region?.id} />
           <div className="herochips"><span>Fri frakt över 999 kr</span><span>Premiumtestade delar med garanti</span><span>Snabb leverans</span></div>
         </div>
@@ -359,8 +363,8 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
 
       {/* KUNDOMDÖMEN: riktiga omdömen från Trustindex, egen karusell */}
 <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-<div className="shead"><div className="stext"><h2>Vad våra kunder säger</h2><span className="ssub tirate"><span className="s" aria-hidden="true">★</span><b>4,6 av 5</b> hos Trustindex, 2 100+ omdömen</span></div><a href="https://www.trustindex.io/reviews/teknikhouse.se" target="_blank" rel="noopener noreferrer">Läs fler omdömen →</a></div>
-<TrustindexReviews />
+<div className="shead"><div className="stext"><h2>Vad våra kunder säger</h2><span className="ssub tirate"><span className="s" aria-hidden="true">★</span><b>{tiRating} av 5</b> hos Trustindex, {tiCount} omdömen</span></div><a href={TRUSTINDEX_URL} target="_blank" rel="noopener noreferrer">Läs fler omdömen →</a></div>
+<TrustindexReviews reviews={ti.reviews} />
 <p className="tinote">Ett urval av omdömen från Trustindex, som samlar omdömen från bland annat Google och Trustpilot.</p>
 </div></section>
 
