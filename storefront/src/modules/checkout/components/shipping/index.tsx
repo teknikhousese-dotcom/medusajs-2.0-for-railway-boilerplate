@@ -30,24 +30,27 @@ const kindOf = (name?: string): Kind => {
   return "other"
 }
 
-// Leveranstid — teknikhouse.se exact numbers (no promised date).
+/* Leveranstid: teknikhouse.se numbers (no promised date). */
 const timeLabel: Record<Kind, string> = {
-  standard: "2–3 vardagar",
-  ombud: "1–3 vardagar",
-  express: "1–2 vardagar",
-  hem: "1–3 vardagar",
-  butik: "Hämta i butik",
-  other: "1–3 vardagar",
+  standard: "2-3 vardagar",
+  ombud: "1-3 vardagar",
+  express: "1-2 vardagar",
+  hem: "1-3 vardagar",
+  butik: "Sveavägen 139, Stockholm",
+  other: "1-3 vardagar",
 }
 
 const noteLabel: Record<Kind, string> = {
-  standard: "Fraktfritt vid köp över 999 kr",
-  ombud: "Levereras till närmaste PostNord-ombud",
+  standard: "Fri frakt när du handlar för över 999 kr",
+  ombud: "Hämtas hos ditt närmaste PostNord-ombud",
   express: "Prioriterad leverans med PostNord",
-  hem: "Levereras hem till dörren",
-  butik: "Sveavägen, Stockholm · Mån–Fre 11:00–16:00",
+  hem: "PostNord kör hem paketet till din dörr",
+  butik: "Mån till fre 10 till 18, lör 11 till 17",
   other: "Leverans med PostNord",
 }
+
+const titleOf = (k: Kind, name?: string) =>
+  k === "butik" ? "Hämta i butik" : name || ""
 
 const Icon = ({ k, active }: { k: Kind; active: boolean }) => {
   const color = active ? "#F50000" : "#6B7280"
@@ -171,13 +174,15 @@ const Shipping: React.FC<ShippingProps> = ({
     const free = option.amount === 0
     return (
       <span
-        className={clx("text-base font-semibold", {
+        className={clx("text-[15px] small:text-base font-semibold whitespace-nowrap", {
           "text-[#1a9d55]": free,
           "text-[#14161C]": !free,
         })}
       >
         {option.amount == null
           ? "29 kr"
+          : free && kindOf(option.name) === "butik"
+          ? "Gratis"
           : free
           ? "Fri frakt"
           : convertToLocale({
@@ -190,11 +195,11 @@ const Shipping: React.FC<ShippingProps> = ({
 
   return (
     <div className="bg-white">
-      <div className="flex flex-row items-center justify-between mb-6">
+      <div className="flex flex-row items-center justify-between gap-x-4 mb-5 small:mb-6">
         <Heading
           level="h2"
           className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
+            "flex flex-row items-center gap-x-2 text-[22px] small:text-[28px] font-semibold leading-tight text-[#14161C]",
             {
               "opacity-50 pointer-events-none select-none":
                 !isOpen && cart.shipping_methods?.length === 0,
@@ -233,37 +238,40 @@ const Shipping: React.FC<ShippingProps> = ({
                     value={option.id}
                     data-testid="delivery-option-radio"
                     className={clx(
-                      "flex items-center justify-between cursor-pointer py-4 px-5 border rounded-2xl mb-3 transition-all duration-150",
+                      "grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-3 small:gap-x-4 cursor-pointer py-3.5 px-3.5 small:py-4 small:px-5 border rounded-2xl mb-3 transition-all duration-150",
                       isSelected
                         ? "border-[#F50000] bg-[#FFF5F5] ring-1 ring-[#F50000] shadow-[0_4px_14px_-6px_rgba(245,0,0,0.35)]"
                         : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
                     )}
                   >
-                    <div className="flex items-center gap-x-4 min-w-0">
-                      <Radio checked={isSelected} />
-                      <span className="shrink-0">
-                        <Icon k={k} active={isSelected} />
-                      </span>
-                      <div className="flex flex-col min-w-0">
-                        <span className="flex items-center gap-x-2">
-                          <span className="text-base font-medium text-[#14161C]">
-                            {option.name}
+                    <Radio checked={isSelected} />
+                    <span
+                      className={clx(
+                        "flex items-center justify-center w-10 h-10 rounded-xl shrink-0",
+                        isSelected ? "bg-white" : "bg-gray-50"
+                      )}
+                    >
+                      <Icon k={k} active={isSelected} />
+                    </span>
+                    <span className="flex flex-col min-w-0">
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-[15px] small:text-base font-semibold leading-snug text-[#14161C]">
+                          {titleOf(k, option.name)}
+                        </span>
+                        {recommended && (
+                          <span className="text-[11px] font-semibold text-[#F50000] bg-[#FFE8E8] rounded px-1.5 py-0.5 leading-none">
+                            Populärt
                           </span>
-                          {recommended && (
-                            <span className="text-[11px] font-semibold text-[#F50000] bg-[#FFE8E8] rounded px-1.5 py-0.5 leading-none">
-                              Populärt
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-[13px] font-semibold text-[#14161C] mt-0.5">
-                          {timeLabel[k]}
-                        </span>
-                        <span className="text-[12px] text-gray-500 leading-snug truncate">
-                          {noteLabel[k]}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="justify-self-end flex items-center gap-x-2 shrink-0 ml-3">
+                        )}
+                      </span>
+                      <span className="text-[13px] font-medium leading-snug text-[#14161C] mt-0.5">
+                        {timeLabel[k]}
+                      </span>
+                      <span className="text-[12px] small:text-[13px] leading-snug text-gray-500 mt-0.5">
+                        {noteLabel[k]}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-x-2 self-center">
                       {isSelected && isLoading && (
                         <Spinner className="animate-spin text-ui-fg-muted" />
                       )}
@@ -282,7 +290,7 @@ const Shipping: React.FC<ShippingProps> = ({
 
           <Button
             size="large"
-            className="mt-2"
+            className="mt-2 w-full small:w-auto"
             onClick={handleSubmit}
             isLoading={isLoading}
             disabled={!cart.shipping_methods?.[0]}
@@ -295,16 +303,22 @@ const Shipping: React.FC<ShippingProps> = ({
         <div>
           <div className="text-small-regular">
             {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
-              <div className="flex flex-col w-1/3">
+              <div className="flex flex-col">
                 <Text className="txt-medium-plus text-ui-fg-base mb-1">
                   Leveranssätt
                 </Text>
                 <Text className="txt-medium text-ui-fg-subtle">
-                  {selectedShippingMethod?.name}{" "}
+                  {titleOf(
+                    kindOf(selectedShippingMethod?.name),
+                    selectedShippingMethod?.name
+                  )}
+                  {", "}
                   {(selectedShippingMethod?.amount == null || Number.isNaN(Number(selectedShippingMethod?.amount)))
                     ? "29 kr"
                     : Number(selectedShippingMethod?.amount) === 0
-                    ? "Fri frakt"
+                    ? kindOf(selectedShippingMethod?.name) === "butik"
+                      ? "gratis"
+                      : "fri frakt"
                     : convertToLocale({
                         amount: selectedShippingMethod?.amount!,
                         currency_code: cart?.currency_code,
