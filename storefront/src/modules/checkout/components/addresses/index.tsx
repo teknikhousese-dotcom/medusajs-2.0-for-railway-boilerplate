@@ -4,13 +4,14 @@ import { useActionState, useState } from "react"
 
 import { CheckCircleSolid } from "@medusajs/icons"
 import { Heading, Text, useToggleState } from "@medusajs/ui"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import Divider from "@modules/common/components/divider"
 
 import { setAddresses, updateCart } from "@lib/data/cart"
 import compareAddresses from "@lib/util/compare-addresses"
 import { HttpTypes } from "@medusajs/types"
+import { checkoutHref, readSteg } from "@lib/util/checkout-step"
 import BillingAddress from "../billing_address"
 import ErrorMessage from "../error-message"
 import ShippingAddress from "../shipping-address"
@@ -25,9 +26,8 @@ const Addresses = ({
 }) => {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "address"
+  const isOpen = readSteg(searchParams) === "adress"
   const filled = !!(cart?.shipping_address?.address_1 && cart?.email)
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
@@ -37,7 +37,7 @@ const Addresses = ({
   )
 
   const handleEdit = () => {
-    router.push(pathname + "?step=address")
+    router.push(checkoutHref("adress"))
   }
 
   const meta = ((cart?.metadata as Record<string, any> | null) || {}) as Record<
