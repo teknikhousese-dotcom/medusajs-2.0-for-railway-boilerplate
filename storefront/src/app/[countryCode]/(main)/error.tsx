@@ -20,8 +20,8 @@ export default function Error({
     <div className="flex flex-col gap-4 items-center justify-center min-h-[calc(100vh-64px)]">
       <h1 className="text-2xl-semi text-ui-fg-base">Något gick fel</h1>
       <p className="text-small-regular text-ui-fg-base text-center max-w-md">
-        We could not load this page. Please try again, and get in touch if it
-        keeps happening.
+        Sidan kunde inte laddas. Försök igen, och hör av dig till oss om det
+        fortsätter att strula.
       </p>
       {error.digest && (
         <p className="text-small-regular text-ui-fg-muted">
