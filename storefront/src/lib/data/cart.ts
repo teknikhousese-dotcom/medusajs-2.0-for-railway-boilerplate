@@ -324,7 +324,7 @@ export async function submitPromotionForm(
   const code = formData.get("code")?.toString().trim()
 
   if (!code) {
-    return "Enter a promotion code."
+    return "Ange en rabattkod."
   }
 
   try {
@@ -337,12 +337,12 @@ export async function submitPromotionForm(
       .filter((promotionCode): promotionCode is string => Boolean(promotionCode))
 
     if (existing.includes(code)) {
-      return "That promotion code is already applied."
+      return "Den rabattkoden används redan."
     }
 
     await applyPromotions([...existing, code])
   } catch (e: any) {
-    return e.message
+    return "Rabattkoden kunde inte läggas till. Kontrollera koden och försök igen."
   }
 }
 
