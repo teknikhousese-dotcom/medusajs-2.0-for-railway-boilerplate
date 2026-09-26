@@ -22,7 +22,22 @@ const sek = (n: number) =>
   new Intl.NumberFormat("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0)) + " kr"
 const dt = (s?: string) => {
   if (!s) return ""
-  try { return new Date(s).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(",", "") } catch { return s }
+  try { return new Date(s).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(",", "") } catch { return s }
+}
+/* Tidpunkt vid beställning: Wiki-tiden (metadata.wiki_order_time / order_time) är redan svensk lokal tid och visas som den är.
+   Annars created_at formaterad i Europe/Stockholm. */
+const orderTime = (o: any): string => {
+  const w = o?.metadata?.wiki_order_time || o?.metadata?.order_time
+  if (w) {
+    const s = String(w).replace("T", " ").trim()
+    const mm = s.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2})(:\d{2})?/)
+    return mm ? mm[1] + (mm[2] || ":00") : s
+  }
+  return dt(o?.created_at)
+}
+const viaText = (v?: string): string => {
+  const map: Record<string, string> = { Mobil: "Mobiltelefon", Dator: "Dator/surfplatta" }
+  return (v && map[v]) || v || "—"
 }
 const payText = (st?: string): string => {
   switch (st) {
@@ -187,6 +202,12 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   const opna = async () => {
     const t = q.trim(); if (!t) return
     let o = rows.find((x) => String(x.metadata?.wiki_order_id) === t || String(x.display_id) === t)
+    if (!o && /^\d+$/.test(t)) {
+      try {
+        const w = await fetch(`/admin/order-fliks?wiki=${encodeURIComponent(t)}`, { credentials: "include" }).then((r) => r.json())
+        if (w && w.id) { onOpen(w.id); return }
+      } catch { /* ignore */ }
+    }
     if (!o) {
       try {
         const r = await fetch(`/admin/orders?limit=5&fields=id,display_id,+metadata&q=${encodeURIComponent(t)}`, { credentials: "include" })
@@ -256,7 +277,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
           {pageRows.map((o) => {
             const nm = o.shipping_address ? `${o.shipping_address.first_name || ""} ${o.shipping_address.last_name || ""}`.trim() : ""
             const wid = o.metadata?.wiki_order_id || o.display_id
-            const when = o.metadata?.order_time || o.created_at
+            const when = orderTime(o)
             const paid = o.payment_status === "captured" || o.payment_status === "paid"
             const fulfilled = ["fulfilled", "shipped", "delivered", "partially_fulfilled", "partially_shipped", "partially_delivered"].includes(o.fulfillment_status)
             // Wiki: rött ID = ej slutfört köp (ej betalt); blått ID = måste behandlas (betalt, ej hanterat); annars svart
@@ -279,7 +300,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
                 <td style={{ ...lcTd, textAlign: "center", background: "transparent" }}><input type="checkbox" checked={!!sel[o.id]} onChange={(e) => setSel({ ...sel, [o.id]: e.target.checked })} /></td>
                 <td style={{ ...lcTd, background: "transparent" }}><a onClick={() => onOpen(o.id)} style={{ color: idColor, fontWeight: unread ? 700 : 400, cursor: "pointer" }}>{wid}</a></td>
                 <td style={{ ...lcTd, background: "transparent" }}>{payBadge(paymentOf(o))}<a onClick={() => onOpen(o.id)} style={{ color: "#06c", fontWeight: unread ? 700 : 400, cursor: "pointer" }}>{nm || o.email}</a></td>
-                <td style={{ ...lcTd, color: "#444", whiteSpace: "nowrap", background: "transparent", fontWeight: unread ? 700 : 400 }}>{dt(when)}</td>
+                <td style={{ ...lcTd, color: "#444", whiteSpace: "nowrap", background: "transparent", fontWeight: unread ? 700 : 400 }}>{when}</td>
                 <td style={{ ...lcTd, textAlign: "center", background: "transparent" }} title={countryName(o.shipping_address?.country_code)}>{flagOf(o)}</td>
                 <td style={{ ...lcTd, textAlign: "center", background: "transparent" }}>
                   <span title="Egen orderstatus (klicka)" onClick={cycleDot} style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "50%", cursor: "pointer", background: dotColor[dotVal], border: "1px solid " + (dotVal ? "#0005" : "#bbb") }} />
@@ -389,10 +410,19 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   const sa = o.shipping_address || {}
   const sm = (o.shipping_methods || [])[0]
   const wid = m.wiki_order_id || o.display_id
-  const when = m.order_time || o.created_at
+  const when = orderTime(o)
   const paid = o.payment_status === "captured" || o.payment_status === "paid"
   const canceled = o.payment_status === "canceled" || flik === "makulerade"
   const betalsatt = paymentOf(o)
+  const isKlarna = /klarna/i.test(betalsatt || "")
+  const paidLike = paid || m.kustom_captured === true || (!!m.wiki_order_id && m.wiki_activated === true)
+  const klarnaPending = isKlarna && !paidLike && m.kustom_cancelled !== true && (m.wiki_activated === false || !!(klarna && klarna.kustom && !klarna.captured && !klarna.cancelled))
+  const statusText = paidLike ? "Betald – transaktionen är genomförd" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : (m.kustom_cancelled === true ? "Transaktionen har avbrutits" : payText(o.payment_status)))
+  const headText = paidLike ? "Betald" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : (m.kustom_cancelled === true ? "Avbruten" : payText(o.payment_status)))
+  const statusColor = paidLike ? "#161" : (klarnaPending ? "#b36b00" : "#a00")
+  const shipName = (sm && sm.name) || m.wiki_shipping_method || "Standard"
+  const shipDesc = m.wiki_shipping_desc || (m.wiki_order_id ? "" : (shipName === "Standard" ? "2-3 vardagar. Fraktfritt vid köp över 999 kr." : ""))
+  const klarnaCanAct = !!(klarna && klarna.kustom && (!klarna.wiki || klarna.reachable))
 
   const itemsExcl = (o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity), 0)
   const shipExcl = Number(sm ? sm.amount : (o.shipping_total ?? 0))
@@ -405,10 +435,22 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
     setSaved("Sparar…")
     try {
       const r = await fetch(`/admin/orders/${id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metadata: { internal_comment: note, orderflik: flik, counts_in_stats: stat } }) })
+        body: JSON.stringify({ metadata: Object.assign({}, o.metadata || {}, { internal_comment: note, orderflik: flik, counts_in_stats: stat }) }) })
       setSaved(r.ok ? "Sparat ✓" : "Kunde inte spara")
     } catch { setSaved("Kunde inte spara") }
     setTimeout(() => setSaved(""), 3000)
+  }
+
+  /* Makulera order: flyttar bara ordern till fliken Makulerade (metadata.orderflik). Skickar inga mejl och rör inte betalningen. */
+  const makulera = async () => {
+    if (!confirm("Vill du makulera order " + wid + "?\n\nOrdern flyttas till fliken Makulerade. Inga e-postmeddelanden skickas och betalningen påverkas inte.")) return
+    setSaved("Makulerar…")
+    try {
+      const meta = Object.assign({}, o.metadata || {}, { orderflik: "makulerade" })
+      const r = await fetch(`/admin/orders/${id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: meta }) })
+      if (r.ok) { setFlik("makulerade"); setO({ ...o, metadata: meta }); setSaved("Ordern är makulerad ✓") } else { setSaved("Kunde inte makulera") }
+    } catch { setSaved("Kunde inte makulera") }
+    setTimeout(() => setSaved(""), 4000)
   }
 
   return (
@@ -418,7 +460,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
           <span style={{ fontSize: "26px" }}>📊</span>
           <h1 style={{ fontSize: "20px", fontWeight: 700, margin: 0 }}>Order {wid}</h1>
-          <span style={{ fontSize: "12px", marginLeft: "8px", color: paid ? "#161" : "#a00", fontWeight: 700 }}>{payText(o.payment_status)}</span>
+          <span style={{ fontSize: "12px", marginLeft: "8px", color: statusColor, fontWeight: 700 }}>{headText}</span>
         </div>
 
         <table style={tbl}><tbody>
@@ -435,36 +477,40 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
         <table style={tbl}><tbody>
           <SectionRow title="Leverans" />
           <KV k="Meddelande" v={m.customer_message || ""} />
-          <KV k="Leveransmetod" v={<span><b>{(sm && sm.name) || m.wiki_shipping_method || "Standard"}</b><br /><span style={{ color: "#666" }}>2-3 vardagar. Fraktfritt vid köp över 999 kr.</span></span>} />
+          <KV k="Leveransmetod" v={<span><b>{shipName}</b>{shipDesc ? <><br /><span style={{ color: "#666" }}>{shipDesc}</span></> : null}</span>} />
         </tbody></table>
 
         <table style={tbl}><tbody>
           <SectionRow title="Övrig information" />
           <KV k="Totalvikt" v={`${m.order_weight_g ?? 0}g`} />
           <KV k="IP-adress vid beställning" v={m.ip_address || "—"} />
-          <KV k="Beställd via" v={m.ordered_via || "—"} />
-          <KV k="Tidpunkt vid beställning" v={dt(when)} />
-          <KV k="Betalningstatus:" v={<span>{payBadge(betalsatt)}<span style={{ color: paid ? "#161" : "#a00" }}>{paid ? "Betald – transaktionen är genomförd" : payText(o.payment_status)}</span></span>} />
+          <KV k="Beställd via" v={viaText(m.ordered_via)} />
+          <KV k="Tidpunkt vid beställning" v={when} />
+          <KV k="Betalningstatus:" v={<span>{payBadge(betalsatt)}<span style={{ color: statusColor }}>{statusText}</span></span>} />
           <KV k="Språk / Valuta:" v={`Svenska / ${(o.currency_code || "SEK").toUpperCase()}`} />
         </tbody></table>
         {klarna?.kustom && !klarna?.cancelled ? (
-          <div style={{ margin: "12px 0", padding: "12px 14px", border: "1px solid #e5c07b", background: "#fff9ec", borderRadius: "6px", fontSize: "13px" }}>
+          <div style={{ margin: "0 0 14px", padding: "10px 12px", border: "1px solid #e5c07b", background: "#fff9ec", fontSize: "11px", fontFamily: WF, width: "600px", maxWidth: "100%", boxSizing: "border-box", lineHeight: 1.6 }}>
             <div style={{ fontWeight: 700, marginBottom: "4px" }}>Klarna Checkout</div>
-            {klarna?.captured ? (
-              <div style={{ color: "#161", marginBottom: "6px" }}>Transaktionen ar aktiverad och levererad.</div>
+            {klarna.captured ? (
+              <div style={{ color: "#161", marginBottom: "6px" }}>Transaktionen är aktiverad och levererad.</div>
             ) : (
               <div>
-                <div style={{ marginBottom: "8px" }}>Klarna har godkant kunden for betalning! I samband med leveransen ska du aktivera transaktionen nedan - alternativt kan transaktionen avbrytas om kunden angrar sig. Andring i varulistan kan goras under "Redigera order" innan aktiveringen.</div>
-                <div style={{ marginBottom: "8px" }}>
-                  <button onClick={() => klarnaAction("capture")} style={{ background: "#111", color: "#fff", border: 0, borderRadius: "4px", padding: "6px 12px", cursor: "pointer", marginRight: "8px" }}>Aktivera och leverera</button>
-                  <button onClick={() => klarnaAction("cancel")} style={{ background: "#fff", color: "#a00", border: "1px solid #a00", borderRadius: "4px", padding: "6px 12px", cursor: "pointer" }}>Avbryt</button>
-                </div>
+                <div style={{ marginBottom: "8px" }}>Klarna har godkänt kunden för betalning! I samband med leveransen ska du aktivera transaktionen nedan - alternativt kan transaktionen avbrytas om kunden ångrar sig. Ändring i varulistan kan göras under "Redigera order" innan aktiveringen.</div>
+                {klarnaCanAct ? (
+                  <div style={{ marginBottom: "8px" }}>
+                    <button onClick={() => klarnaAction("capture")} style={{ background: "#111", color: "#fff", border: 0, borderRadius: "3px", padding: "5px 12px", cursor: "pointer", marginRight: "8px", fontFamily: WF, fontSize: "11px" }}>Aktivera och leverera</button>
+                    <button onClick={() => klarnaAction("cancel")} style={{ background: "#fff", color: "#a00", border: "1px solid #a00", borderRadius: "3px", padding: "5px 12px", cursor: "pointer", fontFamily: WF, fontSize: "11px" }}>Avbryt</button>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: "8px", padding: "6px 8px", background: "#fff", border: "1px dashed #c9a13b", color: "#7a5b00" }}>Ordern lades i Wiki-butiken och Klarna-reservationen kan inte nås via vår Kustom-koppling. Aktivera i Klarna/Kustom portalen.</div>
+                )}
               </div>
             )}
-            <div style={{ color: "#555" }}>Klarnas order-id: {klarna.kustom_order_id}</div>
-            {klarna.reference ? <div style={{ color: "#555" }}>Referens: {klarna.reference}</div> : null}
-            {klarna.butik_id ? <div style={{ color: "#555" }}>Butik-id: {klarna.butik_id}</div> : null}
-            {klarna.expiry ? <div style={{ color: "#555" }}>Giltig till: {String(klarna.expiry).slice(0, 10)} <a onClick={() => klarnaAction("extend")} style={{ color: "#06c", cursor: "pointer" }}>Forlang</a></div> : null}
+            <div style={{ color: "#333" }}>Klarnas order-id: {klarna.kustom_order_id}</div>
+            {klarna.reference ? <div style={{ color: "#333" }}>Referens: {klarna.reference}</div> : null}
+            {klarna.butik_id ? <div style={{ color: "#333" }}>Butik-id: {klarna.butik_id}</div> : null}
+            {klarna.expiry ? <div style={{ color: "#333" }}>Giltig tills: {String(klarna.expiry).slice(0, 10)}{klarnaCanAct && !klarna.captured ? <> <a onClick={() => klarnaAction("extend")} style={{ color: "#06c", cursor: "pointer" }}>Förläng</a></> : null}</div> : null}
           </div>
         ) : null}
 
@@ -502,8 +548,8 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
         <div style={{ marginTop: "4px" }}>
           <div style={{ fontSize: "13px", fontWeight: 700, marginBottom: "6px" }}>Meddelanden/loggar från ändringar</div>
           <div style={{ fontSize: "11px", color: "#0a0", fontStyle: "italic", lineHeight: 1.7 }}>
-            <div>{dt(o.created_at)}<br />Ordern lades.{betalsatt ? ` Betalsätt: ${betalsatt}.` : ""}</div>
-            {paid && <div>{dt(o.created_at)}<br />Betalning registrerad ({sek(grand)}).</div>}
+            <div>{when}<br />Ordern lades.{betalsatt ? ` Betalsätt: ${betalsatt}.` : ""}</div>
+            {paid && <div>{when}<br />Betalning registrerad ({sek(grand)}).</div>}
             {m.wiki_order_id && <div>Importerad från Wikinggruppen · Wiki-ordernr {m.wiki_order_id}.</div>}
           </div>
         </div>
@@ -539,6 +585,9 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
             <Btn href={`${ADMIN}/order-email?order=${o.id}`}>✉ Skicka e-post</Btn>
             <Btn href={`mailto:${o.email}?subject=${encodeURIComponent("Uppföljning av din order hos Teknikhouse.se")}&body=${encodeURIComponent("Hej,\n\nTack för din order hos Teknikhouse.se! Vi hoppas att allt är till belåtenhet. Hör gärna av dig om du har några frågor.\n\nMed vänliga hälsningar\nTeknikhouse.se")}`}>⭐ Uppföljningsmail</Btn>
             <div style={{ borderTop: "1px solid #ddd", margin: "8px 0" }} />
+            {flik !== "makulerade"
+              ? <Btn onClick={makulera}>❌ Makulera order</Btn>
+              : <div style={{ fontSize: "11px", color: "#a00", textAlign: "center", margin: "6px 0" }}>Ordern är makulerad</div>}
             <Btn onClick={() => onEdit(o.id)}>📝 Redigera order</Btn>
             <div style={{ fontSize: "11px", marginTop: "10px" }}>
               <a onClick={onBack} style={{ color: "#06c", cursor: "pointer" }}>« Tillbaka till orderlistan</a>
