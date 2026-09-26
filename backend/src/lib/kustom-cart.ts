@@ -4,7 +4,7 @@ import {
   createPaymentSessionsWorkflow,
   updateCartWorkflow,
 } from "@medusajs/medusa/core-flows"
-import { readOrder } from "./kustom"
+import { readOrder, kustomBase } from "./kustom"
 
 /*
  * Klarna-first checkout (Kustom Checkout, KCO v3).
@@ -130,13 +130,16 @@ export async function applyKustomOrderToCart(
 
   const existing = await findOrderIdForCart(query, cartId)
   if (existing) {
+    /* Re-run for a completed cart (for example /kassa-klar reloaded): make sure
+       the Kustom merchant references carry our order number. */
+    await ensureKustomMerchantReferences(query, existing, kustomOrderId)
     return { ok: true, order_id: existing, already_completed: true }
   }
 
   const r = await readOrder(kustomOrderId)
   const ko: any = r.json || {}
   if (!r.ok) return { ok: false, reason: "kustom_read_" + r.status }
-  if (s(ko.merchant_reference1) !== cartId) {
+  if (!kustomOrderBelongsToCart(ko, cartId)) {
     return { ok: false, reason: "cart_mismatch" }
   }
   const st = s(ko.status).toLowerCase()
@@ -241,4 +244,100 @@ export async function applyKustomOrderToCart(
   const orderId = (result as any)?.id || (await findOrderIdForCart(query, cartId))
   console.log("[kustom] cart completed server-side", cartId, kustomOrderId, orderId)
   return { ok: true, updated, order_id: orderId }
+}
+
+/*
+ * The Kustom order belongs to this cart when the cart id is in
+ * merchant_reference1 (set by /kustom/order at creation), in merchant_data
+ * ({"cart_id": ...}, also set at creation and never changed afterwards) or in
+ * merchant_reference2. merchant_data keeps this check working after the
+ * merchant references were replaced by our order number.
+ */
+export function kustomOrderBelongsToCart(ko: any, cartId: string): boolean {
+  if (!cartId) return false
+  if (s(ko?.merchant_reference1) === cartId) return true
+  if (s(ko?.merchant_reference2) === cartId) return true
+  const md = s(ko?.merchant_data)
+  if (!md) return false
+  if (md === cartId) return true
+  try {
+    const j = JSON.parse(md)
+    return !!j && s(j.cart_id) === cartId
+  } catch {
+    return false
+  }
+}
+
+/*
+ * Kustom portal: merchant reference 1 and 2 show our order number (69449),
+ * like the old Wiki orders showed WGR69448, but without the WGR prefix.
+ * PATCH /ordermanagement/v1/orders/{id}/merchant-references only changes
+ * references, no money moves. Never throws.
+ */
+export async function updateKustomMerchantReferences(
+  kustomOrderId: string,
+  reference: string
+): Promise<{ ok: boolean; status: number }> {
+  const ref = s(reference)
+  if (!ref || !kustomOrderId || !/^[A-Za-z0-9-]+$/.test(kustomOrderId)) {
+    return { ok: false, status: 0 }
+  }
+  try {
+    const u = (process.env.KUSTOM_USERNAME || "").trim()
+    const p = (process.env.KUSTOM_PASSWORD || "").trim()
+    const res = await fetch(
+      kustomBase() + "/ordermanagement/v1/orders/" + kustomOrderId + "/merchant-references",
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: "Basic " + Buffer.from(u + ":" + p).toString("base64"),
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ merchant_reference1: ref, merchant_reference2: ref }),
+      }
+    )
+    if (res.ok) {
+      console.log("[kustom] merchant references set", kustomOrderId, ref, res.status)
+    } else {
+      const t = await res.text().catch(() => "")
+      console.warn("[kustom] merchant references fail", kustomOrderId, res.status, t.slice(0, 200))
+    }
+    return { ok: res.ok, status: res.status }
+  } catch (e: any) {
+    console.warn("[kustom] merchant references error", kustomOrderId, e?.message || e)
+    return { ok: false, status: 0 }
+  }
+}
+
+/*
+ * For an existing Medusa order: set the Kustom merchant references to the
+ * order number, but only when this Kustom order id really belongs to the
+ * order (metadata.kustom_order_id or the Kustom payment data). Wiki-imported
+ * orders are left alone. Never throws.
+ */
+export async function ensureKustomMerchantReferences(
+  query: any,
+  orderId: string,
+  kustomOrderId: string
+): Promise<boolean> {
+  try {
+    const { data } = await query.graph({
+      entity: "order",
+      filters: { id: orderId },
+      fields: ["id", "display_id", "metadata", "payment_collections.payments.data"],
+    })
+    const o: any = data?.[0]
+    if (!o || o.metadata?.wiki_order_id) return false
+    const ids: string[] = [s(o.metadata?.kustom_order_id)]
+    for (const pc of o.payment_collections || []) {
+      for (const p of pc?.payments || []) ids.push(s(p?.data?.kustom_order_id))
+    }
+    if (!kustomOrderId || !ids.includes(kustomOrderId)) return false
+    const r = await updateKustomMerchantReferences(kustomOrderId, s(o.display_id))
+    return r.ok
+  } catch (e: any) {
+    console.warn("[kustom] ensure merchant references error", orderId, e?.message || e)
+    return false
+  }
 }
