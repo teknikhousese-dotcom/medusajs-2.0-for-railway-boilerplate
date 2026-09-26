@@ -27,6 +27,11 @@ const pretty = (s: string) => {
   return decodeURIComponent(s)
     .replace(/-/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\bIphone\b/g, "iPhone")
+    .replace(/\bIpad\b/g, "iPad")
+    .replace(/\bIpod\b/g, "iPod")
+    .replace(/\bMacbook\b/g, "MacBook")
+    .replace(/\bAirpods\b/g, "AirPods")
 }
 
 /**
@@ -48,28 +53,20 @@ export default function ProductBreadcrumb({ title }: { title?: string }) {
     <nav
       aria-label="Brödsmulor"
       className="content-container"
-      style={{ fontSize: "12.5px", color: "#6f685f", padding: "14px 0" }}
+      style={{ fontSize: "12.5px", color: "#6f685f", paddingTop: "12px", paddingBottom: "12px" }}
     >
-      <ol
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          listStyle: "none",
-          margin: 0,
-          padding: 0,
-        }}
-      >
+      <style>{`.thbc{display:flex;align-items:center;list-style:none;margin:0;padding:0;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}.thbc::-webkit-scrollbar{display:none}.thbc li{display:flex;align-items:center;flex:0 0 auto}.thbc li.cur{flex:0 1 auto;min-width:0}.thbc li.cur span.t{overflow:hidden;text-overflow:ellipsis}@media(min-width:1024px){.thbc{flex-wrap:wrap;white-space:normal;overflow:visible}}`}</style>
+      <ol className="thbc">
         <li>
           <LocalizedClientLink href="/" style={{ color: "#6f685f" }}>
             Hem
           </LocalizedClientLink>
         </li>
         {crumbs.map((c, i) => (
-          <li key={i} style={{ display: "flex", alignItems: "center" }}>
-            <span style={{ color: "#a49c92", margin: "0 7px" }}>/</span>
+          <li key={i} className={c.last ? "cur" : undefined}>
+            <span aria-hidden style={{ color: "#a49c92", margin: "0 7px" }}>/</span>
             {c.last ? (
-              <span style={{ color: "#1b1714", fontWeight: 500 }}>
+              <span className="t" aria-current="page" style={{ color: "#1b1714", fontWeight: 500 }}>
                 {title || pretty(c.seg)}
               </span>
             ) : (
