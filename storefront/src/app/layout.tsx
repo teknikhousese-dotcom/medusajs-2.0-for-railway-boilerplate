@@ -12,7 +12,7 @@ import {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Teknikhouse – Mobilreservdelar, skärmar & tillbehör",
+    default: "Mobilreservdelar, skärmar och tillbehör | Teknikhouse",
     template: "%s",
   },
   description: DEFAULT_DESCRIPTION,
