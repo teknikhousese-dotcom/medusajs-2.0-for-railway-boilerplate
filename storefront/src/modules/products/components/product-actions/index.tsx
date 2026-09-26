@@ -27,34 +27,35 @@ const CSS = `
 .thb .priceblk{border:1px solid var(--line);border-radius:18px;padding:16px 18px;background:var(--bg)}
 .thb .savebadge{display:inline-block;background:var(--red);color:#fff;font-family:var(--round);font-weight:600;font-size:12.5px;padding:5px 11px;border-radius:8px;margin-bottom:10px}
 .thb .prow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.thb .now{font-family:var(--round);font-weight:700;font-size:34px;color:var(--red);letter-spacing:-.02em;line-height:1}
-.thb .was{font-size:16px;color:var(--faint);text-decoration:line-through}
-.thb .pct{font-family:var(--round);font-weight:600;font-size:13px;color:var(--red-d);background:#ffe4dd;padding:3px 9px;border-radius:7px}
+.thb .now{font-family:var(--round);font-weight:700;font-size:clamp(28px,8vw,34px);white-space:nowrap;color:var(--red);letter-spacing:-.02em;line-height:1}
+.thb .was{font-size:16px;color:var(--faint);text-decoration:line-through;white-space:nowrap}
+.thb .pct{font-family:var(--round);font-weight:600;font-size:13px;color:var(--red-d);background:#ffe4dd;padding:3px 9px;border-radius:7px;white-space:nowrap}
 .thb .hist{font-size:11.5px;color:var(--faint);margin-top:8px}
-.thb .klarna{font-size:12.5px;color:var(--sub);margin-top:6px;display:flex;align-items:center;gap:7px}
+.thb .klarna{font-size:12.5px;color:var(--sub);margin-top:8px;display:flex;align-items:center;gap:7px;line-height:1.35}
+.thb .klarna .kb{flex:0 0 auto}
 .thb .klarna .kb{background:#ffb3c7;color:#17120b;font-weight:700;font-size:11px;border-radius:5px;padding:2px 7px;font-family:var(--round)}
-.thb .cta{display:flex;gap:12px;align-items:stretch;margin:14px 0 8px}
-.thb .qty{display:flex;align-items:center;border:1.5px solid var(--line2);border-radius:14px;overflow:hidden;background:#fff}
-.thb .qty button{width:42px;height:52px;border:0;background:#fff;font-size:20px;color:var(--ink);cursor:pointer}
+.thb .cta{display:flex;gap:10px;align-items:stretch;margin:14px 0 8px}
+.thb .qty{display:flex;align-items:center;flex:0 0 auto;border:1.5px solid var(--line2);border-radius:14px;overflow:hidden;background:#fff}
+.thb .qty button{width:40px;height:52px;border:0;background:#fff;font-size:20px;color:var(--ink);cursor:pointer}
 .thb .qty button:disabled{color:var(--faint);cursor:not-allowed}
-.thb .qty .n{width:34px;text-align:center;font-family:var(--round);font-weight:600;font-size:16px}
-.thb .addcart{flex:1;background:var(--red);color:#fff;border:0;border-radius:14px;font-family:var(--round);font-weight:600;font-size:16.5px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;min-height:52px;transition:background .15s}
+.thb .qty .n{width:30px;text-align:center;font-family:var(--round);font-weight:600;font-size:16px}
+.thb .addcart{flex:1 1 auto;min-width:0;white-space:nowrap;padding:0 14px;background:var(--red);color:#fff;border:0;border-radius:14px;font-family:var(--round);font-weight:600;font-size:16.5px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;min-height:52px;transition:background .15s}
 .thb .addcart:hover{background:var(--red-d)}
 .thb .addcart:disabled{background:#c9c2ba;cursor:not-allowed}
-.thb .addcart svg{width:20px;height:20px;stroke:#fff;stroke-width:1.9;fill:none}
-.thb .fav{width:52px;border:1.5px solid var(--line2);border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.thb .addcart svg{width:20px;height:20px;stroke:#fff;stroke-width:1.9;fill:none;flex:0 0 auto}
+.thb .fav{width:52px;flex:0 0 auto;border:1.5px solid var(--line2);border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .thb .fav svg{width:20px;height:20px;stroke:var(--sub);stroke-width:1.7;fill:none}
 .thb .fav.on svg{stroke:var(--red);fill:var(--red)}
 .thb .klarnacta{font-size:12.5px;color:var(--sub);text-align:center;margin-bottom:14px}
 .thb .trust{border:1px solid var(--line);border-radius:16px;padding:14px 16px}
-.thb .trust .tr{display:flex;gap:10px;align-items:center;font-size:13.5px;padding:6px 0;color:var(--ink)}
+.thb .trust .tr{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4;padding:6px 0;color:var(--ink)}
 .thb .trust .tr svg{width:19px;height:19px;stroke:var(--red);stroke-width:1.7;fill:none;flex:0 0 auto}
 .thb .trust .tr b{font-weight:600}
-.thb .pay{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.thb .pay{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .thb .pay span{font-size:11px;color:var(--sub);border:1px solid var(--line2);border-radius:7px;padding:4px 9px;font-weight:600}
-.thstick{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e6e0da;box-shadow:0 -8px 24px -12px rgba(27,23,20,.18);z-index:60;transform:translateY(110%);transition:transform .2s ease}
+.thstick{position:fixed;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid #e6e0da;box-shadow:0 -8px 24px -12px rgba(27,23,20,.18);z-index:60;transform:translateY(110%);transition:transform .2s ease}
 .thstick.show{transform:translateY(0)}
-.thstick .in{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:68px}
+.thstick .in{max-width:1440px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:68px}
 .thstick .si{width:44px;height:44px;border:1px solid #efeae5;border-radius:11px;background:#faf8f6;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}
 .thstick .si img{width:80%;height:80%;object-fit:contain;mix-blend-mode:multiply}
 .thstick .st{font-family:"Poppins",system-ui,sans-serif;font-weight:600;font-size:14px;color:#1b1714;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -62,7 +63,9 @@ const CSS = `
 .thstick .sp .w{font-size:13px;color:#a49c92;text-decoration:line-through;font-weight:400;margin-right:8px}
 .thstick .sb{background:#F50000;color:#fff;border:0;border-radius:12px;padding:13px 24px;font-family:"Poppins",system-ui,sans-serif;font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap;flex:0 0 auto}
 .thstick .sb:disabled{background:#c9c2ba}
-@media(max-width:640px){.thstick .st{display:none}.thstick .si{display:none}}
+@media(max-width:640px){.thstick .st{display:none}.thstick .si{display:none}.thstick .in{padding:0 16px;gap:12px;height:64px}.thstick .sp{margin-left:0;font-size:18px}.thstick .sb{margin-left:auto;padding:12px 18px}}
+@media(max-width:400px){.thb .addcart svg{display:none}.thb .addcart{font-size:15.5px;padding:0 10px}.thb .qty button{width:34px}.thb .fav{width:46px}.thstick .sp .w{display:none}}
+body:has(.thstick.show){padding-bottom:calc(68px + env(safe-area-inset-bottom))}
 `
 
 const optionsAsKeymap = (variantOptions: any) => {
@@ -131,7 +134,9 @@ export default function ProductActions({
     variantId: selectedVariant?.id,
   })
   const price: any = variantPrice || cheapestPrice
-  const onSale = price?.price_type === "sale"
+  const onSale =
+    price?.price_type === "sale" &&
+    Number(price?.original_price_number || 0) > Number(price?.calculated_price_number || 0)
   const savings = onSale
     ? Math.round((price.original_price_number || 0) - (price.calculated_price_number || 0))
     : 0
@@ -198,7 +203,7 @@ export default function ProductActions({
                 {price.calculated_price}
               </span>
               {onSale && <span className="was">{price.original_price}</span>}
-              {onSale && price.percentage_diff ? (
+              {onSale && Number(price.percentage_diff) > 0 ? (
                 <span className="pct">−{price.percentage_diff}%</span>
               ) : null}
             </div>
@@ -262,7 +267,7 @@ export default function ProductActions({
             <svg viewBox="0 0 24 24"><path d="M3 13h6l2-8 3 16 2-6h5" /></svg>
             <span>
               <b>{!selectedVariant ? "Välj alternativ ovan" : inStock ? "I lager" : "Tillfälligt slut"}</b>
-              {!selectedVariant ? "" : inStock ? " – skickas idag, hemma om 1–3 dagar" : " – vi fyller på snart"}
+              {!selectedVariant ? "" : inStock ? ": skickas idag, hemma om 1-3 dagar" : ", vi fyller på snart"}
             </span>
           </div>
           <div className="tr">
@@ -283,7 +288,7 @@ export default function ProductActions({
         <ErrorMessage error={error} data-testid="add-product-error-message" />
       </div>
 
-      {/* Sticky buy bar — appears when the buy box scrolls out of view */}
+      {/* Sticky buy bar, shown when the buy box scrolls out of view */}
       <div className={"thstick" + (!inView ? " show" : "")}>
         <div className="in">
           {product.thumbnail && (
