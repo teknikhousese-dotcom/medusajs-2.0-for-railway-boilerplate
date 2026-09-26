@@ -40,6 +40,8 @@ function DeptIcon({ name }: { name: string }) {
 
 /**
  * teknikhouse category navigation: icon department bar, one row (scrolls sideways if it does not fit).
+ * The row starts at the content-container left edge, the same edge as the logo,
+ * the breadcrumb and the page content, so everything lines up at every width.
  * Each department shows an outline icon above its label; hovering opens a
  * full-width mega-panel with its brands (columns) and each brand's models.
  */
@@ -119,7 +121,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
           </button>
         )}
         <div ref={scrollRef} onScroll={updateEdges} className="overflow-x-auto no-scrollbar">
-        <ul className="flex flex-nowrap items-stretch w-max mx-auto">
+        <ul className="flex flex-nowrap items-stretch w-max">
           {departments.map((dep) => {
             const brands = childrenOf(dep.id)
             const isOpen = openId === dep.id
