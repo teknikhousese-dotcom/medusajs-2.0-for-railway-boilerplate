@@ -7,7 +7,7 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
-import { listCategories } from "@lib/data/categories"
+import { listCategories, listCategoryMetadata } from "@lib/data/categories"
 import { niceCategoryName } from "@lib/util/category-name"
 import ReadMore from "@modules/categories/components/read-more"
 
@@ -121,7 +121,16 @@ export default async function CategoryTemplate({
   const self = byId[category.id] || category
   const chain = chainOf(self, byId)
   const dept = chain[0]
-  const children = kids(category.id)
+  // Tile images live in metadata.category_image, which the slim category tree
+  // leaves out, so fetch it for just the tiles shown on this page.
+  const childCats = kids(category.id)
+  const childMeta = childCats.length
+    ? await listCategoryMetadata(childCats.map((c) => c.id), ["category_image"])
+    : new Map<string, Record<string, unknown>>()
+  const children = childCats.map((c) => {
+    const m = childMeta.get(c.id)
+    return (m ? { ...c, metadata: m } : c) as Cat
+  })
   const hasChildren = children.length > 0
   const departments = kids(null)
 
@@ -148,6 +157,7 @@ export default async function CategoryTemplate({
                   <div key={d.id}>
                     <LocalizedClientLink
                       href={pathOf(d, byId)}
+                      prefetch={false}
                       style={{ display: "block", padding: "9px 16px", fontSize: "14px", fontWeight: active ? 600 : 500, color: active ? "#1b1714" : "#4a4640", background: active ? "#fff" : "transparent" }}
                     >
                       {d.name}
@@ -160,6 +170,7 @@ export default async function CategoryTemplate({
                             <LocalizedClientLink
                               key={c.id}
                               href={pathOf(c, byId)}
+                              prefetch={false}
                               style={{ display: "block", padding: "7px 16px 7px 28px", fontSize: "13.5px", color: onPath ? "#F50000" : "#6f685f", fontWeight: onPath ? 600 : 400 }}
                             >
                               {displayName(c, byId)}
@@ -237,6 +248,7 @@ export default async function CategoryTemplate({
                 <li key={c.id}>
                   <LocalizedClientLink
                     href={pathOf(c, byId)}
+                    prefetch={false}
                     className="h-full transition-colors hover:border-[#d9d2ca]"
                     style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: "112px", padding: "16px 10px", border: "1px solid #efeae5", borderRadius: "14px", background: "#fff", gap: "10px" }}
                   >
