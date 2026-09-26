@@ -28,7 +28,12 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
       <Text className="mt-2">
         Orderdatum:{" "}
         <span data-testid="order-date">
-          {new Date(order.created_at).toDateString()}
+          {new Date(order.created_at).toLocaleDateString("sv-SE", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        timeZone: "Europe/Stockholm",
+                      })}
         </span>
       </Text>
       <Text className="mt-2 text-ui-fg-interactive">
