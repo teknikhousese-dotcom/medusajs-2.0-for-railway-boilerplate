@@ -57,7 +57,7 @@ function KontrollpanelPage() {
     return () => clearInterval(t)
   }, [])
   const [menuOpen, setMenuOpen] = useState<boolean>(true)
-  const [s, setS] = useState({ orders: 0, ordersYear: 0, salesYear: 0, customers: 0, products: 0, categories: 0, loading: true, salesLoading: true })
+  const [s, setS] = useState({ unread: 0, orders: 0, ordersYear: 0, salesYear: 0, customers: 0, products: 0, categories: 0, loading: true, salesLoading: true })
 
   useEffect(() => {
     let alive = true
@@ -73,7 +73,10 @@ function KontrollpanelPage() {
         count("/admin/products?limit=1"),
         count("/admin/product-categories?limit=1"),
       ])
-      if (alive) setS((p) => ({ ...p, orders, ordersYear, customers, products, categories, loading: false }))
+      /* Olästa ordrar: samma definition som orderlistan (flik Nya och ej öppnad), räknas server-side. */
+      let unread = 0
+      try { const u = await fetch("/admin/order-fliks?unread=1", { credentials: "include" }).then((r) => r.json()); unread = Number(u && u.unread) || 0 } catch { unread = 0 }
+      if (alive) setS((p) => ({ ...p, unread, orders, ordersYear, customers, products, categories, loading: false }))
       // Sum THIS YEAR's order totals only — a small slice of the full history,
       // so a few pages instead of scanning all orders. Runs in the background
       // and never blocks the counts above.
@@ -267,7 +270,7 @@ function KontrollpanelPage() {
     <aside className="w-60 shrink-0 border-r bg-ui-bg-subtle rounded-l-lg overflow-hidden">
       <div className="px-4 py-3 border-b bg-ui-bg-base">
         <div className="text-sm font-semibold">Statistik</div>
-        <div className="text-xs text-ui-fg-subtle mt-1">Olästa ordrar: <span className="font-semibold text-ui-fg-base">{s.loading ? "…" : s.orders} st</span></div>
+        <div className="text-xs text-ui-fg-subtle mt-1">Olästa ordrar: <span className="font-semibold text-ui-fg-base">{s.loading ? "…" : s.unread} st</span></div>
         <div className="text-xs text-ui-fg-subtle">Produkter: <span className="font-semibold text-ui-fg-base">{s.loading ? "…" : s.products} st</span></div>
       </div>
       <nav className="py-1 text-[13px]">
@@ -373,10 +376,10 @@ function KontrollpanelPage() {
 
       {/* Order alert, like Wiki's "Du har X olästa ordrar" */}
       <div className="px-6 pt-4">
-        {s.orders > 0 ? (
+        {s.unread > 0 ? (
           <button onClick={() => { window.location.href = `${ADMIN}/ordrar` }}
             className="w-full text-left text-sm font-semibold px-4 py-2.5 rounded-md border bg-ui-tag-orange-bg text-ui-tag-orange-text border-ui-tag-orange-border">
-            Du har {s.orders} olästa ordrar! Klicka på orderknappen nedan.
+            Du har {s.unread} olästa ordrar! Klicka på orderknappen nedan.
           </button>
         ) : (
           <div className="w-full text-sm px-4 py-2.5 rounded-md border bg-ui-tag-green-bg text-ui-tag-green-text border-ui-tag-green-border">
