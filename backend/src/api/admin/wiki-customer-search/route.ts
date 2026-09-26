@@ -64,11 +64,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const ob: any[] = []
     let needItems = false
     if (product) { needItems = true; oc.push(`(li.title ILIKE ? OR li.product_title ILIKE ?)`); ob.push(like(product), like(product)) }
-    if (artNo) { needItems = true; oc.push(`li.variant_sku ILIKE ?`); ob.push(like(artNo)) }
+    // Imported Wiki order lines have no product_id/variant_sku; the article number is in li.metadata.sku.
+    if (artNo) { needItems = true; oc.push(`lower(COALESCE(NULLIF(li.variant_sku, ''), li.metadata->>'sku', '')) = lower(?)`); ob.push(artNo) }
     if (categories.length) {
       needItems = true
-      oc.push(`li.product_id IN (SELECT pcp.product_id FROM product_category_product pcp JOIN product_category pc ON pc.id = pcp.product_category_id JOIN product_category root ON root.id = ANY(?) WHERE pc.deleted_at IS NULL AND (pc.id = root.id OR pc.mpath LIKE root.mpath || '%'))`)
-      ob.push(categories)
+      const catProducts = `SELECT pcp.product_id FROM product_category_product pcp JOIN product_category pc ON pc.id = pcp.product_category_id JOIN product_category root ON root.id = ANY(?) WHERE pc.deleted_at IS NULL AND (pc.id = root.id OR pc.mpath LIKE root.mpath || '%')`
+      oc.push(`(li.product_id IN (${catProducts}) OR COALESCE(NULLIF(li.variant_sku, ''), li.metadata->>'sku') IN (SELECT v.sku FROM product_variant v WHERE v.deleted_at IS NULL AND v.sku IS NOT NULL AND v.product_id IN (${catProducts})))`)
+      ob.push(categories, categories)
     }
     if (dateStart) { oc.push(`o.created_at >= ?::date`); ob.push(dateStart) }
     if (dateEnd) { oc.push(`o.created_at < (?::date + interval '1 day')`); ob.push(dateEnd) }
