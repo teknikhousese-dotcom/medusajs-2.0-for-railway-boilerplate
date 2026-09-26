@@ -1,6 +1,6 @@
 "use client"
 
-import { Table, Text, clx } from "@medusajs/ui"
+import { Text, clx } from "@medusajs/ui"
 
 import { updateLineItem } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
@@ -62,83 +62,99 @@ const Item = ({ item, type = "full" }: ItemProps) => {
   const maxQuantity = item.variant?.manage_inventory ? 10 : maxQtyFromInventory
 
   return (
-    <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
-        <LocalizedClientLink
-          href={`/products/${handle}`}
-          className={clx("flex", {
-            "w-16": type === "preview",
-            "small:w-24 w-12": type === "full",
-          })}
-        >
-          <Thumbnail
-            thumbnail={item.variant?.product?.thumbnail}
-            images={item.variant?.product?.images}
-            size="square"
-          />
-        </LocalizedClientLink>
-      </Table.Cell>
+    <div
+      className={clx(
+        "grid items-start gap-x-3 small:gap-x-4 border-b border-gray-100 last:border-b-0",
+        {
+          "grid-cols-[64px_minmax(0,1fr)_auto] py-4": type === "preview",
+          "grid-cols-[72px_minmax(0,1fr)] small:grid-cols-[96px_minmax(0,1fr)_auto] py-5":
+            type === "full",
+        }
+      )}
+      data-testid="product-row"
+    >
+      <LocalizedClientLink
+        href={"/products/" + handle}
+        className="block rounded-xl overflow-hidden bg-gray-50"
+      >
+        <Thumbnail
+          thumbnail={item.variant?.product?.thumbnail}
+          images={item.variant?.product?.images}
+          size="square"
+        />
+      </LocalizedClientLink>
 
-      <Table.Cell className="text-left">
+      <div className="flex flex-col min-w-0 gap-y-1">
         <Text
-          className="txt-medium-plus text-ui-fg-base"
+          className={clx("text-[#14161C] leading-snug break-words", {
+            "txt-medium-plus line-clamp-3": type === "preview",
+            "text-[15px] small:text-base font-medium": type === "full",
+          })}
           data-testid="product-title"
         >
           {item.product_title}
         </Text>
         <LineItemOptions variant={item.variant} data-testid="product-variant" />
-      </Table.Cell>
 
-      {type === "full" && (
-        <Table.Cell>
-          <div className="flex gap-2 items-center w-28">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
-            <CartItemSelect
-              value={item.quantity}
-              onChange={(value) => changeQuantity(parseInt(value.target.value))}
-              className="w-14 h-10 p-4"
-              data-testid="product-select-button"
-            >
-              {/* TODO: Update this with the v2 way of managing inventory */}
-              {Array.from(
-                {
-                  length: Math.min(maxQuantity, 10),
-                },
-                (_, i) => (
-                  <option value={i + 1} key={i}>
-                    {i + 1}
-                  </option>
-                )
-              )}
-            </CartItemSelect>
-            {updating && <Spinner />}
+        {type === "preview" && item.quantity > 1 && (
+          <span className="flex gap-x-1 txt-small text-ui-fg-muted">
+            <span>{item.quantity} st à</span>
+            <LineItemUnitPrice item={item} style="tight" />
+          </span>
+        )}
+
+        {type === "full" && (
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mt-2 small:mt-3">
+            <div className="flex items-center gap-x-3">
+              <CartItemSelect
+                value={item.quantity}
+                onChange={(value) => changeQuantity(parseInt(value.target.value))}
+                className="w-16 h-10 px-3"
+                aria-label="Antal"
+                data-testid="product-select-button"
+              >
+                {Array.from(
+                  {
+                    length: Math.min(maxQuantity, 10),
+                  },
+                  (_, i) => (
+                    <option value={i + 1} key={i}>
+                      {i + 1}
+                    </option>
+                  )
+                )}
+              </CartItemSelect>
+              <DeleteButton id={item.id} data-testid="product-delete-button">
+                Ta bort
+              </DeleteButton>
+              {updating && <Spinner />}
+            </div>
+            <div className="small:hidden text-right">
+              <LineItemPrice item={item} style="tight" />
+            </div>
           </div>
+        )}
+        {type === "full" && (
           <ErrorMessage error={error} data-testid="product-error-message" />
-        </Table.Cell>
-      )}
+        )}
+      </div>
 
-      {type === "full" && (
-        <Table.Cell className="hidden small:table-cell">
-          <LineItemUnitPrice item={item} style="tight" />
-        </Table.Cell>
-      )}
-
-      <Table.Cell className="!pr-0">
-        <span
-          className={clx("!pr-0", {
-            "flex flex-col items-end h-full justify-center": type === "preview",
-          })}
-        >
-          {type === "preview" && item.quantity > 1 && (
-            <span className="flex gap-x-1 ">
-              <Text className="text-ui-fg-muted">{item.quantity}x </Text>
+      {type === "preview" ? (
+        <div className="text-right whitespace-nowrap">
+          <LineItemPrice item={item} style="tight" />
+        </div>
+      ) : (
+        <div className="hidden small:flex flex-col items-end whitespace-nowrap">
+          <LineItemPrice item={item} style="tight" />
+          {item.quantity > 1 && (
+            <span className="flex gap-x-1 txt-small text-ui-fg-muted mt-1">
+              <span>{item.quantity} st à</span>
               <LineItemUnitPrice item={item} style="tight" />
             </span>
           )}
-          <LineItemPrice item={item} style="tight" />
-        </span>
-      </Table.Cell>
-    </Table.Row>
+        </div>
+      )}
+    </div>
   )
 }
 
