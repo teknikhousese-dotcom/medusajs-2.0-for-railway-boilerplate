@@ -91,6 +91,8 @@ async function loadOrder(scope: any, id: string) {
       "items.subtitle",
       "items.quantity",
       "items.unit_price",
+      "items.is_tax_inclusive",
+      "items.subtotal",
       "items.total",
       "items.variant_sku",
       "items.product_id",
@@ -151,13 +153,21 @@ function renderFoljesedel(order: any): string {
   const wikiTime = m.wiki_order_time || m.order_time
   const inkom = wikiTime ? String(wikiTime).replace("T", " ").slice(0, 19) : formatDateTime(order.created_at)
 
+  /* Nya Medusa-ordrar: priser inkl. moms (is_tax_inclusive) och beräknade totaler. Wiki-ordrar: priser exkl. moms. */
+  const isNative = !m.wiki_order_id && (items.some((it: any) => it.is_tax_inclusive === true) || Number(order.tax_total) > 0)
   const grossFactor = Number(order.tax_total) > 0 ? 1 : 1.25
+  const itemGross = (it: any): number => {
+    const q = Number(it.quantity || 0)
+    const up = Number(it.unit_price) || 0
+    if (it.is_tax_inclusive === true) return up * q
+    return up * q * grossFactor
+  }
   /* Som Wiki: varurader (inkl. kreditering CRED), sedan Fraktkostnad, Expeditionsavgift, Totalt, Varav moms. */
   const r2 = (n: number) => Math.round(Number(n || 0) * 100) / 100
   const vb = m.vat_breakdown || null
   const lineVat = vb && Number(vb["25"] && vb["25"].base) === 0 && Number(vb["0"] && vb["0"].base) > 0 ? 0 : 25
   const lineFactor = Number(order.tax_total) > 0 ? 1 : 1 + lineVat / 100
-  const itemsExcl = items.reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity || 0), 0)
+  const itemsExcl = items.reduce((s: number, it: any) => s + (it.is_tax_inclusive === true && it.subtotal != null ? Number(it.subtotal) || 0 : (Number(it.unit_price) || 0) * Number(it.quantity || 0)), 0)
   const feeExcl = r2(Number(m.payment_fee_excl_vat) || 0)
   const credExcl = r2(Number(m.wiki_credit_excl_vat) || 0)
   const sm0 = (order.shipping_methods || [])[0]
@@ -171,7 +181,7 @@ function renderFoljesedel(order: any): string {
       let vara = esc(it.title || it.product_title || "")
       if (it.subtitle) vara += ` <span class="muted">(${esc(it.subtitle)})</span>`
       const antal = `${Number(it.quantity || 0)} st`
-      const summa = wkr((Number(it.unit_price) || 0) * Number(it.quantity || 0) * grossFactor)
+      const summa = wkr(itemGross(it))
       return `
         <tr>
           <td class="col-sku">${artikelnr}</td>
@@ -189,16 +199,16 @@ function renderFoljesedel(order: any): string {
           <td class="col-summa">${wkr(credExcl * lineFactor)}</td>
         </tr>` : ""
   const itemRows = itemRowsHtml + credRow
-  const grand = Number(order.tax_total) > 0
+  const grand = Number(order.tax_total) > 0 || isNative
     ? Number(order.total) || 0
     : r2(itemsExcl * 1.25 + (shipExcl + feeExcl + credExcl) * (1 + lineVat / 100))
   const totalExcl = r2(itemsExcl + shipExcl + feeExcl + credExcl)
   const totalt = wkr(grand)
-  const moms = wkr(Number(order.tax_total) > 0 ? Number(order.tax_total) : grand - totalExcl)
+  const moms = wkr(Number(order.tax_total) > 0 || isNative ? Number(order.tax_total) || 0 : grand - totalExcl)
   const shipRow = shipExcl > 0 ? `
           <tr>
             <td class="tot-label">Fraktkostnad</td>
-            <td class="tot-value">${wkr(shipExcl * lineFactor)}</td>
+            <td class="tot-value">${wkr(isNative && sm0 && sm0.is_tax_inclusive ? smAmt : shipExcl * lineFactor)}</td>
           </tr>` : ""
   const feeRow = feeExcl !== 0 ? `
           <tr>
