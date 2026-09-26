@@ -6,7 +6,7 @@ const TRUST = [
   { b: "Fri frakt", t: "över 999 kr" },
   { b: "4,6 / 5", t: "på Trustpilot" },
   { b: "30 dagars", t: "öppet köp" },
-  { b: "Snabb leverans", t: "skickas 1–2 dagar" },
+  { b: "Snabb leverans", t: "skickas inom 1-2 dagar" },
 ]
 
 export default function CheckoutLayout({
@@ -62,7 +62,7 @@ export default function CheckoutLayout({
         {children}
       </div>
       <div className="border-t border-b bg-gray-50">
-        <div className="content-container py-5 grid grid-cols-2 small:grid-cols-4 gap-4 text-center">
+        <div className="content-container py-5 grid grid-cols-2 small:grid-cols-4 gap-x-4 gap-y-3 text-center">
           {TRUST.map((x) => (
             <div key={x.b} className="text-[13px] text-gray-600">
               <div className="font-semibold text-[#14161C]">{x.b}</div>
