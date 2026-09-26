@@ -45,9 +45,13 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                     : `${convertToLocale({
                         amount: payment.amount,
                         currency_code: order.currency_code,
-                      })} paid at ${new Date(
+                      })}, betalt ${new Date(
                         payment.created_at ?? ""
-                      ).toLocaleString()}`}
+                      ).toLocaleString("sv-SE", {
+                        dateStyle: "long",
+                        timeStyle: "short",
+                        timeZone: "Europe/Stockholm",
+                      })}`}
                 </Text>
               </div>
             </div>
