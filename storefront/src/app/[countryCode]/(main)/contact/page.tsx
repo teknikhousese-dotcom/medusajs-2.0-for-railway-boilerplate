@@ -59,11 +59,11 @@ export default function ContactPage() {
   const input = "w-full rounded-xl border border-gray-300 px-4 py-3 text-[15px] outline-none focus:border-[#D10000] focus:ring-2 focus:ring-red-100 transition"
   return (
     <div className="bg-white">
-      <section className="content-container pt-14 pb-8">
+      <section className="content-container pt-10 sm:pt-14 pb-8">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold text-[#D10000] uppercase tracking-widest mb-3">Kundtjänst</p>
-          <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 mb-5 tracking-tight">Hör av dig</h1>
-          <p className="text-lg text-gray-600 leading-relaxed">
+          <h1 className="text-3xl sm:text-5xl font-semibold text-gray-900 mb-5 tracking-tight">Hör av dig</h1>
+          <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
             Fråga om en beställning, en reservdel eller en reparation? Skriv några rader så hjälper vi dig vidare. Vi läser varje meddelande och svarar oftast redan samma dag, alla vardagar.
           </p>
         </div>
@@ -71,8 +71,8 @@ export default function ContactPage() {
 
       <section className="content-container pb-12">
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Kanske hittar du svaret direkt</h2>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <Shortcut href="/account" icon={P.box} title="Var är min order?" desc="Alla paket skickas spårbart med PostNord eller DHL. Logga in på ditt konto och följ leveransen hela vägen hem." cta="Till mitt konto" />
+        <div className="grid md:grid-cols-3 gap-4">
+          <Shortcut href="/orderstatus" icon={P.box} title="Var är min order?" desc="Skriv in ordernummer och e-post så ser du status och spårningslänk direkt. Vi skickar alltid spårbart med PostNord eller DHL." cta="Spåra order" />
           <Shortcut href="/return" icon={P.refresh} title="Retur och reklamation" desc="30 dagars öppet köp och garanti på allt vi säljer. Anmäl din retur på under en minut." cta="Anmäl retur" />
           <Shortcut href="/info/salj-din-enhet" icon={P.tag} title="Sälj din enhet" desc="Vi köper din begagnade mobil, surfplatta eller dator. Få ett bud utan att binda dig." cta="Få ett bud" />
         </div>
@@ -92,7 +92,7 @@ export default function ContactPage() {
               <p className="text-sm text-gray-600 leading-relaxed mt-2">Kom förbi med din enhet, så tittar vi på den på plats.</p>
               <div className="flex items-start gap-2 text-sm text-gray-600 mt-4 pt-4 border-t border-gray-100">
                 <span className="text-gray-400 mt-0.5"><Icon path={P.clock} /></span>
-                <span>Måndag–fredag 10–18<br />Lördag 11–17 · Söndag 12–16</span>
+                <span>Måndag till fredag 10.00 till 18.00<br />Lördag 11.00 till 17.00<br />Söndag 12.00 till 16.00</span>
               </div>
             </div>
             <div className="rounded-2xl bg-gray-50 p-5 text-sm text-gray-600 leading-relaxed">
@@ -101,7 +101,7 @@ export default function ContactPage() {
           </div>
 
           <div className="lg:col-span-3">
-            <div className="rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+            <div className="rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8">
               {state === "done" ? (
                 <div className="text-center py-10">
                   <div className="w-14 h-14 rounded-full bg-green-50 text-green-600 flex items-center justify-center mx-auto mb-4">
@@ -115,12 +115,12 @@ export default function ContactPage() {
                   <h3 className="text-xl font-semibold text-gray-900">Skicka ett meddelande</h3>
                   <p className="text-sm text-gray-500 -mt-2">Fyll i så mycket du kan, så hittar rätt person hos oss ditt ärende snabbare.</p>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <input required placeholder="Namn" value={f.name} onChange={upd("name")} className={input} />
-                    <input required type="email" placeholder="E-post" value={f.email} onChange={upd("email")} className={input} />
-                    <input placeholder="Telefon (valfritt)" value={f.phone} onChange={upd("phone")} className={input} />
-                    <input placeholder="Ordernummer (valfritt)" value={f.orderNo} onChange={upd("orderNo")} className={input} />
+                    <input required aria-label="Namn" autoComplete="name" placeholder="Namn" value={f.name} onChange={upd("name")} className={input} />
+                    <input required type="email" aria-label="E-post" autoComplete="email" placeholder="E-post" value={f.email} onChange={upd("email")} className={input} />
+                    <input type="tel" aria-label="Telefon" autoComplete="tel" placeholder="Telefon (valfritt)" value={f.phone} onChange={upd("phone")} className={input} />
+                    <input aria-label="Ordernummer" inputMode="numeric" placeholder="Ordernummer (valfritt)" value={f.orderNo} onChange={upd("orderNo")} className={input} />
                   </div>
-                  <select value={f.subject} onChange={upd("subject")} className={input + " bg-white"}>
+                  <select aria-label="Vad gäller det?" value={f.subject} onChange={upd("subject")} className={input + " bg-white"}>
                     <option value="">Vad gäller det?</option>
                     <option>Min beställning</option>
                     <option>Retur eller reklamation</option>
@@ -129,9 +129,9 @@ export default function ContactPage() {
                     <option>Företag och offert</option>
                     <option>Något annat</option>
                   </select>
-                  <textarea required placeholder="Skriv ditt meddelande här" value={f.message} onChange={upd("message")} rows={6} className={input} />
+                  <textarea required aria-label="Meddelande" placeholder="Skriv ditt meddelande här" value={f.message} onChange={upd("message")} rows={6} className={input} />
                   {state === "error" && (
-                    <div className="text-red-600 text-sm">Något strulade. Försök igen, eller mejla oss direkt på info@teknikhouse.se.</div>
+                    <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-[#B00000]">Meddelandet gick inte iväg. Försök igen, eller mejla oss direkt på info@teknikhouse.se.</div>
                   )}
                   <button disabled={state === "sending"} className="w-full sm:w-auto bg-[#D10000] text-white font-semibold rounded-xl px-8 py-3.5 hover:bg-[#b00000] disabled:opacity-60 transition">
                     {state === "sending" ? "Skickar…" : "Skicka meddelande"}
