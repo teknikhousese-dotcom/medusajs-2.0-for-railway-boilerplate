@@ -7,7 +7,6 @@ import { Heading, Text, useToggleState } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import Divider from "@modules/common/components/divider"
-import Spinner from "@modules/common/icons/spinner"
 
 import { setAddresses } from "@lib/data/cart"
 import compareAddresses from "@lib/util/compare-addresses"
@@ -29,6 +28,7 @@ const Addresses = ({
   const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "address"
+  const filled = !!(cart?.shipping_address?.address_1 && cart?.email)
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     cart?.shipping_address && cart?.billing_address
@@ -47,12 +47,15 @@ const Addresses = ({
       <div className="flex flex-row items-center justify-between mb-6">
         <Heading
           level="h2"
-          className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
+          className={
+            "flex flex-row text-3xl-regular gap-x-2 items-baseline" +
+            (!isOpen && !filled ? " opacity-50 pointer-events-none select-none" : "")
+          }
         >
-          Leveransadress
-          {!isOpen && <CheckCircleSolid />}
+          3. Leveransadress
+          {!isOpen && filled && <CheckCircleSolid />}
         </Heading>
-        {!isOpen && cart?.shipping_address && (
+        {!isOpen && filled && (
           <Text>
             <button
               onClick={handleEdit}
@@ -87,7 +90,7 @@ const Addresses = ({
               </div>
             )}
             <SubmitButton className="mt-6" data-testid="submit-address-button">
-              Fortsätt till leverans
+              Fortsätt till betalning
             </SubmitButton>
             <ErrorMessage error={message} data-testid="address-error-message" />
           </div>
@@ -95,7 +98,7 @@ const Addresses = ({
       ) : (
         <div>
           <div className="text-small-regular">
-            {cart && cart.shipping_address ? (
+            {cart && filled && cart.shipping_address ? (
               <div className="flex items-start gap-x-8">
                 <div className="flex items-start gap-x-1 w-full">
                   <div
@@ -171,11 +174,7 @@ const Addresses = ({
                   </div>
                 </div>
               </div>
-            ) : (
-              <div>
-                <Spinner />
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       )}
