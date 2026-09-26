@@ -12,6 +12,10 @@ export function genId(prefix: string) {
   return prefix + "_" + randomUUID().replace(/-/g, "")
 }
 
+async function tryRaw(pg: any, sql: string) {
+  try { await pg.raw(sql) } catch (e: any) { console.warn("[purchasing] " + (e?.message || e)) }
+}
+
 export async function ensureTables(pg: any) {
   if (ensured || !pg || typeof pg.raw !== "function") return
   await pg.raw(`CREATE TABLE IF NOT EXISTS "supplier" (
@@ -31,10 +35,35 @@ export async function ensureTables(pg: any) {
     "min_stock" integer NOT NULL DEFAULT 0, "cost" numeric NULL,
     "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(),
     "deleted_at" timestamptz NULL, CONSTRAINT "purchase_order_line_pkey" PRIMARY KEY ("id"));`)
+  await tryRaw(pg, `ALTER TABLE "supplier" ADD COLUMN IF NOT EXISTS "wiki_id" integer NULL`)
+  await tryRaw(pg, `ALTER TABLE "supplier" ADD COLUMN IF NOT EXISTS "metadata" jsonb NULL`)
+  await tryRaw(pg, `ALTER TABLE "purchase_order" ADD COLUMN IF NOT EXISTS "wiki_id" integer NULL`)
+  await tryRaw(pg, `ALTER TABLE "purchase_order" ADD COLUMN IF NOT EXISTS "sent_at" timestamptz NULL`)
+  await tryRaw(pg, `ALTER TABLE "purchase_order" ADD COLUMN IF NOT EXISTS "archived_at" timestamptz NULL`)
+  await tryRaw(pg, `ALTER TABLE "purchase_order" ADD COLUMN IF NOT EXISTS "comment" text NULL`)
+  await tryRaw(pg, `ALTER TABLE "purchase_order" ADD COLUMN IF NOT EXISTS "metadata" jsonb NULL`)
   ensured = true
 }
 
 export async function q(pg: any, sql: string, bindings: any[] = []) {
   const r = await pg.raw(sql, bindings)
   return (r && r.rows) ? r.rows : r
+}
+
+export function normName(s: any) {
+  return String(s == null ? "" : s).trim().toLowerCase()
+}
+
+// Count products per supplier: metadata.leverantor (name) or metadata.supplier_id.
+export async function supplierProductCounts(pg: any): Promise<{ byName: Record<string, number>; byId: Record<string, number> }> {
+  const byName: Record<string, number> = {}
+  const byId: Record<string, number> = {}
+  try {
+    const rows = await q(pg, `SELECT lower(trim(COALESCE("metadata"->>'leverantor', ''))) AS "n", COALESCE("metadata"->>'supplier_id', '') AS "sid", count(*)::int AS "c" FROM "product" WHERE "deleted_at" IS NULL GROUP BY 1, 2`)
+    for (const r of rows || []) {
+      if (r.n) byName[r.n] = (byName[r.n] || 0) + Number(r.c || 0)
+      else if (r.sid) byId[r.sid] = (byId[r.sid] || 0) + Number(r.c || 0)
+    }
+  } catch (e: any) { console.warn("[purchasing] count " + (e?.message || e)) }
+  return { byName, byId }
 }
