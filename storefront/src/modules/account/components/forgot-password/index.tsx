@@ -23,7 +23,7 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
       className="max-w-sm w-full flex flex-col items-center"
       data-testid="forgot-password-page"
     >
-      <h1 className="text-large-semi uppercase mb-6">Reset your password</h1>
+      <h1 className="text-large-semi uppercase mb-6 text-center">Glömt lösenordet?</h1>
 
       {state.success ? (
         <>
@@ -37,29 +37,30 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
             className="text-center text-base-regular text-ui-fg-base mb-8"
             data-testid="forgot-password-sent"
           >
-            If an account exists for that address, a link to set a new password
-            is on its way. It can be used once and expires in 15 minutes.
+            Finns det ett konto med den adressen är en länk för att välja nytt
+            lösenord på väg till din inkorg. Länken fungerar en gång och gäller i
+            15 minuter.
           </p>
           <button
             onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
             className="underline text-small-regular"
             data-testid="back-to-sign-in-button"
           >
-            Back to sign in
+            Tillbaka till inloggningen
           </button>
         </>
       ) : (
         <>
           <p className="text-center text-base-regular text-ui-fg-base mb-8">
-            Enter the email address on your account and we will send you a link
-            to set a new password.
+            Skriv e-postadressen du har på ditt konto, så mejlar vi en länk där
+            du väljer ett nytt lösenord.
           </p>
           <form className="w-full" action={formAction}>
             <Input
-              label="Email"
+              label="E-post"
               name="email"
               type="email"
-              title="Enter a valid email address."
+              title="Ange en giltig e-postadress."
               autoComplete="email"
               required
               data-testid="forgot-password-email-input"
@@ -72,17 +73,17 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
               data-testid="send-reset-link-button"
               className="w-full mt-6"
             >
-              Send reset link
+              Skicka länk
             </SubmitButton>
           </form>
           <span className="text-center text-ui-fg-base text-small-regular mt-6">
-            Remembered it?{" "}
+            Kom du på det?{" "}
             <button
               onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
               className="underline"
               data-testid="back-to-sign-in-button"
             >
-              Sign in
+              Logga in
             </button>
             .
           </span>
