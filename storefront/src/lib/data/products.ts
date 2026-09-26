@@ -4,10 +4,38 @@ import { cache } from "react"
 import { getRegion } from "./regions"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { sortProducts } from "@lib/util/sort-products"
-import { getCacheDirectives } from "./cookies"
+import { getCacheTag } from "./cookies"
 
 // See the note in regions.ts for why these are client.fetch calls rather than
 // the sdk.store.* helpers.
+
+/*
+ * Product reads are cached for everyone for a short while.
+ *
+ * They used to go through getCacheDirectives, which caches per visitor and
+ * never expires, and caches nothing at all for a visitor without a cache id
+ * (first page view, crawlers). So a cold visitor fetched every product card
+ * from Medusa one by one, and a warm one could keep an old price or stock
+ * status until the next deploy.
+ *
+ * Now every read has a lifetime: 60 s on the product page, where price and
+ * stock must be current, and 5 min for cards and lists. The shared "products"
+ * tag can purge everything at once, and the visitor tag is kept so existing
+ * per-visitor revalidation still reaches these entries.
+ */
+const PDP_SECONDS = 60
+const LIST_SECONDS = 300
+
+const productCache = async (seconds: number) => {
+  const visitor = await getCacheTag("products")
+  return {
+    cache: "force-cache" as const,
+    next: {
+      revalidate: seconds,
+      tags: visitor ? ["products", visitor] : ["products"],
+    },
+  }
+}
 export const getProductsById = cache(async function ({
   ids,
   regionId,
@@ -23,7 +51,7 @@ export const getProductsById = cache(async function ({
         region_id: regionId,
         fields: "*variants.calculated_price,+variants.inventory_quantity,+metadata",
       },
-      ...(await getCacheDirectives("products")),
+      ...(await productCache(LIST_SECONDS)),
     })
     .then(({ products }) => products)
 })
@@ -40,7 +68,7 @@ export const getProductByHandle = cache(async function (
         region_id: regionId,
         fields: "*variants.calculated_price,+variants.inventory_quantity,+metadata",
       },
-      ...(await getCacheDirectives("products")),
+      ...(await productCache(PDP_SECONDS)),
     })
     .then(({ products }) => products[0])
 })
@@ -79,7 +107,7 @@ export const getProductsList = cache(async function ({
         fields: "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id,+metadata",
         ...queryParams,
       },
-      ...(await getCacheDirectives("products")),
+      ...(await productCache(LIST_SECONDS)),
     })
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null
@@ -126,11 +154,11 @@ export const getProductsListWithSort = cache(async function ({
     }
   }
 
-  // Fetch fresh (bypassing the shared force-cache) so the order + region-priced
-  // result always reflects the current sort. Category routes were previously
-  // statically prerendered, which left their cached product fetch frozen on the
-  // default order; a per-request fetch fixes that. sortProducts then applies the
-  // price ordering the Store API cannot do server-side.
+  // Cached for LIST_SECONDS like the other list reads. The sort order is
+  // part of the query, and so of the cache key, so every order gets its own
+  // entry and a cached default order is never served for another sort.
+  // sortProducts then applies the price ordering the Store API cannot do
+  // server-side.
   const { products, count } =
     await sdk.client.fetch<HttpTypes.StoreProductListResponse>("/store/products", {
       method: "GET",
@@ -142,8 +170,7 @@ export const getProductsListWithSort = cache(async function ({
         fields:
           "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id,+metadata",
       },
-      cache: "no-store",
-      next: { revalidate: 0 },
+      ...(await productCache(LIST_SECONDS)),
     } as any)
 
   const sortedProducts = sortProducts(products || [], sortBy)
