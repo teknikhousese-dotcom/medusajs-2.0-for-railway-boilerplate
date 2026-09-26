@@ -20,6 +20,14 @@ const OrdersIcon = () => (
 
 const sek = (n: number) =>
   new Intl.NumberFormat("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0)) + " kr"
+/* Wiki-format: "632 kr", "79,20 kr", "4 792 kr", "-56 kr" (decimaler bara när de inte är noll). */
+const wkr = (n: number) => {
+  const cents = Math.round(Math.abs(Number(n || 0)) * 100)
+  const neg = Number(n || 0) < 0 && cents > 0
+  const i = String(Math.floor(cents / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  const c = cents % 100
+  return (neg ? "-" : "") + i + (c ? "," + String(c).padStart(2, "0") : "") + " kr"
+}
 const dt = (s?: string) => {
   if (!s) return ""
   try { return new Date(s).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(",", "") } catch { return s }
@@ -453,12 +461,93 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   const klarnaCanAct = !!(klarna && klarna.kustom && (!klarna.wiki || (klarna.reachable && (klarna.status === "AUTHORIZED" || klarna.status === "PART_CAPTURED"))))
   const telefon = m.wiki_order_id ? (m.phone || "") : (sa.phone || m.phone || "")
 
+  const r2 = (n: number) => Math.round(Number(n || 0) * 100) / 100
   const itemsExcl = (o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity), 0)
-  const shipExcl = Number(sm ? sm.amount : (o.shipping_total ?? 0))
-  const totalExcl = itemsExcl + shipExcl
-  const grand = Number(o.tax_total) > 0 ? Number(o.total ?? 0) : (itemsExcl + shipExcl) * 1.25
-  const taxTotal = Number(o.tax_total) > 0 ? Number(o.tax_total) : (grand - totalExcl)
-  const incl = (excl: number, vat: number) => Number(excl) * (1 + (Number(vat) || 25) / 100)
+  /* Wiki: frakt, expeditionsavgift och kreditering visas som egna rader i varutabellen (SHIP25/HAND25/CRED).
+     Momssats för dessa rader: 0 % om hela ordern är momsfri (export), annars 25 %. */
+  const vb = m.vat_breakdown || null
+  const lineVat = vb && Number(vb["25"] && vb["25"].base) === 0 && Number(vb["0"] && vb["0"].base) > 0 ? 0 : 25
+  const feeExcl = r2(Number(m.payment_fee_excl_vat) || 0)
+  const credExcl = r2(Number(m.wiki_credit_excl_vat) || 0)
+  const smAmt = Number(sm ? sm.amount : (o.shipping_total ?? 0)) || 0
+  let shipExcl = r2(sm && sm.is_tax_inclusive ? smAmt / (1 + lineVat / 100) : smAmt)
+  /* Importen har ibland dragit krediteringen från frakten (t.ex. 69409: 79,20 - 56 = 23,20). Återställ Wikis fraktrad när summan då stämmer mot Wikis total. */
+  const wikiTe = m.wiki_total_excl_vat != null && m.wiki_total_excl_vat !== "" ? Number(m.wiki_total_excl_vat) : NaN
+  if (credExcl !== 0 && !isNaN(wikiTe) && Math.abs(itemsExcl + shipExcl + feeExcl - wikiTe) < 0.01 && shipExcl - credExcl > 0) shipExcl = r2(shipExcl - credExcl)
+  const extraLines: { code: string; title: string; excl: number; vat: number }[] = []
+  if (shipExcl > 0) extraLines.push({ code: "SHIP" + lineVat, title: m.wiki_order_id ? "Frakt" : ((sm && sm.name) || "Frakt"), excl: shipExcl, vat: lineVat })
+  if (feeExcl !== 0) extraLines.push({ code: "HAND" + lineVat, title: m.payment_fee_name || "Expeditionsavgift", excl: feeExcl, vat: lineVat })
+  if (credExcl !== 0) extraLines.push({ code: m.wiki_credit_code || "CRED", title: m.wiki_credit_text || "Kreditering", excl: credExcl, vat: lineVat })
+  const extraExcl = extraLines.reduce((s, l) => s + l.excl, 0)
+  const totalExcl = r2(itemsExcl + extraExcl)
+  const itVat = (it: any) => (it.tax_lines && it.tax_lines[0] ? Number(it.tax_lines[0].rate) : lineVat)
+  const grand = Number(o.tax_total) > 0 ? Number(o.total ?? 0) : r2((o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity) * (1 + itVat(it) / 100), 0) + extraLines.reduce((s, l) => s + l.excl * (1 + l.vat / 100), 0))
+  const taxTotal = r2(grand - totalExcl)
+  const incl = (excl: number, vat: number) => Number(excl) * (1 + (vat === 0 ? 0 : (Number(vat) || 25)) / 100)
+
+  /* Betalningstatus som i Wiki: betalsättets namn, sedan statustext (Wikis exakta formuleringar), sedan Klarna-uppgifter. */
+  const pmKey = (betalsatt || "").toUpperCase().replace(/[^A-Z]/g, "")
+  const pmName = /KLARNA/.test(pmKey) ? "Klarna Checkout" : (pmKey === "SWISH" ? "Swish" : (pmKey === "PAYSONFAKTURA" ? "Payson Faktura" : (pmKey === "PAYSON" ? "Payson" : (pmKey === "CDON" ? "CDON" : (pmKey === "KORT" || pmKey === "KORTBETALNING" || pmKey === "STRIPE" ? "Kort" : (betalsatt || ""))))))
+  const kOrderId = (klarna && klarna.kustom_order_id) || m.wiki_klarna_order_id || ""
+  const kRef = (klarna && klarna.reference) || m.wiki_klarna_reference || ""
+  const kButik = (klarna && klarna.butik_id) || m.wiki_klarna_butik_id || ""
+  const kCaptured = paidLike || !!(klarna && klarna.captured)
+  const kCancelled = !kCaptured && (m.kustom_cancelled === true || !!(klarna && klarna.cancelled) || wikiRed)
+  const ok: any = { color: "#009900" }
+  const err: any = { color: "#cc0000" }
+  const grey: any = { color: "#666666", fontSize: "10px" }
+  const gap: any = { marginTop: "12px" }
+  const wikiPayLines: string[] = Array.isArray(m.wiki_payment_text) ? m.wiki_payment_text : (typeof m.wiki_payment_text === "string" && m.wiki_payment_text ? String(m.wiki_payment_text).split("\n") : [])
+  const redigeraLink = <a onClick={() => onEdit(o.id)} style={{ color: "#06c", cursor: "pointer" }}>Redigera order</a>
+  let payBody: any = null
+  if (pmKey === "INGEN") {
+    payBody = null
+  } else if (wikiPayLines.length) {
+    payBody = <div style={gap}>{wikiPayLines.map((t, i) => <div key={i}>{t}</div>)}</div>
+  } else if (/KLARNA/.test(pmKey) || (klarna && klarna.kustom)) {
+    const ids = kOrderId ? (
+      <div style={{ ...grey, ...gap }}>
+        <div>Klarnas order-id: {kOrderId}</div>
+        {kRef ? <div>Referens: {kRef}</div> : null}
+        {kButik ? <div>Butik-id: {kButik}</div> : null}
+        {klarnaPending && klarna && klarna.expiry ? <div>Giltig tills: {String(klarna.expiry).slice(0, 10)}{klarnaCanAct ? <> <a onClick={() => klarnaAction("extend")} style={{ color: "#06c", cursor: "pointer" }}>Förläng</a></> : null}</div> : null}
+      </div>
+    ) : null
+    if (kCaptured) {
+      payBody = <>
+        <div style={{ ...ok, ...gap }}>Transaktionen är nu genomförd - varorna kan skickas!</div>
+        <div style={gap}>Återbetalning/kreditering av belopp kan göras på sidan "{redigeraLink}". Om ordern makuleras görs en fullständig kreditering.</div>
+        {ids}
+      </>
+    } else if (kCancelled) {
+      payBody = <div style={{ ...err, ...gap }}>Transaktionen har avbrutits.</div>
+    } else if (klarnaPending) {
+      payBody = <>
+        <div style={gap}>Klarna har godkänt kunden för betalning! I samband med leveransen ska du aktivera transaktionen nedan - alternativt kan transaktionen avbrytas om kunden ångrar sig. Ändring i varulistan kan göras under "{redigeraLink}" innan aktiveringen.</div>
+        {klarnaCanAct ? (
+          <div style={gap}><a onClick={() => klarnaAction("capture")} style={{ ...ok, cursor: "pointer" }}>Aktivera och leverera</a> | <a onClick={() => klarnaAction("cancel")} style={{ ...err, cursor: "pointer" }}>Avbryt</a></div>
+        ) : (klarna && klarna.kustom ? (
+          <div style={{ ...gap, padding: "6px 8px", border: "1px dashed #c9a13b", color: "#7a5b00" }}>{klarna.reachable ? ("Klarna-status: " + (klarna.status || "okänd") + " – kan inte aktiveras härifrån.") : "Klarna-reservationen kan inte nås via vår Kustom-koppling. Aktivera i Klarna/Kustom portalen."}</div>
+        ) : null)}
+        {ids}
+      </>
+    } else {
+      payBody = <><div style={{ ...err, ...gap }}>{statusText}</div>{ids}</>
+    }
+  } else if (pmKey === "SWISH") {
+    payBody = paidLike
+      ? <><div style={{ ...ok, ...gap }}>Betalningen är genomförd!</div><div style={gap}>Eventuell återbetalning kan göras under "{redigeraLink}".</div></>
+      : <div style={{ ...err, ...gap }}>{statusText}</div>
+  } else if (pmKey === "PAYSON") {
+    payBody = <div style={{ ...(paidLike ? ok : err), ...gap }}>{paidLike ? "COMPLETED: Transaktionen är genomförd!" : statusText}</div>
+  } else if (pmKey === "PAYSONFAKTURA") {
+    payBody = <><div style={{ ...(paidLike ? ok : err), ...gap }}>{paidLike ? "SHIPPED" : statusText}</div><div style={gap}>Obs! Kundens leveransadress har uppdaterats från Payson till folkbokföringsadressen.</div></>
+  } else if (pmKey === "CDON") {
+    payBody = m.cdon_order_id ? <div style={gap}>ID hos CDON: {m.cdon_order_id}</div> : null
+  } else {
+    payBody = <div style={{ color: statusColor, ...gap }}>{statusText}</div>
+  }
+  const payCell = <div style={{ lineHeight: 1.5 }}><div style={{ fontWeight: 700 }}>{pmName || "—"}</div>{payBody}</div>
 
   const save = async () => {
     setSaved("Sparar…")
@@ -515,33 +604,9 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
           <KV k="IP-adress vid beställning" v={m.ip_address || "—"} />
           <KV k="Beställd via" v={viaText(m.ordered_via)} />
           <KV k="Tidpunkt vid beställning" v={when} />
-          <KV k="Betalningstatus:" v={<span>{payBadge(betalsatt)}<span style={{ color: statusColor }}>{statusText}</span></span>} />
+          <KV k="Betalningstatus:" v={payCell} />
           <KV k="Språk / Valuta:" v={`Svenska / ${(o.currency_code || "SEK").toUpperCase()}`} />
         </tbody></table>
-        {klarna?.kustom && !klarna?.cancelled ? (
-          <div style={{ margin: "0 0 14px", padding: "10px 12px", border: "1px solid #e5c07b", background: "#fff9ec", fontSize: "11px", fontFamily: WF, width: "600px", maxWidth: "100%", boxSizing: "border-box", lineHeight: 1.6 }}>
-            <div style={{ fontWeight: 700, marginBottom: "4px" }}>Klarna Checkout</div>
-            {klarna.captured ? (
-              <div style={{ color: "#161", marginBottom: "6px" }}>Transaktionen är nu genomförd - varorna kan skickas!</div>
-            ) : (
-              <div>
-                <div style={{ marginBottom: "8px" }}>Klarna har godkänt kunden för betalning! I samband med leveransen ska du aktivera transaktionen nedan - alternativt kan transaktionen avbrytas om kunden ångrar sig. Ändring i varulistan kan göras under "Redigera order" innan aktiveringen.</div>
-                {klarnaCanAct ? (
-                  <div style={{ marginBottom: "8px" }}>
-                    <button onClick={() => klarnaAction("capture")} style={{ background: "#111", color: "#fff", border: 0, borderRadius: "3px", padding: "5px 12px", cursor: "pointer", marginRight: "8px", fontFamily: WF, fontSize: "11px" }}>Aktivera och leverera</button>
-                    <button onClick={() => klarnaAction("cancel")} style={{ background: "#fff", color: "#a00", border: "1px solid #a00", borderRadius: "3px", padding: "5px 12px", cursor: "pointer", fontFamily: WF, fontSize: "11px" }}>Avbryt</button>
-                  </div>
-                ) : (
-                  <div style={{ marginBottom: "8px", padding: "6px 8px", background: "#fff", border: "1px dashed #c9a13b", color: "#7a5b00" }}>{klarnaExpired ? "Klarna-reservationen har gått ut och kan inte längre aktiveras." : (klarna.reachable ? ("Klarna-status: " + (klarna.status || "okänd") + " – kan inte aktiveras härifrån.") : "Klarna-reservationen kan inte nås via vår Kustom-koppling. Aktivera i Klarna/Kustom portalen.")}</div>
-                )}
-              </div>
-            )}
-            <div style={{ color: "#333" }}>Klarnas order-id: {klarna.kustom_order_id}</div>
-            {klarna.reference ? <div style={{ color: "#333" }}>Referens: {klarna.reference}</div> : null}
-            {klarna.butik_id ? <div style={{ color: "#333" }}>Butik-id: {klarna.butik_id}</div> : null}
-            {klarna.expiry ? <div style={{ color: "#333" }}>Giltig tills: {String(klarna.expiry).slice(0, 10)}{klarnaCanAct && !klarna.captured ? <> <a onClick={() => klarnaAction("extend")} style={{ color: "#06c", cursor: "pointer" }}>Förläng</a></> : null}</div> : null}
-          </div>
-        ) : null}
 
 
         <table style={{ ...tbl }}><tbody>
@@ -554,24 +619,33 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
             <td style={{ ...thTd, textAlign: "right" }}>Summa inkl. moms</td>
           </tr>
           {(o.items || []).map((it: any) => {
-            const vat = it.tax_lines && it.tax_lines[0] ? Number(it.tax_lines[0].rate) : 25
+            const vat = itVat(it)
             const pi = incl(it.unit_price, vat)
             return (
               <tr key={it.id}>
                 <td style={cellTd}>{it.variant_sku || (it.metadata && it.metadata.sku) || "—"}</td>
                 <td style={cellTd}>{it.title}{it.subtitle ? ` · ${it.subtitle}` : ""}</td>
-                <td style={{ ...cellTd, textAlign: "right" }}>{sek(it.unit_price)}</td>
-                <td style={{ ...cellTd, textAlign: "right" }}>{sek(pi)}</td>
+                <td style={{ ...cellTd, textAlign: "right" }}>{wkr(it.unit_price)}</td>
+                <td style={{ ...cellTd, textAlign: "right" }}>{wkr(pi)}</td>
                 <td style={{ ...cellTd, textAlign: "center" }}>{it.quantity} st.</td>
-                <td style={{ ...cellTd, textAlign: "right" }}>{sek(pi * Number(it.quantity))}</td>
+                <td style={{ ...cellTd, textAlign: "right" }}>{wkr(pi * Number(it.quantity))}</td>
               </tr>
             )
           })}
-          <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }} colSpan={5}>Summa exkl. 25% moms »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }}>{sek(itemsExcl)}</td></tr>
-          {shipExcl > 0 && <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }} colSpan={5}>Frakt exkl. moms »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }}>{sek(shipExcl)}</td></tr>}
-          <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }} colSpan={5}>Totalt exkl. moms »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }}>{sek(totalExcl)}</td></tr>
-          <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }} colSpan={5}>Totalt inkl. moms »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }}>{sek(grand)}</td></tr>
-          <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }} colSpan={5}>Varav moms (25%) »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }}>{sek(taxTotal)}</td></tr>
+          {extraLines.map((l) => (
+            <tr key={l.code + l.title}>
+              <td style={cellTd}>{l.code}</td>
+              <td style={cellTd}>{l.title}</td>
+              <td style={{ ...cellTd, textAlign: "right" }}>{wkr(l.excl)}</td>
+              <td style={{ ...cellTd, textAlign: "right" }}>{wkr(incl(l.excl, l.vat))}</td>
+              <td style={{ ...cellTd, textAlign: "center" }}>1 st.</td>
+              <td style={{ ...cellTd, textAlign: "right" }}>{wkr(incl(l.excl, l.vat))}</td>
+            </tr>
+          ))}
+          <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }} colSpan={5}>{"Summa exkl. " + lineVat + "% moms »"}</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }}>{wkr(totalExcl)}</td></tr>
+          <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }} colSpan={5}>Totalt exkl. moms »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }}>{wkr(totalExcl)}</td></tr>
+          <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }} colSpan={5}>Totalt inkl. moms »</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7", fontWeight: 700 }}>{wkr(grand)}</td></tr>
+          {lineVat > 0 || taxTotal !== 0 ? <tr><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }} colSpan={5}>{"Varav moms (" + (lineVat || 25) + "%) »"}</td><td style={{ ...cellTd, textAlign: "right", background: "#f7f7f7" }}>{wkr(taxTotal)}</td></tr> : null}
         </tbody></table>
 
         <div style={{ marginTop: "4px" }}>
