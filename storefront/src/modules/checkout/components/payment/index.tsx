@@ -154,11 +154,11 @@ const Payment = ({
 
   return (
     <div className="bg-white">
-      <div className="flex flex-row items-center justify-between mb-6">
+      <div className="flex flex-row items-center justify-between gap-x-4 mb-5 small:mb-6">
         <Heading
           level="h2"
           className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
+            "flex flex-row items-center gap-x-2 text-[22px] small:text-[28px] font-semibold leading-tight text-[#14161C]",
             {
               "opacity-50 pointer-events-none select-none":
                 !isOpen && !paymentReady,
@@ -230,7 +230,7 @@ const Payment = ({
           )}
 
           {paidByGiftcard && (
-            <div className="flex flex-col w-1/3">
+            <div className="flex flex-col">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
                 Betalsätt
               </Text>
@@ -251,7 +251,7 @@ const Payment = ({
           {isOpen && isKustomFunc(selectedPaymentMethod) ? (
             <div className="mt-4" data-testid="kustom-checkout-container">
               <Text className="txt-medium text-ui-fg-subtle mb-3">
-                Fyll i dina uppgifter och slutför köpet i Klarnas kassa nedan.
+                Fyll i dina uppgifter och betala i Klarnas kassa här nedanför.
               </Text>
               <KustomPaymentButton
                 cart={cart}
@@ -262,7 +262,7 @@ const Payment = ({
           ) : (
             <Button
               size="large"
-              className="mt-6"
+              className="mt-6 w-full small:w-auto"
               onClick={handleSubmit}
               isLoading={isLoading}
               disabled={
@@ -280,42 +280,32 @@ const Payment = ({
 
         <div className={isOpen ? "hidden" : "block"}>
           {cart && paymentReady && activeSession ? (
-            <div className="flex items-start gap-x-1 w-full">
-              <div className="flex flex-col w-1/3">
+            <div className="grid grid-cols-1 small:grid-cols-2 gap-4 w-full">
+              <div className="flex flex-col min-w-0">
                 <Text className="txt-medium-plus text-ui-fg-base mb-1">
                   Betalsätt
                 </Text>
-                <Text
-                  className="txt-medium text-ui-fg-subtle"
-                  data-testid="payment-method-summary"
-                >
-                  {paymentInfoMap[selectedPaymentMethod]?.title ||
-                    selectedPaymentMethod}
-                </Text>
-              </div>
-              <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                  Betalningsuppgifter
-                </Text>
                 <div
                   className="flex gap-2 txt-medium text-ui-fg-subtle items-center"
-                  data-testid="payment-details-summary"
+                  data-testid="payment-method-summary"
                 >
-                  <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
+                  <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover shrink-0">
                     {paymentInfoMap[selectedPaymentMethod]?.icon || (
                       <CreditCard />
                     )}
                   </Container>
-                  <Text>
+                  <Text className="min-w-0 break-words">
+                    {paymentInfoMap[selectedPaymentMethod]?.title ||
+                      selectedPaymentMethod}
                     {isStripeFunc(selectedPaymentMethod) && cardBrand
-                      ? cardBrand
-                      : "Ytterligare ett steg visas"}
+                      ? ", " + cardBrand
+                      : ""}
                   </Text>
                 </div>
               </div>
             </div>
           ) : paidByGiftcard ? (
-            <div className="flex flex-col w-1/3">
+            <div className="flex flex-col">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
                 Betalsätt
               </Text>
