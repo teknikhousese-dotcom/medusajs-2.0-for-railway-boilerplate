@@ -289,7 +289,7 @@ export default function ProductActions({
           </div>
           <div className="tr">
             <svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>
-            Garanti ingår · trygg e-handel
+            Garanti ingår · handla tryggt och säkert hos oss
           </div>
           <div className="pay">
             {["Swish", "Klarna", "VISA", "Mastercard", "PostNord"].map((p) => (
