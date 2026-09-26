@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { HttpTypes } from "@medusajs/types"
+import { legacyHtmlCss, sanitizeLegacyHtml } from "@lib/util/sanitize-legacy-html"
 
 type ProductTabsProps = {
   product: HttpTypes.StoreProduct
@@ -78,10 +79,12 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
     { id: "frakt", label: "Frakt & Retur" },
   ]
   const [active, setActive] = useState("desc")
+  // Legacy texts: no JSON-LD (the page has its own Product block), no inline styles, clean links.
+  const descHtml = useMemo(() => sanitizeLegacyHtml(product.description), [product.description])
 
   return (
     <div className="thtabs">
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: CSS + legacyHtmlCss(".thdesc", false) }} />
       <div className="bar" role="tablist">
         {tabs.map((t) => (
           <button
@@ -99,11 +102,11 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
 
       <div className="body">
         {active === "desc" &&
-          (product.description ? (
+          (descHtml ? (
             <div
               className="thdesc"
               data-testid="product-description"
-              dangerouslySetInnerHTML={{ __html: product.description }}
+              dangerouslySetInnerHTML={{ __html: descHtml }}
             />
           ) : (
             <p style={{ color: "#6f685f", fontSize: "14.5px" }}>
