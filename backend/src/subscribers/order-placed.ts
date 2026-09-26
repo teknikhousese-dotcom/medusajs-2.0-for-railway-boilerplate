@@ -4,6 +4,40 @@ import { SubscriberArgs, SubscriberConfig } from '@medusajs/medusa'
 import { EmailTemplates } from '../modules/email-notifications/templates'
 import { SHOP_EMAIL, fromAddress, loadDbTemplate, fillTemplate, sendShopMail, htmlToText } from '../modules/email-notifications/shop-mail'
 import { loadOrderForMail, orderNumber, orderPlaceholderMap, sendShopOrderNotification } from '../modules/email-notifications/order-mails'
+import { updateKustomMerchantReferences } from '../lib/kustom-cart'
+
+/* Swedish local time "YYYY-MM-DD HH:MM:SS", the same format as Wiki order times. */
+function swedishTime(d: any): string {
+  try {
+    const opts: any = { timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }
+    const parts = new Intl.DateTimeFormat('sv-SE', opts).formatToParts(new Date(d))
+    const g = (k: string) => parts.find((p) => p.type === k)?.value || '00'
+    return g('year') + '-' + g('month') + '-' + g('day') + ' ' + g('hour') + ':' + g('minute') + ':' + g('second')
+  } catch {
+    return ''
+  }
+}
+
+/* Payment provider and data of an order: the payment row, else the authorized
+   (or any) payment session, so the stamp also works if the payment row is not
+   readable yet. */
+function pickOrderPayment(row: any): { provider_id: string; data: any } {
+  const pcs: any[] = row?.payment_collections || []
+  for (const pc of pcs) {
+    for (const p of pc?.payments || []) {
+      if (p?.provider_id) return { provider_id: String(p.provider_id), data: p.data || {} }
+    }
+  }
+  let fallback: any = null
+  for (const pc of pcs) {
+    for (const ps of pc?.payment_sessions || []) {
+      if (!ps?.provider_id) continue
+      if (ps.status === 'authorized') return { provider_id: String(ps.provider_id), data: ps.data || {} }
+      if (!fallback) fallback = ps
+    }
+  }
+  return fallback ? { provider_id: String(fallback.provider_id), data: fallback.data || {} } : { provider_id: '', data: {} }
+}
 
 export default async function orderPlacedHandler({
   event: { data },
@@ -88,38 +122,88 @@ export default async function orderPlacedHandler({
     console.error('Error sending order confirmation notification:', error)
   }
 
-  // Tag the payment method on the order (metadata.payment_method) from the
-  // payment provider, so the admin Orders list shows the right logo
-  // (Swish/Klarna/Card). Runs after the email so a failure here cannot
-  // block the order confirmation.
+  // Order metadata for the admin (Ordrar), for every native order, Swish and
+  // Klarna/Kustom alike, including orders created by the Kustom push fallback:
+  //  - payment_method (SWISH / KLARNA / Kort) from the payment provider, with
+  //    the payment session as fallback, and kustom_order_id for Kustom orders;
+  //  - order_time in Swedish local time ("YYYY-MM-DD HH:MM:SS");
+  //  - ordered_via "-" when the storefront did not send it (push fallback).
+  //    ip_address and ordered_via normally come from the cart metadata that
+  //    the storefront placeOrder() writes just before completing the cart.
+  // Then the Kustom order's merchant references are set to our order number.
+  // Runs after the email so a failure here cannot block the confirmation.
   try {
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
-    const { data: rows } = await query.graph({
-      entity: 'order',
-      filters: { id: data.id },
-      fields: ['id', 'metadata', 'payment_collections.payments.provider_id', 'payment_collections.payments.data'],
-    })
-    const row: any = rows?.[0]
-    const pay: any = row?.payment_collections?.[0]?.payments?.[0]
-    const pid: string = pay?.provider_id || ''
+    const loadRow = async (): Promise<any> => {
+      const { data: rows } = await query.graph({
+        entity: 'order',
+        filters: { id: data.id },
+        fields: [
+          'id',
+          'display_id',
+          'created_at',
+          'metadata',
+          'payment_collections.payments.provider_id',
+          'payment_collections.payments.data',
+          'payment_collections.payment_sessions.provider_id',
+          'payment_collections.payment_sessions.status',
+          'payment_collections.payment_sessions.data',
+        ],
+      })
+      return rows?.[0] || null
+    }
+    let row: any = await loadRow()
+    let pay = pickOrderPayment(row)
+    if (!pay.provider_id) {
+      await new Promise((ok) => setTimeout(ok, 3000))
+      row = await loadRow()
+      pay = pickOrderPayment(row)
+    }
+    const pid: string = pay.provider_id
     let pm = ''
     if (/swish/i.test(pid)) pm = 'SWISH'
     else if (/klarna|kustom/i.test(pid)) pm = 'KLARNA'
     else if (/stripe|card/i.test(pid)) pm = 'Kort'
-    const current = (row?.metadata?.payment_method as string) || ''
-    /* Kustom (KCO) orders: store kustom_order_id so the admin Klarna panel can capture/refund. */
-    const kid: string = /kustom/i.test(pid) ? String(pay?.data?.kustom_order_id || '') : ''
-    const needKid = !!kid && row?.metadata?.kustom_order_id !== kid
-    if ((pm && current !== pm) || needKid) {
-      const meta: any = { ...(row?.metadata || {}) }
-      if (pm) meta.payment_method = pm
-      if (needKid) meta.kustom_order_id = kid
+    if (!pid) console.warn('order.placed: no payment provider found for', data.id)
+    const kid: string = /kustom/i.test(pid) ? String(pay.data?.kustom_order_id || '') : ''
+
+    const meta: any = { ...(row?.metadata || {}) }
+    let changed = false
+    if (pm && meta.payment_method !== pm) {
+      meta.payment_method = pm
+      changed = true
+    }
+    if (kid && meta.kustom_order_id !== kid) {
+      meta.kustom_order_id = kid
+      changed = true
+    }
+    if (!meta.wiki_order_id && !meta.order_time) {
+      const t = swedishTime(row?.created_at || (order as any).created_at || new Date())
+      if (t) {
+        meta.order_time = t
+        changed = true
+      }
+    }
+    if (!meta.wiki_order_id && !meta.ordered_via) {
+      meta.ordered_via = '-'
+      changed = true
+    }
+    if (changed) {
       await orderModuleService.updateOrders(data.id, {
         metadata: meta,
       })
     }
+
+    if (kid && !meta.wiki_order_id) {
+      const ref = String(row?.display_id || (order as any).display_id || '')
+      let r = await updateKustomMerchantReferences(kid, ref)
+      if (!r.ok && r.status !== 401 && r.status !== 403) {
+        await new Promise((ok) => setTimeout(ok, 5000))
+        r = await updateKustomMerchantReferences(kid, ref)
+      }
+    }
   } catch (error) {
-    console.error('Could not stamp payment_method on order', data.id, error)
+    console.error('Could not stamp order metadata on order', data.id, error)
   }
 
   /* Shop notification to info@teknikhouse.se (replaces the old Wiki "Order <nr> (<namn>)" mail). */
