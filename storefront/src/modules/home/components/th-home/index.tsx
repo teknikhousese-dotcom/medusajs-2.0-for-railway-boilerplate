@@ -3,6 +3,7 @@ import NewsletterSignup from "./newsletter-signup"
 import RecentlyViewed from "./recently-viewed"
 import DeviceFinder from "./device-finder"
 import TrustindexReviews from "./trustindex-reviews"
+import HeroDeviceVisual from "./hero-device-visual"
 
 // Teknikhouse 2027 homepage: light, warm Swedish-retail styling
 // (modelled on power.se / teknikdelar.se / 24.se). Scoped under .th.
@@ -41,13 +42,6 @@ const CSS = `
 .th .herochips .s{color:var(--star)}
 .th .badge.safe{color:var(--ink2)}
 .th .badge.safe svg{width:16px;height:16px;stroke:var(--green);stroke-width:2;fill:none;flex:0 0 auto}
-.th .heroart{background:#fff;border-radius:24px;box-shadow:0 20px 50px rgba(27,23,20,.1);min-height:360px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.th .heroart .ph{width:150px;height:300px;border-radius:34px;background:linear-gradient(160deg,#2c2621,#4a423b);box-shadow:0 20px 50px rgba(0,0,0,.25);position:relative}
-.th .heroart .ph:after{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:46px;height:6px;border-radius:3px;background:rgba(255,255,255,.25)}
-.th .heroart .fc{position:absolute;background:#fff;border-radius:14px;padding:11px 14px;box-shadow:0 12px 30px rgba(27,23,20,.12);font-size:12.5px}
-.th .heroart .fc b{display:block;font-family:var(--round);font-weight:600;color:var(--ink)}
-.th .heroart .fc .p{color:var(--red);font-weight:600}
-.th .heroart .fc .ok{color:var(--green);font-weight:600;font-size:11.5px}
 
 /* usp */
 .th .usp{background:var(--bg);border-bottom:1px solid var(--line)}
@@ -251,11 +245,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
           <DeviceFinder regionId={region?.id} />
           <div className="herochips"><span>Fri frakt över 999 kr</span><span>Premiumtestade delar med garanti</span><span>Snabb leverans</span></div>
         </div>
-        <div className="heroart">
-          <div className="ph" />
-          <div className="fc" style={{ top: "44px", left: "34px" }}><b>Skärm iPhone 13</b><span className="ok">✓ Sorterat efter modell</span></div>
-          <div className="fc" style={{ bottom: "44px", right: "34px" }}><b>Batteri · 649 kr</b><span className="p">Med garanti</span></div>
-        </div>
+        <HeroDeviceVisual />
       </div></div>
 
       {/* USP */}
