@@ -43,10 +43,11 @@ const QuickLinks: [string, string][] = [
   ["Alla produkter", "/store"],
   ["Sök", "/search"],
   ["Konto", "/account"],
+  ["Kundtjänst", "/contact"],
 ]
 
 /**
- * Power-style category drawer — light panel with department icons and
+ * Category drawer: light panel with department icons and
  * expandable subcategories (chevron), plus quick links.
  */
 const SideMenu = ({
@@ -79,9 +80,9 @@ const SideMenu = ({
               <div className="relative flex h-full">
                 <Popover.Button
                   data-testid="nav-menu-button"
-                  className="relative h-full flex items-center gap-2 transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base font-medium"
+                  className="relative h-full min-w-[44px] flex items-center gap-2 transition-all ease-out duration-200 focus:outline-none focus-visible:text-[#F50000] hover:text-ui-fg-base font-medium"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                  <svg className="shrink-0 block" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
                   Meny
                 </Popover.Button>
               </div>
@@ -96,14 +97,14 @@ const SideMenu = ({
                 leaveFrom="opacity-100 translate-x-0"
                 leaveTo="opacity-0 -translate-x-2"
               >
-                <Popover.Panel className="flex flex-col absolute w-full sm:w-[380px] h-[calc(100vh-1rem)] z-[60] inset-x-0 sm:inset-x-auto text-sm text-ui-fg-base my-2 sm:ml-0">
+                <Popover.Panel className="flex flex-col absolute top-full left-0 right-0 xsmall:right-auto xsmall:left-4 w-full xsmall:w-[380px] h-[calc(100dvh-106px)] z-[60] text-sm text-ui-fg-base xsmall:mt-2">
                   <div
                     data-testid="nav-menu-popup"
-                    className="flex flex-col h-full bg-white rounded-rounded border border-ui-border-base shadow-2xl justify-between overflow-hidden"
+                    className="flex flex-col h-full bg-white xsmall:rounded-rounded border-t xsmall:border border-ui-border-base shadow-2xl justify-between overflow-hidden"
                   >
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-ui-border-base">
+                    <div className="flex items-center justify-between pl-5 pr-2 py-1.5 border-b border-ui-border-base">
                       <span className="text-base font-semibold">Kategorier</span>
-                      <button type="button" data-testid="close-menu-button" onClick={close} aria-label="Stäng meny" className="text-ui-fg-subtle hover:text-ui-fg-base">
+                      <button type="button" data-testid="close-menu-button" onClick={close} aria-label="Stäng meny" className="flex items-center justify-center w-11 h-11 text-ui-fg-subtle hover:text-ui-fg-base">
                         <XMark />
                       </button>
                     </div>
@@ -120,19 +121,20 @@ const SideMenu = ({
                                 <LocalizedClientLink
                                   href={depHref}
                                   onClick={close}
-                                  className="flex flex-1 items-center gap-3 px-5 py-3.5 hover:bg-ui-bg-subtle"
+                                  className="flex flex-1 min-w-0 items-center gap-3 px-5 py-3 min-h-[48px] hover:bg-ui-bg-subtle"
                                 >
                                   <span className="text-ui-fg-base">
                                     <DeptIcon name={niceCategoryName(dep.name, dep.handle)} />
                                   </span>
-                                  <span className="font-medium">{dep.name}</span>
+                                  <span className="font-medium truncate">{dep.name}</span>
                                 </LocalizedClientLink>
                                 {kids.length > 0 && (
                                   <button
                                     type="button"
-                                    aria-label={isOpen ? "Dölj" : "Visa"}
+                                    aria-label={isOpen ? `Dölj ${dep.name}` : `Visa ${dep.name}`}
+                                    aria-expanded={isOpen}
                                     onClick={() => setExpanded(isOpen ? null : dep.id)}
-                                    className="px-4 self-stretch text-ui-fg-subtle hover:text-[#F50000]"
+                                    className="w-12 self-stretch flex items-center justify-center text-ui-fg-subtle hover:text-[#F50000]"
                                   >
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className={"transition-transform " + (isOpen ? "rotate-90" : "")}><path d="M9 6l6 6-6 6" /></svg>
                                   </button>
@@ -145,7 +147,7 @@ const SideMenu = ({
                                       <LocalizedClientLink
                                         href={`${depHref}/${seg(k, dep)}`}
                                         onClick={close}
-                                        className="block pl-14 pr-5 py-2 text-ui-fg-subtle hover:text-[#F50000]"
+                                        className="flex items-center min-h-[44px] pl-14 pr-5 py-2 text-ui-fg-subtle hover:text-[#F50000]"
                                       >
                                         {categoryLabel(k.name, dep.name, seg(k, dep))}
                                       </LocalizedClientLink>
@@ -160,7 +162,7 @@ const SideMenu = ({
                           <LocalizedClientLink
                             href="/kampanjer"
                             onClick={close}
-                            className="flex items-center gap-3 px-5 py-3.5 text-[#F50000] font-semibold hover:bg-ui-bg-subtle"
+                            className="flex items-center gap-3 px-5 py-3 min-h-[48px] text-[#F50000] font-semibold hover:bg-ui-bg-subtle"
                           >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4v7.2L12 21l8.6-5.4z" /><path d="M12 8v5M9.5 10.5h5" /></svg>
                             <span>Kampanjer</span>
@@ -170,10 +172,10 @@ const SideMenu = ({
 
                       <div className="px-5 py-4 border-t border-ui-border-base">
                         <div className="text-[11px] font-semibold uppercase tracking-wide text-ui-fg-muted mb-2">Genvägar</div>
-                        <ul className="flex flex-col gap-1.5">
+                        <ul className="flex flex-col">
                           {QuickLinks.map(([name, href]) => (
                             <li key={name}>
-                              <LocalizedClientLink href={href} onClick={close} className="block py-1 text-ui-fg-subtle hover:text-ui-fg-base">
+                              <LocalizedClientLink href={href} onClick={close} className="flex items-center min-h-[44px] text-ui-fg-subtle hover:text-ui-fg-base">
                                 {name}
                               </LocalizedClientLink>
                             </li>
