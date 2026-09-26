@@ -95,7 +95,7 @@ function VarugrupperPage() {
                     <tr key={c.id}>
                       {sortMode && <td style={td}><input style={{ ...inp, width: "56px" }} value={c.rank} onChange={(e) => setCats(cats.map((x) => x.id === c.id ? { ...x, rank: e.target.value } : x))} /></td>}
                       <td style={td}>{c.label}</td>
-                      <td style={td}>{c.is_active ? <span style={{ color: "#2e7d32" }}>Aktiv</span> : <span style={{ color: "#a00" }}>Dold</span>}</td>
+                      <td style={td}>{c.is_active ? (((c.metadata || {}).hide_in_menu === "1") ? <span style={{ color: "#8a6d00" }}>Aktiv, ej i meny</span> : <span style={{ color: "#2e7d32" }}>Aktiv</span>) : <span style={{ color: "#a00" }}>Avstängd</span>}</td>
                       <td style={td}><a style={lnk} onClick={() => { setEdit({ ...c }); setMsg("") }}>Ändra</a><a style={{ ...lnk, color: "#a00" }} onClick={() => remove(c)}>Ta bort</a></td>
                     </tr>
                   ))}
@@ -115,7 +115,9 @@ function VarugrupperPage() {
                   <option value="">(Ingen – toppnivå)</option>
                   {cats.filter((c) => c.id !== edit.id).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
-                <label style={{ ...lbl, display: "inline-block" }}><input type="checkbox" checked={edit.is_active} onChange={(e) => setEdit({ ...edit, is_active: e.target.checked })} /> Aktiv (visas i butiken)</label>
+                <label style={{ ...lbl, display: "inline-block", marginRight: "16px" }}><input type="checkbox" checked={edit.is_active} onChange={(e) => setEdit({ ...edit, is_active: e.target.checked })} /> Aktiv (sidan finns i butiken)</label>
+<label style={{ ...lbl, display: "inline-block" }}><input type="checkbox" checked={(edit.metadata || {}).hide_in_menu === "1"} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), hide_in_menu: e.target.checked ? "1" : "" } })} /> Dölj i menyerna (sidan och länkar fungerar ändå)</label>
+<div style={{ fontSize: "11px", color: "#8a6d00", margin: "2px 0 6px" }}>Vill du bara ta bort varugruppen från menyn: kryssa i Dölj i menyerna. Avmarkera Aktiv bara om hela sidan ska bort från butiken (den ger då 404).</div>
                 <label style={lbl}>Beskrivning (visas överst på sidan)</label>
                 <RichText value={edit.description || ""} onChange={(html) => setEdit({ ...edit, description: html })} />
                 <label style={{ ...lbl, display: "inline-block", marginRight: "16px" }}><input type="checkbox" checked={(edit.metadata || {}).is_featured === "1"} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), is_featured: e.target.checked ? "1" : "" } })} /> Utvald varugrupp</label><label style={{ ...lbl, display: "inline-block", marginRight: "16px" }}><input type="checkbox" checked={(edit.metadata || {}).startpage_dropdown === "1"} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), startpage_dropdown: e.target.checked ? "1" : "" } })} /> Visa i menyn på startsidan</label><label style={lbl}>Kategoribild (URL)</label><input style={inp} value={(edit.metadata || {}).image || ""} onChange={(e) => setEdit({ ...edit, metadata: { ...(edit.metadata || {}), image: e.target.value } })} /><div style={{ fontSize: 15, fontWeight: 700, color: "#14161C", margin: "22px 0 6px", borderTop: "1px solid #ececef", paddingTop: 16 }}>Sökmotoroptimering</div>

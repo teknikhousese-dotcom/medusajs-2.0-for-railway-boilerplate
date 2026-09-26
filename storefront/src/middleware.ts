@@ -169,6 +169,54 @@ function __u301IsAbs(u: string): boolean {
   const l = (u || "").toLowerCase()
   return l.indexOf("http://") === 0 || l.indexOf("https://") === 0
 }
+// Relativa mal utan avslutande snedstreck, sa att en 301 inte foljs av en extra 308.
+function __u301Clean(u: string): string {
+  if (!u || __u301IsAbs(u) || u.indexOf("?") >= 0) return u
+  let v = u
+  while (v.length > 1 && v.charAt(v.length - 1) === "/") v = v.slice(0, -1)
+  return v
+}
+
+// --- Gamla Wiki-adresser som inte langre finns: fraga backend (/url301/resolve) om
+// narmaste nya sida. Svar cachas per adress i 10 min. Vid fel/timeout faller vi
+// tillbaka till tidigare beteende (produktsidan, som visar 404 om den saknas). ---
+type LegacyResolve = { kind: string; to?: string }
+const __legacyCache = new Map<string, { at: number; r: LegacyResolve | null }>()
+async function resolveLegacyPath(path: string): Promise<LegacyResolve | null> {
+  const now = Date.now()
+  const hit = __legacyCache.get(path)
+  if (hit && now - hit.at < 600000) return hit.r
+  if (!BACKEND_URL) return null
+  let r: LegacyResolve | null = null
+  try {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 2500)
+    const res = await fetch(BACKEND_URL + "/url301/resolve?p=" + encodeURIComponent(path), {
+      headers: { accept: "application/json" },
+      signal: ctrl.signal,
+      cache: "no-store",
+    })
+    clearTimeout(timer)
+    if (res.ok) {
+      const d = await res.json()
+      if (d && typeof d.kind === "string") r = { kind: d.kind, to: typeof d.to === "string" ? d.to : undefined }
+    }
+  } catch (e) {
+    r = null
+  }
+  if (__legacyCache.size > 3000) __legacyCache.clear()
+  // Lyckade svar sparas i 10 min, misslyckade i 1 min (sa att en seg backend inte bromsar varje sidvisning).
+  __legacyCache.set(path, { at: r ? now : now - 540000, r })
+  return r
+}
+
+// Avdelningar som alltid finns. Anvands bara om kategorilistan inte gick att hamta
+// (t.ex. precis efter en omstart), sa att gamla lankar inte blir 404 av en slump.
+const KNOWN_DEPTS = new Set([
+  "mobilreservdelar", "mobiltillbehor", "batterier", "kablar-laddare", "powerbank",
+  "horlurar-hogtalare", "dator-laptop", "datortillbehor", "gaming", "mobiler-surfplattor",
+  "hem-fritid", "verktyg", "mobilreparation", "outlet-fyndvaror",
+])
 
 export async function middleware(request: NextRequest) {
   // Admin-managed 301 redirects run first so explicit rules win.
@@ -179,7 +227,7 @@ export async function middleware(request: NextRequest) {
     const __rules301 = await getUrl301Rules()
     for (const __r301 of __rules301) {
       if (__r301 && (__r301.from === __full301 || __r301.from === __p301)) {
-        const __to301 = __r301.to
+        const __to301 = __u301Clean(__r301.to)
         if (__to301) {
           const __dest301 = __u301IsAbs(__to301) ? __to301 : new URL(__to301, request.url).toString()
           return NextResponse.redirect(__dest301, 301)
@@ -194,6 +242,9 @@ export async function middleware(request: NextRequest) {
       const act = String(lsp.get("action") || "feed").toLowerCase()
       const feedPath = act.indexOf("inventory") >= 0 ? "/google-feed-inventory" : "/google-feed"
       return NextResponse.rewrite(new URL(BACKEND_URL.replace(/\/$/, "") + feedPath))
+    }
+    if (/^\/news(\/.*)?$/i.test(lp)) {
+      return NextResponse.redirect(new URL("/blogg", request.url), 301)
     }
     const blogOld = lp.match(/^\/blogg\/\d{4}\/[a-z]{3}\/([^\/]+)\/?$/i)
     if (blogOld) {
@@ -227,10 +278,28 @@ export async function middleware(request: NextRequest) {
       // otherwise category pages never receive their pagination / sort params.
       const legacySearch = request.nextUrl.search
       let target: string | null = null
+      const isDept =
+        catHandles.has(legacySegs[0]) ||
+        (catHandles.size === 0 && KNOWN_DEPTS.has(legacySegs[0].toLowerCase()))
       if (catHandles.has(joined)) {
         target = `/se/categories/${joined}${legacySearch}`
-      } else if (catHandles.has(legacySegs[0])) {
-        target = `/se/products/${legacySegs[legacySegs.length - 1]}${legacySearch}`
+      } else if (isDept) {
+        // Inte en kategori: produkt, eller en gammal adress som ska 301:as.
+        const resolved = await resolveLegacyPath(request.nextUrl.pathname)
+        if (resolved && resolved.kind === "redirect" && resolved.to) {
+          const dest = __u301Clean(resolved.to)
+          let cur = request.nextUrl.pathname
+          while (cur.length > 1 && cur.charAt(cur.length - 1) === "/") cur = cur.slice(0, -1)
+          if (dest && dest.toLowerCase() !== cur.toLowerCase()) {
+            const destUrl = __u301IsAbs(dest) ? dest : new URL(dest + legacySearch, request.url).toString()
+            return NextResponse.redirect(destUrl, 301)
+          }
+        }
+        if (resolved && resolved.kind === "category") {
+          target = `/se/categories/${joined}${legacySearch}`
+        } else {
+          target = `/se/products/${legacySegs[legacySegs.length - 1]}${legacySearch}`
+        }
       }
       if (target) {
         const legacyRes = NextResponse.rewrite(new URL(target, request.url))
@@ -245,9 +314,6 @@ export async function middleware(request: NextRequest) {
   const regionMap = await getRegionMap()
 
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
-
-  const urlHasCountryCode =
-    countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
 
   // Put the id on the request as well as the response, so the render that is
   // about to happen can already read it.
@@ -284,52 +350,6 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  // check if one of the country codes is in the url
-  if (urlHasCountryCode && (!cartId || cartIdCookie)) {
-    const response = NextResponse.next({
-      request: { headers: request.headers },
-    })
-
-    if (!cacheIdCookie) {
-      response.cookies.set(
-        "_medusa_cache_id",
-        cacheId,
-        CACHE_ID_COOKIE_OPTIONS
-      )
-    }
-
-    return response
-  }
-
-  const redirectPath =
-    request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
-
-  const queryString = request.nextUrl.search ? request.nextUrl.search : ""
-
-  let redirectUrl = request.nextUrl.href
-
-  let response = NextResponse.redirect(redirectUrl, 307)
-
-  // If no country code is set, we redirect to the relevant region.
-  if (!urlHasCountryCode && countryCode) {
-    redirectUrl = `${request.nextUrl.origin}/${countryCode}${redirectPath}${queryString}`
-    response = NextResponse.redirect(`${redirectUrl}`, 307)
-  }
-
-  // If a cart_id is in the params, we set it as a cookie and redirect to the address step.
-  if (cartId && !checkoutStep) {
-    redirectUrl = `${redirectUrl}&step=address`
-    response = NextResponse.redirect(`${redirectUrl}`, 307)
-    response.cookies.set("_medusa_cart_id", cartId, { maxAge: 60 * 60 * 24 })
-  }
-
-  // Set last, because the branches above replace `response` wholesale and a
-  // cookie set on a discarded response is silently lost.
-  if (!cacheIdCookie) {
-    response.cookies.set("_medusa_cache_id", cacheId, CACHE_ID_COOKIE_OPTIONS)
-  }
-
-  return response
 }
 
 export const config = {
