@@ -10,16 +10,39 @@ import CategoryMega from "@modules/layout/components/category-mega"
 import { isSearchEnabled } from "@lib/util/env"
 
 /* Teknikhouse nav: USP bar, red logo, menu/search/account/cart. */
+const USP_CSS = [
+  ".thusp{background:#0B0C10;color:#D5DAE3;font-size:12.5px}",
+  ".thusp-in{position:relative;display:flex;align-items:center;justify-content:center;gap:32px;height:34px;overflow:hidden;white-space:nowrap}",
+  ".thusp-i{display:inline-flex;align-items:center;justify-content:center;gap:7px;line-height:1}",
+  ".thusp-i svg{width:16px;height:16px;flex:0 0 auto}",
+  ".thusp-i b{color:#fff;font-weight:600}",
+  "@keyframes thuspfade{0%{opacity:0;transform:translateY(7px)}4%{opacity:1;transform:none}30%{opacity:1;transform:none}34%{opacity:0;transform:translateY(-7px)}100%{opacity:0;transform:translateY(-7px)}}",
+  "@media (max-width:599px){.thusp-i{position:absolute;left:0;right:0;top:0;bottom:0;opacity:0;animation:thuspfade 12s infinite}.thusp-i:nth-child(2){animation-delay:4s}.thusp-i:nth-child(3){animation-delay:8s}}",
+  "@media (max-width:599px) and (prefers-reduced-motion:reduce){.thusp-i{animation:none}.thusp-i:first-child{opacity:1}}",
+].join("")
+
 export default async function Nav() {
   const regions = await listRegions().then((regions: StoreRegion[]) => regions)
   const categories = await listCategories().catch(() => [])
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
-      {/* USP bar, one centered line. Third point hidden on narrow screens so it never wraps. */}
-      <div style={{ background: "#0B0C10", color: "#C9CFDA", fontSize: "12px" }}>
-        <div className="content-container flex items-center justify-center h-[34px] whitespace-nowrap overflow-hidden text-center">
-          <span>Fri frakt över <b style={{ color: "#fff" }}>999 kr</b> · Öppet köp i 30 dagar<span className="hidden xsmall:inline"> · Snabb leverans med PostNord</span></span>
+      {/* USP bar: three centered points with coloured icons. Below 600px it shows one point at a time and fades between them, so nothing wraps or overlaps. */}
+      <style dangerouslySetInnerHTML={{ __html: USP_CSS }} />
+      <div className="thusp">
+        <div className="content-container thusp-in">
+          <span className="thusp-i">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#FF5A4E" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v9.5h-11z" /><path d="M13.5 10h4.2l3.3 3.3V16h-7.5" /><circle cx="6.5" cy="17.5" r="1.9" fill="#0B0C10" /><circle cx="17" cy="17.5" r="1.9" fill="#0B0C10" /></svg>
+            <span>Fri frakt över <b>999 kr</b></span>
+          </span>
+          <span className="thusp-i">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 010 11H11" /></svg>
+            <span>Öppet köp i <b>30 dagar</b></span>
+          </span>
+          <span className="thusp-i">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 2.5L4.8 13.4h6.1l-1.1 8.1 8.4-10.9h-6.1z" fill="#FFC23D" /></svg>
+            <span><b>Snabb leverans</b></span>
+          </span>
         </div>
       </div>
 
