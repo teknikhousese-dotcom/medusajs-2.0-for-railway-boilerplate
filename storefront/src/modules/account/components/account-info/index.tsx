@@ -29,7 +29,7 @@ const AccountInfo = ({
   isSuccess,
   isError,
   clearState,
-  errorMessage = "An error occurred, please try again",
+  errorMessage = "Något gick fel. Försök igen.",
   children,
   isEditable = true,
   'data-testid': dataTestid
