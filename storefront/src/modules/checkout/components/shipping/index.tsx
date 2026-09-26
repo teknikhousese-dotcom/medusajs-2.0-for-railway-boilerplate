@@ -7,11 +7,13 @@ import { Button, Heading, Text, clx } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import Radio from "@modules/common/components/radio"
 import ErrorMessage from "@modules/checkout/components/error-message"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { setShippingMethod } from "@lib/data/cart"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import { checkoutHref, readSteg } from "@lib/util/checkout-step"
+import { PICKUP_DESCRIPTION, PICKUP_TITLE } from "@lib/util/pickup-text"
 
 type ShippingProps = {
   cart: HttpTypes.StoreCart
@@ -36,7 +38,7 @@ const timeLabel: Record<Kind, string> = {
   ombud: "1-3 vardagar",
   express: "1-2 vardagar",
   hem: "1-3 vardagar",
-  butik: "Sveavägen 139, Stockholm",
+  butik: "",
   other: "1-3 vardagar",
 }
 
@@ -45,12 +47,12 @@ const noteLabel: Record<Kind, string> = {
   ombud: "Hämtas hos ditt närmaste PostNord-ombud",
   express: "Prioriterad leverans med PostNord",
   hem: "PostNord kör hem paketet till din dörr",
-  butik: "Mån till fre 10 till 18, lör 11 till 17",
+  butik: PICKUP_DESCRIPTION,
   other: "Leverans med PostNord",
 }
 
 const titleOf = (k: Kind, name?: string) =>
-  k === "butik" ? "Hämta i butik" : name || ""
+  k === "butik" ? PICKUP_TITLE : name || ""
 
 const Icon = ({ k, active }: { k: Kind; active: boolean }) => {
   const color = active ? "#F50000" : "#6B7280"
@@ -126,9 +128,8 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "delivery"
+  const isOpen = readSteg(searchParams) === "leverans"
 
   const shippingMethods = dedupeMethods(availableShippingMethods)
 
@@ -139,11 +140,11 @@ const Shipping: React.FC<ShippingProps> = ({
   )
 
   const handleEdit = () => {
-    router.push(pathname + "?step=delivery", { scroll: false })
+    router.push(checkoutHref("leverans"), { scroll: false })
   }
 
   const handleSubmit = () => {
-    router.push(pathname + "?step=payment", { scroll: false })
+    router.push(checkoutHref("betalning"), { scroll: false })
   }
 
   const set = async (id: string) => {
@@ -264,9 +265,11 @@ const Shipping: React.FC<ShippingProps> = ({
                           </span>
                         )}
                       </span>
-                      <span className="text-[13px] font-medium leading-snug text-[#14161C] mt-0.5">
-                        {timeLabel[k]}
-                      </span>
+                      {timeLabel[k] ? (
+                        <span className="text-[13px] font-medium leading-snug text-[#14161C] mt-0.5">
+                          {timeLabel[k]}
+                        </span>
+                      ) : null}
                       <span className="text-[12px] small:text-[13px] leading-snug text-gray-500 mt-0.5">
                         {noteLabel[k]}
                       </span>
