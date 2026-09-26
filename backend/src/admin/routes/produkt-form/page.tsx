@@ -60,7 +60,11 @@ function ProduktFormPage() {
     const u = new URL(window.location.href)
     const id = u.searchParams.get("id") || ""
     fetch("/admin/wiki-products", { credentials: "include" }).then((r) => r.json()).then((j) => {
-      setCats(j.categories || []); setSuppliers(j.suppliers || [])
+      setCats(j.categories || []); setSuppliers((prev) => Array.from(new Set([...(j.suppliers || []), ...prev])).sort((a, b) => a.localeCompare(b, "sv", { sensitivity: "base" })))
+    }).catch(() => {})
+    fetch("/admin/purchasing/suppliers", { credentials: "include" }).then((r) => r.json()).then((j) => {
+      const names: string[] = (j.suppliers || []).map((x: any) => x.name).filter(Boolean)
+      setSuppliers((prev) => Array.from(new Set([...prev, ...names])).sort((a, b) => a.localeCompare(b, "sv", { sensitivity: "base" })))
     }).catch(() => {})
     if (id) {
       setEditId(id)
@@ -244,7 +248,7 @@ function ProduktFormPage() {
                 <label style={lbl}>Leverantör</label>
                 <select style={inp} value={f.leverantor} onChange={(e) => set("leverantor", e.target.value)}>
                   <option value="">Välj…</option>
-                  {suppliers.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {(f.leverantor && !suppliers.includes(f.leverantor) ? [...suppliers, f.leverantor] : suppliers).map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </div>
