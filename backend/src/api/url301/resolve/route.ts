@@ -198,8 +198,15 @@ export async function resolvePath(scope: any, raw: string) {
 
   // (b) produkt via handle eller gammal Wiki-adress
   const byHandle = ix.prodByHandle.get(last)
-  if (byHandle && byHandle.published) return done({ kind: "product" })
   const byWiki = ix.prodByWiki.get(path)
+  // Gammal Wiki-adress (metadata.wiki_url_path) till en publicerad produkt: 301 till produktens
+  // aktuella adress under huvudkategorin (metadata.url_category, annars djupaste kategorin).
+  // Da foljer adressen alltid ratt kategori och ingen url301-regel per produkt behovs.
+  if (byWiki && byWiki.published && (!byHandle || !byHandle.published || byHandle.id === byWiki.id)) {
+    const canon = productPath(ix, byWiki)
+    if (canon.indexOf("/products/") !== 0 && normPath(canon) !== path) return done({ kind: "redirect", to: canon, via: "wiki_url_path" })
+  }
+  if (byHandle && byHandle.published) return done({ kind: "product" })
   if (byWiki && byWiki.published) return done({ kind: "redirect", to: productPath(ix, byWiki), via: "wiki_url_path" })
 
   // (c) liknande produkt i samma modellkategori (eller produktens egen kategori om den ar avpublicerad)
