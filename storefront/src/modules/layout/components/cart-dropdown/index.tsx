@@ -35,7 +35,8 @@ const CartDropdown = ({
       return acc + item.quantity
     }, 0) || 0
 
-  const subtotal = cartState?.subtotal ?? 0
+  /* Swedish B2C: show goods incl. moms (item_total), same as cart page Delsumma */
+  const subtotal = cartState?.item_total ?? cartState?.subtotal ?? 0
   const itemRef = useRef<number>(totalItems || 0)
 
   const timedOpen = () => {
@@ -185,7 +186,7 @@ const CartDropdown = ({
                   <div className="flex items-center justify-between">
                     <span className="text-ui-fg-base font-semibold">
                       Delsumma{" "}
-                      <span className="font-normal">(exkl. moms)</span>
+                      <span className="font-normal">(inkl. moms)</span>
                     </span>
                     <span
                       className="text-large-semi"
