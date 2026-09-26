@@ -68,7 +68,7 @@ const DeleteButton = ({
         disabled={isDeleting}
         /* On the cart page this button has no visible text, so without a label */
         /* it is announced as just "button" and cannot be identified. */
-        aria-label={children ? undefined : "Remove item from cart"}
+        aria-label={children ? undefined : "Ta bort varan från varukorgen"}
         data-testid={dataTestId}
       >
         {isDeleting ? <Spinner className="animate-spin" /> : <Trash />}
