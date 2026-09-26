@@ -31,19 +31,19 @@ const ResetPassword = ({ token, email }: Props) => {
         className="max-w-sm w-full flex flex-col items-center"
         data-testid="reset-password-page"
       >
-        <h1 className="text-large-semi uppercase mb-6">Password updated</h1>
+        <h1 className="text-large-semi uppercase mb-6 text-center">Lösenordet är bytt</h1>
         <p
           className="text-center text-base-regular text-ui-fg-base mb-8"
           data-testid="reset-password-success"
         >
-          Your password has been changed. You can sign in with it now.
+          Klart! Du kan logga in med ditt nya lösenord direkt.
         </p>
         <LocalizedClientLink
           href="/account"
           className="underline text-small-regular"
           data-testid="go-to-sign-in-link"
         >
-          Go to sign in
+          Till inloggningen
         </LocalizedClientLink>
       </div>
     )
@@ -54,14 +54,14 @@ const ResetPassword = ({ token, email }: Props) => {
       className="max-w-sm w-full flex flex-col items-center"
       data-testid="reset-password-page"
     >
-      <h1 className="text-large-semi uppercase mb-6">Set a new password</h1>
+      <h1 className="text-large-semi uppercase mb-6 text-center">Välj nytt lösenord</h1>
       <p className="text-center text-base-regular text-ui-fg-base mb-8">
         {email ? (
           <>
-            Choose a new password for <strong>{email}</strong>.
+            Välj ett nytt lösenord för <strong className="break-all">{email}</strong>.
           </>
         ) : (
-          "Choose a new password for your account."
+          "Välj ett nytt lösenord för ditt konto."
         )}
       </p>
 
@@ -74,7 +74,7 @@ const ResetPassword = ({ token, email }: Props) => {
 
         <div className="flex flex-col w-full gap-y-2">
           <Input
-            label="New password"
+            label="Nytt lösenord (minst 8 tecken)"
             name="password"
             type="password"
             autoComplete="new-password"
@@ -83,7 +83,7 @@ const ResetPassword = ({ token, email }: Props) => {
             data-testid="new-password-input"
           />
           <Input
-            label="Confirm new password"
+            label="Upprepa nytt lösenord"
             name="confirm_password"
             type="password"
             autoComplete="new-password"
@@ -102,18 +102,18 @@ const ResetPassword = ({ token, email }: Props) => {
           data-testid="reset-password-button"
           className="w-full mt-6"
         >
-          Save new password
+          Spara lösenord
         </SubmitButton>
       </form>
 
       <span className="text-center text-ui-fg-base text-small-regular mt-6">
-        Link expired?{" "}
+        Har länken gått ut?{" "}
         <LocalizedClientLink
           href="/account"
           className="underline"
           data-testid="request-new-link"
         >
-          Request a new one
+          Be om en ny
         </LocalizedClientLink>
         .
       </span>
