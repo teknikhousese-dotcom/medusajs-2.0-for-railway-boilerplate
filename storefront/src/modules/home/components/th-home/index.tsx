@@ -2,6 +2,7 @@ import ProductPreview from "@modules/products/components/product-preview"
 import NewsletterSignup from "./newsletter-signup"
 import RecentlyViewed from "./recently-viewed"
 import DeviceFinder from "./device-finder"
+import TrustindexReviews from "./trustindex-reviews"
 
 // Teknikhouse 2027 homepage: light, warm Swedish-retail styling
 // (modelled on power.se / teknikdelar.se / 24.se). Scoped under .th.
@@ -38,6 +39,8 @@ const CSS = `
 .th .herochips{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
 .th .herochips span{background:#fff;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--ink2);display:flex;gap:7px;align-items:center;box-shadow:0 2px 8px rgba(27,23,20,.05)}
 .th .herochips .s{color:var(--star)}
+.th .badge.safe{color:var(--ink2)}
+.th .badge.safe svg{width:16px;height:16px;stroke:var(--green);stroke-width:2;fill:none;flex:0 0 auto}
 .th .heroart{background:#fff;border-radius:24px;box-shadow:0 20px 50px rgba(27,23,20,.1);min-height:360px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .th .heroart .ph{width:150px;height:300px;border-radius:34px;background:linear-gradient(160deg,#2c2621,#4a423b);box-shadow:0 20px 50px rgba(0,0,0,.25);position:relative}
 .th .heroart .ph:after{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:46px;height:6px;border-radius:3px;background:rgba(255,255,255,.25)}
@@ -113,12 +116,28 @@ const CSS = `
 .th .brand{display:flex;align-items:center;justify-content:center;height:66px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-family:var(--round);font-weight:600;font-size:15px;color:var(--ink);transition:.15s}
 .th .brand:hover{border-color:var(--red);color:var(--red);transform:translateY(-2px);box-shadow:var(--shadow)}
 
-/* reviews */
-.th .revs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.th .rev{border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--card)}
-.th .rev .stars{color:var(--star);font-size:15px;letter-spacing:3px}
-.th .rev p{margin:10px 0 14px;font-size:15px;line-height:1.55;color:var(--ink)}
-.th .rev .who{font-family:var(--round);font-size:13px;color:var(--sub);font-weight:600}
+/* reviews (Trustindex) */
+.th .tirate{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.th .tirate b{color:var(--ink);font-weight:600}
+.th .tirate .s{color:var(--star);font-size:16px;line-height:1}
+.th .tiwrap{position:relative;margin:0 -24px}
+.th .tiscroll{position:relative;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;padding:6px 24px 16px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%)}
+.th .tiscroll::-webkit-scrollbar{display:none}
+.th .tiscroll:focus-visible{outline:2px solid var(--red);outline-offset:-2px;border-radius:14px}
+.th .titrack{display:flex;gap:16px;width:max-content}
+.th .tiset{display:flex;gap:16px}
+.th .ticard{flex:0 0 auto;width:300px;max-width:78vw;margin:0;border:1px solid var(--line);border-radius:16px;padding:20px;background:var(--card);display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 22px -16px rgba(27,23,20,.25)}
+.th .ticard .stars{color:var(--star);font-size:15px;letter-spacing:2px;line-height:1}
+.th .ticard blockquote{margin:0;flex:1;font-size:14.5px;line-height:1.55;color:var(--ink)}
+.th .ticard .who{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-family:var(--round);font-size:13px;font-weight:600;color:var(--ink2)}
+.th .ticard .src{font-family:system-ui,Arial,sans-serif;font-weight:400;font-size:12px;color:var(--sub);white-space:nowrap}
+.th .tinav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:0;background:#fff;color:var(--ink);font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(27,23,20,.14);z-index:2}
+.th .tinav:hover{color:var(--red)}
+.th .tinav.prev{left:8px}
+.th .tinav.next{right:8px}
+.th .tinote{margin:4px 0 0;text-align:center;font-size:12.5px;color:var(--sub)}
+@media(hover:none){.th .tinav{display:none}}
+@media(prefers-reduced-motion:reduce){.th .tiscroll{scroll-snap-type:x mandatory}.th .ticard{scroll-snap-align:start}.th .tiset[data-set=b]{display:none}}
 
 /* SEO text */
 .th .intro{background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:40px}
@@ -168,8 +187,7 @@ const CSS = `
   .th .usp .wrap{grid-template-columns:repeat(2,1fr)}
   .th .repair{grid-template-columns:1fr}
   .th .brands{grid-template-columns:repeat(4,1fr)}
-  .th .revs{grid-template-columns:1fr}
-  .th .finder .row{grid-template-columns:1fr 1fr}
+    .th .finder .row{grid-template-columns:1fr 1fr}
   .th .finder .go{grid-column:1/-1;justify-content:center;padding:13px}
 }
 @media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}.th .rvgrid{grid-template-columns:repeat(2,1fr)}}
@@ -186,6 +204,8 @@ const CSS = `
   .th .cat svg{width:36px;height:36px}
   .th .cat b{font-size:14px}
   .th .intro{padding:26px 20px}
+.th .tiwrap{margin:0 -16px}
+.th .tiscroll{padding:6px 16px 16px}
   .th .intro .itoggle{display:block;position:absolute;opacity:0;width:1px;height:1px;margin:0}
   .th .intro .itx{position:relative}
   .th .intro .ibody{position:relative;max-height:300px;overflow:hidden}
@@ -205,6 +225,19 @@ const CSS = `
 @media(max-width:420px){
 }`
 
+const FAQ_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    { "@type": "Question", name: "Hur mycket kostar frakten?", acceptedAnswer: { "@type": "Answer", text: "Frakten är gratis när du handlar för över 999 kr. Vi skickar med PostNord och DHL från Stockholm och normal leveranstid är ungefär tre dagar." } },
+    { "@type": "Question", name: "Kan jag ångra mitt köp?", acceptedAnswer: { "@type": "Answer", text: "Ja, du har 30 dagars öppet köp från beställningsdatum. Varan ska vara oanvänd och ligga i sin förpackning. Reservdelar och andra plomberade varor går inte att ångra när förpackningen är bruten. Du anmäler returen på teknikhouse.se/return." } },
+    { "@type": "Question", name: "Vilken garanti gäller?", acceptedAnswer: { "@type": "Answer", text: "Alla produkter säljs med garanti mot fabrikationsfel. För uppladdningsbara batterier och begagnade mobiler och surfplattor gäller tre månaders garanti. Garantin gäller inte vid tappskador, slitage eller felaktig montering. Fullständiga villkor finns i köpvillkoren." } },
+    { "@type": "Question", name: "Hur kan jag betala?", acceptedAnswer: { "@type": "Answer", text: "Du kan betala med Swish, kort eller Klarna, där du kan välja faktura eller delbetalning." } },
+    { "@type": "Question", name: "Kan jag hämta min order i butiken?", acceptedAnswer: { "@type": "Answer", text: "Ja, bor du i Stockholm kan du hämta din order hos oss på Sveavägen 139. Butiken har öppet måndag till fredag 10 till 18, lördag 11 till 17 och söndag 12 till 16." } },
+    { "@type": "Question", name: "Kan vi handla som företag?", acceptedAnswer: { "@type": "Answer", text: "Ja. Ansök om ett företagskonto så får ni fakturaköp, offert på volym och en fast kontaktperson." } },
+  ],
+}
+
 export default function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
   const has = (n: number) => region && products && products.length > n
   return (
@@ -214,23 +247,23 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* HERO */}
       <div className="hero"><div className="wrap">
         <div>
-          <span className="badge"><span className="dot" style={{ background: "var(--red)" }} /> Sveriges bredaste reservdelslager</span>
+          <span className="badge safe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Handla tryggt och säkert hos oss</span>
           <DeviceFinder regionId={region?.id} />
-          <div className="herochips"><span>Fri frakt över 999 kr</span><span>Livstidsgaranti på delar</span><span>Skickas idag</span></div>
+          <div className="herochips"><span>Fri frakt över 999 kr</span><span>Premiumtestade delar med garanti</span><span>Snabb leverans</span></div>
         </div>
         <div className="heroart">
           <div className="ph" />
           <div className="fc" style={{ top: "44px", left: "34px" }}><b>Skärm iPhone 13</b><span className="ok">✓ Sorterat efter modell</span></div>
-          <div className="fc" style={{ bottom: "44px", right: "34px" }}><b>Batteri · 649 kr</b><span className="p">Livstidsgaranti</span></div>
+          <div className="fc" style={{ bottom: "44px", right: "34px" }}><b>Batteri · 649 kr</b><span className="p">Med garanti</span></div>
         </div>
       </div></div>
 
       {/* USP */}
       <div className="usp"><div className="wrap">
         <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></svg><div><b>Fri frakt över 999 kr</b><span>Spårbart med PostNord och DHL</span></div></div>
-        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg><div><b>Butik på Sveavägen 139</b><span>Hämta din order i Stockholm</span></div></div>
+        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg><div><b>Hämta i butik i Stockholm</b><span>Öppet alla dagar på Sveavägen 139</span></div></div>
         <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0116 0M20 4v4h-4" /><path d="M20 16a8 8 0 01-16 0M4 20v-4h4" /></svg><div><b>30 dagars öppet köp</b><span>Enkelt att returnera</span></div></div>
-        <div className="uspitem"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></svg><div><b>Swish, Klarna och kort</b><span>Trygg betalning</span></div></div>
+        <div className="uspitem"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></svg><div><b>Swish, Klarna och kort</b><span>Handla tryggt och säkert</span></div></div>
       </div></div>
 
       {/* CATEGORY TILES */}
@@ -334,42 +367,62 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* SENAST VISADE (personalised, client-side) */}
       <RecentlyViewed regionId={region?.id} />
 
-      {/* WHY US */}
-      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="shead"><h2>Vad våra kunder säger</h2></div>
-        <div className="revs" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16 }}>
-          <div className="rev"><div className="stars">★★★★★</div><p>Mycket trevlig, hjälpsam &amp; kunnig personal som gav fint bemötande. Fräsch &amp; luftig lokal mitt i centrum. Fantastisk service. Rekommenderas varmt.</p><div className="who">Johanna · Trustpilot</div></div>
-          <div className="rev"><div className="stars">★★★★★</div><p>Behövde hjälp med en mikrolödning på en bilnyckel, snabbt, perfekt och trevligt. Rekommenderas.</p><div className="who">Patrik E. · Trustpilot</div></div>
-          <div className="rev"><div className="stars">★★★★★</div><p>Min vara kom snabbt och betalningen gick smidigt. Kan rekommendera och tänka mej att beställa nåt mer länge fram.</p><div className="who">Anna · Trustpilot</div></div>
-          <div className="rev"><div className="stars">★★★★<span style={{ color: "#d8d2ca" }}>★</span></div><p>Det var ett bra batteri. Annonsen kunde haft en tydligare bild av att det inte ingick batteritejp men annars var det som det ska, men det kan ni säkert ordna.</p><div className="who">David H. · Google</div></div>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 18, fontSize: 14 }}><a href="https://se.trustpilot.com/review/teknikhouse.se" target="_blank" rel="noreferrer" style={{ color: "#6f685f", fontWeight: 600, textDecoration: "none", margin: "0 10px" }}>Fler omdömen på Trustpilot →</a><a href="https://www.google.com/maps/place/Teknikhouse.se" target="_blank" rel="noreferrer" style={{ color: "#6f685f", fontWeight: 600, textDecoration: "none", margin: "0 10px" }}>Google →</a></div>
-      </div></section>
+      {/* KUNDOMDÖMEN: riktiga omdömen från Trustindex, egen karusell */}
+<section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+<div className="shead"><div className="stext"><h2>Vad våra kunder säger</h2><span className="ssub tirate"><span className="s" aria-hidden="true">★</span><b>4,6 av 5</b> hos Trustindex, 2 100+ omdömen</span></div><a href="https://www.trustindex.io/reviews/teknikhouse.se" target="_blank" rel="noopener noreferrer">Läs fler omdömen →</a></div>
+<TrustindexReviews />
+<p className="tinote">Ett urval av omdömen från Trustindex, som samlar omdömen från bland annat Google och Trustpilot.</p>
+</div></section>
 
-      {/* SEO TEXT */}
-      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="intro">
-          <div className="itx">
-            <h2>Mobilreservdelar och mobiltillbehör från vår butik i Stockholm</h2>
-            <input type="checkbox" id="th-seo-more" className="itoggle" aria-label="Visa hela texten" />
-            <div className="ibody">
-              <p>Teknikhouse.se drivs av Nordic Teknik House AB och vi har butik och verkstad på Sveavägen 139 i Stockholm. Här säljer vi mobilreservdelar, verktyg och mobiltillbehör till iPhone, Samsung, iPad och en lång rad andra märken. Det är samma delar som vi själva använder när vi lagar telefoner i verkstaden, så vi vet ganska väl vad som håller och vad som inte gör det.</p>
+{/* SEO TEXT */}
+<section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
+<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_LD) }} />
+<div className="intro">
+<div className="itx">
+<h2>Mobilreservdelar, tillbehör och elektronik från vår butik i Stockholm</h2>
+<input type="checkbox" id="th-seo-more" className="itoggle" aria-label="Visa hela texten" />
+<div className="ibody">
+<p>Teknikhouse.se drivs av Nordic Teknik House AB från Sveavägen 139 i Stockholm, i samma lokal som vår verkstad Phone Rep. Reservdelar till mobiler är hjärtat i sortimentet, men hos oss hittar du också skal, skärmskydd, laddare, hörlurar, datortillbehör, gaming och både nya och begagnade mobiler. Mycket av det vi säljer använder vi själva varje dag när vi lagar telefoner, så vi vet vad som håller och vad som inte gör det.</p>
 
-              <h3>Reservdelar till iPhone, Samsung och iPad</h3>
-              <p>Det vi säljer mest av är skärmar och batterier. En ny skärm till iPhone löser sprucket glas, fläckar i bilden och touch som slutat svara. Ett nytt batteri till Samsung eller iPhone gör stor skillnad när telefonen stänger av sig vid 20 procent eller inte klarar en hel dag. Vi har också baksidor, kameror, laddkontakter, högtalare och flexkablar. Börja med ditt märke, till exempel <a href="/mobilreservdelar/apple">reservdelar till iPhone och iPad</a> eller <a href="/mobilreservdelar/samsung">reservdelar till Samsung</a>, och välj sedan din modell så ser du bara delar som passar. Letar du efter något annat finns alla märken samlade under <a href="/mobilreservdelar">mobilreservdelar</a>, och lösa batterier hittar du under <a href="/batterier">batterier</a>.</p>
+<h3>Reservdelar till iPhone, Samsung, iPad och fler märken</h3>
+<p>Skärmar och batterier är det vi säljer mest av, men sortimentet går djupare än så. Vi har baksidor, kameror, kameraglas, laddkontakter, högtalare, knappar och flexkablar. Börja med märket, till exempel <a href="/mobilreservdelar/apple">reservdelar till iPhone och iPad</a> eller <a href="/mobilreservdelar/samsung">reservdelar till Samsung</a>, och välj sedan din modell. Då ser du bara delar som passar just din telefon.</p>
+<p>Vi har också delar till <a href="/mobilreservdelar/google">Google Pixel</a>, <a href="/mobilreservdelar/xiaomi">Xiaomi</a>, <a href="/mobilreservdelar/oneplus">OnePlus</a>, <a href="/mobilreservdelar/sony-xperia">Sony Xperia</a>, Huawei och flera andra märken. Allt finns samlat under <a href="/mobilreservdelar">mobilreservdelar</a>.</p>
 
-              <h3>Laga mobilen själv, eller låt oss göra det</h3>
-              <p>Många byter batteri eller skärm hemma vid köksbordet, och det brukar gå bra med rätt verktyg och lite tålamod. Under <a href="/verktyg">verktyg</a> finns skruvmejslar, bändverktyg och lim, och i <a href="/blogg">bloggen</a> har vi skrivit guider om till exempel batteribyte och hur du tar reda på vilken iPad du har. Känns det för pilligt kan du lämna in telefonen hos oss i stället. Läs mer om vår <a href="/mobilreparation">mobilreparation i Stockholm</a>.</p>
+<h3>Så väljer du rätt skärm</h3>
+<p>Till många iPhone-modeller finns skärmen i flera kvaliteter, och skillnaden märks. En OLED-skärm i originalkvalitet ger samma djupa svärta, färger och ljusstyrka som telefonen hade från början, och den drar minst ström. En In-Cell eller LCD är ett billigare alternativ som fungerar bra i vardagen, men den är ofta något tjockare, har gråare svärta och kan dra lite mer batteri.</p>
+<p>Tittar du mycket på film och bilder är OLED värt pengarna. Ska telefonen bara hålla ett tag till, eller gå vidare till ett barn, räcker en enklare skärm gott. Ett råd från verkstaden: testa alltid skärmen innan du limmar fast den. Koppla in flexkablarna, starta telefonen och kontrollera touch, färger och ljusstyrka. Låt skyddsfilmen sitta kvar tills allt fungerar, annars kan vi inte ta tillbaka delen.</p>
 
-              <h3>Tillbehör, frakt och öppet köp</h3>
-              <p>Utöver reservdelar har vi <a href="/mobiltillbehor">mobiltillbehör</a> som skal och skärmskydd, <a href="/kablar-laddare">kablar och laddare</a>, <a href="/powerbank">powerbanks</a> och <a href="/horlurar-hogtalare">hörlurar</a>. Vi skickar med PostNord och DHL, och frakten är gratis när du handlar för över 999 kr. Bor du i Stockholm kan du välja att hämta din order i butiken. Du har 30 dagars öppet köp och garanti mot fabrikationsfel, allt står i våra <a href="/info/oppet-kop-retur">regler för öppet köp och retur</a>. Undrar du om en del passar din telefon? Mejla oss på info@teknikhouse.se så svarar någon av oss som jobbar med det här varje dag.</p>
-            </div>
-            <label htmlFor="th-seo-more" className="imore" aria-hidden="true"><span className="more">Läs mer ↓</span><span className="less">Visa mindre ↑</span></label>
-          </div>
-        </div>
-      </div></section>
+<h3>Batteriet: när är det dags att byta?</h3>
+<p>Ett batteri tappar kapacitet med varje laddcykel. På iPhone ser du batterihälsan under Inställningar och Batteri. Ligger den runt 80 procent eller lägre, eller stänger telefonen av sig i kyla, är det dags för ett nytt. På Samsung hittar du batteriets skick i appen Samsung Members.</p>
+<p>Du hittar <a href="/batterier/mobilbatterier">mobilbatterier</a> och batterier till surfplattor under <a href="/batterier">batterier</a>, och i vår <a href="/blogg/iphone-batteriguide-den-kompletta-guiden">batteriguide för iPhone</a> går vi igenom bytet steg för steg. Rätt <a href="/verktyg">verktyg</a> gör stor skillnad: en skruvmejsel som passar skruvarna, bändverktyg i plast och ny batteritejp.</p>
 
-      {/* GUIDER OCH TIPS: links to the blog */}
+<h3>Laga själv eller lämna in hos Phone Rep</h3>
+<p>Många byter batteri eller skärm hemma vid köksbordet, och det går bra med rätt verktyg och lite tålamod. Känns det för pilligt kan du lämna in telefonen hos Phone Rep, vår verkstad i samma lokal. Felsökningen är kostnadsfri, du får ett pris innan vi börjar och många reparationer görs medan du väntar. Bor du utanför Stockholm kan du skicka in enheten. Läs mer om vår <a href="/mobilreparation">mobilreparation i Stockholm</a>.</p>
+
+<h3>Skal, skärmskydd, laddare och powerbanks</h3>
+<p>Ett bra skal och ett skärmskydd kostar lite jämfört med en ny skärm. Under <a href="/mobiltillbehor">mobiltillbehör</a> hittar du skal, fodral och skärmskydd sorterade efter märke, till exempel <a href="/mobiltillbehor/apple">tillbehör till iPhone</a> och <a href="/mobiltillbehor/samsung">tillbehör till Samsung</a>. Härdat glas skyddar bäst mot sprickor, och ett skal med förhöjd kant runt kameran skyddar linserna när telefonen landar på baksidan.</p>
+<p>När det gäller laddning är kontakten det första att kolla. iPhone 15 och senare har USB-C, äldre modeller har Lightning. För snabbladdning av iPhone behövs en USB-C-laddare på minst 20 W med Power Delivery. Nyare Samsung laddar snabbast med en laddare som klarar PPS, ofta på 25 eller 45 W. Har du en iPhone med MagSafe är en magnetisk trådlös laddare smidig på nattduksbordet. Allt detta hittar du under <a href="/kablar-laddare">kablar och laddare</a>. En <a href="/powerbank">powerbank</a> på 10 000 mAh räcker till ungefär två laddningar av en vanlig mobil. Tänk på att powerbanks ska ligga i handbagaget när du flyger.</p>
+
+<h3>Hörlurar, högtalare och klockor</h3>
+<p>Bland våra <a href="/horlurar-hogtalare">hörlurar och högtalare</a> finns bland annat Sony, JVC, Urbanista och Apple. Tre saker avgör om du blir nöjd med trådlösa hörlurar. Passformen påverkar både ljud och komfort, så välj gärna modeller med flera storlekar på öronsnäckorna. Aktiv brusreducering, ANC, gör stor skillnad på tunnelbanan och på flyget. Ska de med till gymmet räcker det oftast med IPX4, som klarar svett och regnstänk. Letar du klocka finns <a href="/mobiler-surfplattor/apple-watch">Apple Watch</a>, både ny och <a href="/mobiler-surfplattor/begagnad-apple-watch">begagnad</a>.</p>
+
+<h3>Dator, gaming och hem</h3>
+<p>Sortimentet slutar inte vid mobilen. Under <a href="/datortillbehor">datortillbehör</a> finns <a href="/datortillbehor/kablar-adaptrar">kablar och adaptrar</a>, <a href="/datortillbehor/lagring-media">lagring</a>, <a href="/datortillbehor/datorskarmar-bildskarmar">datorskärmar</a> och tillbehör till <a href="/datortillbehor/apple-macbook">MacBook</a>. Vi säljer också <a href="/dator-laptop">datorer och laptops</a>, bland annat <a href="/dator-laptop/begagnad-laptop">begagnade laptops</a> som är ett prisvärt val för skola och kontor. Spelar du hittar du headset, kontroller och skärmar under <a href="/gaming">gaming</a>, och under <a href="/hem-fritid">hem och fritid</a> finns bland annat biltillbehör, fläktar och personvård.</p>
+
+<h3>Mobiler och surfplattor, nya och begagnade</h3>
+<p>En begagnad telefon är ett smart sätt att spara både pengar och resurser. Alla begagnade mobiler och surfplattor vi säljer är testade, olåsta och utan abonnemang. Titta på <a href="/mobiler-surfplattor/begagnad-iphone">begagnad iPhone</a>, <a href="/mobiler-surfplattor/begagnad-samsung-galaxy">begagnad Samsung Galaxy</a> och <a href="/mobiler-surfplattor/begagnade-surfplattor">begagnade surfplattor</a>, eller välj bland <a href="/mobiler-surfplattor/nya-mobiler-surfplattor">nya mobiler och surfplattor</a>. Kolla batterihälsan och hur länge modellen får uppdateringar innan du bestämmer dig. Har du en gammal telefon i en låda kan du <a href="/info/salj-din-enhet">sälja din enhet</a> till oss, och restlager och fynd samlar vi under <a href="/outlet-fyndvaror">outlet</a>.</p>
+
+<h3>Frakt, retur, betalning och företag</h3>
+<p>Vi skickar med PostNord och DHL från Stockholm och normal leveranstid är ungefär tre dagar. Frakten är gratis när du handlar för över 999 kr. Bor du i Stockholm kan du hämta din order i butiken på Sveavägen 139, som har öppet alla dagar i veckan. Du betalar med Swish, kort eller Klarna, där du kan välja faktura eller delbetalning.</p>
+<p>Du har 30 dagars öppet köp och garanti mot fabrikationsfel på det du köper. För uppladdningsbara batterier och begagnade enheter gäller tre månaders garanti. Reservdelar och andra plomberade varor går inte att ångra när förpackningen är bruten. Allt står i våra <a href="/info/villkor">köpvillkor</a> och <a href="/info/oppet-kop-retur">regler för öppet köp och retur</a>.</p>
+<p>Handlar ni som företag kan ni <a href="/retail-application">ansöka om ett företagskonto</a> och få fakturaköp, offert på volym och en fast kontaktperson. Undrar du om en del passar din telefon? Mejla info@teknikhouse.se med modellen, så svarar någon av oss som jobbar med det här varje dag.</p>
+</div>
+<label htmlFor="th-seo-more" className="imore" aria-hidden="true"><span className="more">Läs mer ↓</span><span className="less">Visa mindre ↑</span></label>
+</div>
+</div>
+</div></section>
+
+{/* GUIDER OCH TIPS: links to the blog */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="guide">
           <div>
