@@ -6,6 +6,9 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 
 const PRODUCT_LIMIT = 24
 
+const GRID =
+  "grid grid-cols-2 min-[768px]:grid-cols-3 medium:grid-cols-4 large:grid-cols-5 gap-3 min-[768px]:gap-4 medium:gap-5"
+
 type PaginatedProductsParams = {
   limit: number
   collection_id?: string[]
@@ -84,7 +87,7 @@ export default async function PaginatedProducts({
   return (
     <>
       <ul
-        className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
+        className={"w-full " + GRID}
         data-testid="products-list"
       >
         {products.map((p) => {
