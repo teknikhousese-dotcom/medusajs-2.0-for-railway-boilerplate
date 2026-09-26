@@ -241,7 +241,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* HERO */}
       <div className="hero"><div className="wrap">
         <div>
-          <span className="badge safe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Handla tryggt och säkert hos oss</span>
+          <span className="badge safe"><svg viewBox="0 0 24 24" aria-hidden="true" style={{ fill: "#f5b301", stroke: "#f5b301" }}><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z" /></svg>4,6 av 5 i betyg från över 2 100 omdömen</span>
           <DeviceFinder regionId={region?.id} />
           <div className="herochips"><span>Fri frakt över 999 kr</span><span>Premiumtestade delar med garanti</span><span>Snabb leverans</span></div>
         </div>
@@ -251,9 +251,9 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       {/* USP */}
       <div className="usp"><div className="wrap">
         <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></svg><div><b>Fri frakt över 999 kr</b><span>Spårbart med PostNord och DHL</span></div></div>
-        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg><div><b>Hämta i butik i Stockholm</b><span>Öppet alla dagar på Sveavägen 139</span></div></div>
+        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg><div><b>Handla tryggt och säkert hos oss</b><span>Säker betalning och garanti på alla varor</span></div></div>
         <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0116 0M20 4v4h-4" /><path d="M20 16a8 8 0 01-16 0M4 20v-4h4" /></svg><div><b>30 dagars öppet köp</b><span>Enkelt att returnera</span></div></div>
-        <div className="uspitem"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></svg><div><b>Swish, Klarna och kort</b><span>Handla tryggt och säkert</span></div></div>
+        <div className="uspitem"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></svg><div><b>Swish, Klarna och kort</b><span>Faktura eller delbetalning via Klarna</span></div></div>
       </div></div>
 
       {/* CATEGORY TILES */}
@@ -369,10 +369,10 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_LD) }} />
 <div className="intro">
 <div className="itx">
-<h2>Mobilreservdelar, tillbehör och elektronik från vår butik i Stockholm</h2>
+<h2>Reservdelar, tillbehör, elektronik och mycket mer hos Teknikhouse.se</h2>
 <input type="checkbox" id="th-seo-more" className="itoggle" aria-label="Visa hela texten" />
 <div className="ibody">
-<p>Teknikhouse.se drivs av Nordic Teknik House AB från Sveavägen 139 i Stockholm, i samma lokal som vår verkstad Phone Rep. Reservdelar till mobiler är hjärtat i sortimentet, men hos oss hittar du också skal, skärmskydd, laddare, hörlurar, datortillbehör, gaming och både nya och begagnade mobiler. Mycket av det vi säljer använder vi själva varje dag när vi lagar telefoner, så vi vet vad som håller och vad som inte gör det.</p>
+<p>Teknikhouse.se är en svensk webbutik för mobilreservdelar, tillbehör och elektronik, och vi skickar till hela Sverige. Bakom sajten står Nordic Teknik House AB, med lager och vår verkstad Phone Rep på Sveavägen 139 i Stockholm. Reservdelar till mobiler är hjärtat i sortimentet, men hos oss hittar du också skal, skärmskydd, laddare, hörlurar, datortillbehör, gaming och både nya och begagnade mobiler. Mycket av det vi säljer använder vi själva varje dag när vi lagar telefoner, så vi vet vad som håller och vad som inte gör det.</p>
 
 <h3>Reservdelar till iPhone, Samsung, iPad och fler märken</h3>
 <p>Skärmar och batterier är det vi säljer mest av, men sortimentet går djupare än så. Vi har baksidor, kameror, kameraglas, laddkontakter, högtalare, knappar och flexkablar. Börja med märket, till exempel <a href="/mobilreservdelar/apple">reservdelar till iPhone och iPad</a> eller <a href="/mobilreservdelar/samsung">reservdelar till Samsung</a>, och välj sedan din modell. Då ser du bara delar som passar just din telefon.</p>
