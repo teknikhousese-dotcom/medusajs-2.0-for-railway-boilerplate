@@ -37,6 +37,39 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const p = pg(req.scope)
   await ensure(p)
   const flik = String((req.query as any).flik || "")
+  const qq: any = req.query || {}
+
+  /* Olästa ordrar (samma definition som listan: flik Nya och metadata.read !== true). Billig räkning server-side. */
+  if (qq.unread) {
+    let unread = 0
+    try { unread = (await p.raw(`SELECT count(*)::int AS c FROM "order" o WHERE o.deleted_at IS NULL AND ${nyaCond} AND (o.metadata->>'read') IS DISTINCT FROM 'true'`)).rows[0]?.c || 0 } catch { unread = 0 }
+    return res.json({ unread })
+  }
+  /* Slå upp order-id från Wiki-ordernummer (metadata.wiki_order_id). */
+  if (qq.wiki) {
+    const r = await p.raw(`SELECT o.id FROM "order" o WHERE o.deleted_at IS NULL AND o.metadata->>'wiki_order_id' = ? LIMIT 1`, [String(qq.wiki)])
+    return res.json({ id: (r.rows && r.rows[0] && r.rows[0].id) || null })
+  }
+  /* Lista Wiki-importerade ordrar (wiki_imported) lagda efter ett datum (svensk tid). */
+  if (qq.wiki_list) {
+    const since = String(qq.since || "2000-01-01")
+    const r = await p.raw(`SELECT o.id, o.metadata->>'wiki_order_id' AS wid, o.metadata->>'wiki_order_time' AS t, o.metadata->>'wiki_activated' AS act, o.metadata->>'payment_method' AS pm, o.metadata->>'orderflik' AS flik, (o.metadata->>'ip_address') IS NOT NULL AS has_ip, (o.metadata->>'wiki_shipping_desc') IS NOT NULL AS has_ship, (o.metadata->>'wiki_klarna_order_id') IS NOT NULL AS has_kl FROM "order" o WHERE o.deleted_at IS NULL AND o.metadata->>'wiki_imported' = 'true' AND COALESCE(o.metadata->>'wiki_order_time','') >= ? ORDER BY o.metadata->>'wiki_order_time' ASC`, [since])
+    return res.json({ orders: r.rows || [] })
+  }
+  /* Täckning av Wiki-fält (för kontroll). */
+  if (qq.wiki_stats) {
+    const r = await p.raw(`SELECT count(*)::int AS total,
+      count(*) FILTER (WHERE (o.metadata->>'wiki_order_id') IS NOT NULL)::int AS wiki,
+      count(*) FILTER (WHERE o.metadata->>'wiki_imported' = 'true')::int AS imported,
+      count(*) FILTER (WHERE (o.metadata->>'order_time') IS NOT NULL)::int AS order_time,
+      count(*) FILTER (WHERE (o.metadata->>'wiki_order_time') IS NOT NULL)::int AS wiki_order_time,
+      count(*) FILTER (WHERE COALESCE(o.metadata->>'ip_address','') <> '')::int AS ip,
+      count(*) FILTER (WHERE COALESCE(o.metadata->>'wiki_shipping_method','') <> '')::int AS ship,
+      count(*) FILTER (WHERE COALESCE(o.metadata->>'wiki_shipping_desc','') <> '')::int AS ship_desc,
+      count(*) FILTER (WHERE COALESCE(o.metadata->>'wiki_klarna_order_id','') <> '')::int AS klarna
+      FROM "order" o WHERE o.deleted_at IS NULL`)
+    return res.json((r.rows && r.rows[0]) || {})
+  }
 
   if (!flik) {
     const defs = ((await p.raw(`SELECT "key","label","is_system","sort" FROM "order_flik" ORDER BY "sort" ASC, "label" ASC`)).rows) || []
