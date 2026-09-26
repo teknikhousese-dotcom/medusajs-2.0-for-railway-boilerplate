@@ -77,7 +77,7 @@ export default async function Checkout({
 
   return (
     <>
-      <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
+      <div className="grid grid-cols-1 small:grid-cols-[minmax(0,1fr)_360px] medium:grid-cols-[minmax(0,1fr)_400px] content-container gap-x-10 medium:gap-x-20 py-6 small:py-12">
         <Wrapper cart={cart}>
           <CheckoutForm cart={cart} customer={customer} />
         </Wrapper>
@@ -86,7 +86,7 @@ export default async function Checkout({
 
       {region && recommended.length > 0 && (
         <div className="content-container border-t py-12">
-          <h2 className="text-[26px] font-semibold text-[#14161C] mb-6">
+          <h2 className="text-[22px] small:text-[26px] font-semibold text-[#14161C] mb-5 small:mb-6">
             Kanske gillar du också
           </h2>
           <ul className="flex gap-4 overflow-x-auto snap-x pb-3 -mx-4 px-4">
