@@ -7,6 +7,7 @@ import Input from "@modules/common/components/input"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import { login } from "@lib/data/customer"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
@@ -30,7 +31,7 @@ const Login = ({ setCurrentView }: Props) => {
             label="E-post"
             name="email"
             type="email"
-            title="Enter a valid email address."
+            title="Ange en giltig e-postadress."
             autoComplete="email"
             required
             data-testid="email-input"
@@ -56,6 +57,12 @@ const Login = ({ setCurrentView }: Props) => {
       >
         Glömt lösenordet?
       </button>
+      <p className="text-center text-ui-fg-subtle text-small-regular mt-4">
+        Handlade du utan konto?{" "}
+        <LocalizedClientLink href="/orderstatus" className="underline text-ui-fg-base">
+          Spåra din order här
+        </LocalizedClientLink>
+      </p>
       <span className="text-center text-ui-fg-base text-small-regular mt-6">
         Inte medlem än?{" "}
         <button
