@@ -347,6 +347,7 @@ export async function submitPromotionForm(
 
 // TODO: Pass a POJO instead of a form entity here
 export async function setAddresses(currentState: unknown, formData: FormData) {
+  let updated: HttpTypes.StoreCart | undefined
   try {
     if (!formData) {
       throw new Error("No form data found when setting addresses")
@@ -388,14 +389,41 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         province: formData.get("billing_address.province"),
         phone: formData.get("billing_address.phone"),
       }
-    await updateCart(data)
+    updated = await updateCart(data)
   } catch (e: any) {
     return e.message
   }
 
+  /* Leveransadress is step 3 (after Leverans + Betalning): go on to pay. */
+  const nextStep = updated?.shipping_methods?.length ? "review" : "delivery"
   redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
+    `/${formData.get("shipping_address.country_code")}/checkout?step=${nextStep}`
   )
+}
+
+/**
+ * Klarna-first checkout: the shopper enters email/phone/address inside the
+ * Kustom (KCO) iframe, not in our form. Before the cart is completed, the
+ * backend copies those details from the completed Kustom order onto the cart
+ * (POST /kustom/confirm). Best effort: never throws.
+ */
+export async function prepareKustomCart(kustomOrderId: string) {
+  try {
+    const cartId = await getCartId()
+    if (!cartId || !kustomOrderId) {
+      return { ok: false, reason: "missing" }
+    }
+    const res = await sdk.client
+      .fetch<{ ok: boolean; reason?: string | null }>("/kustom/confirm", {
+        method: "POST",
+        body: { cart_id: cartId, kustom_order_id: kustomOrderId },
+      })
+      .catch((e: any) => ({ ok: false, reason: String(e?.message || "error") }))
+    await revalidateCacheTag("carts")
+    return res
+  } catch (e: any) {
+    return { ok: false, reason: String(e?.message || "error") }
+  }
 }
 
 export async function placeOrder() {
