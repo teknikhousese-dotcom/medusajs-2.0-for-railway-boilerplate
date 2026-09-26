@@ -26,8 +26,9 @@ async function getOrder(id: string) {
 }
 
 export const metadata: Metadata = {
-  title: "Order Confirmed",
-  description: "You purchase was successful",
+  title: "Tack för din beställning | Teknikhouse",
+  description: "Din beställning hos Teknikhouse är mottagen.",
+  robots: { index: false, follow: false },
 }
 
 export default async function OrderConfirmedPage({ params }: Props) {
