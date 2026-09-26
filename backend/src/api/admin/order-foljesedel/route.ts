@@ -109,7 +109,7 @@ function renderFoljesedel(order: any): string {
   const m = order.metadata || {}
   const items = order.items || []
 
-  const displayId = order.display_id ?? m.wiki_order_id ?? order.id
+  const displayId = m.wiki_order_id || order.display_id || order.id
   const orderNr = String(m.wiki_order_id || order.display_id || order.id)
 
   const namn = `${sa.first_name || ""} ${sa.last_name || ""}`.trim() || "–"
@@ -129,12 +129,16 @@ function renderFoljesedel(order: any): string {
   const mobile = m.mobile || m.mobiltelefon || m.cell_phone || sa.phone || ""
 
   const shippingMethod = order.shipping_methods?.[0]?.name || m.wiki_shipping_method || "Standard"
+  /* Wiki-ordrar: visa Wikis sparade leveranstext, inte dagens fraktalternativ. */
+  const shipDesc = m.wiki_shipping_desc || (m.wiki_order_id ? "" : "Standard / 2-3 vardagar. Fraktfritt vid köp över 999 kr.")
 
   const payments = order.payment_collections?.flatMap((pc: any) => pc.payments || []) || []
   const providerId = payments?.[0]?.provider_id
   const betalningstyp = paymentLabel(providerId, m.payment_method)
 
-  const inkom = formatDateTime(m.order_time || order.created_at)
+  /* Wiki-tid är redan svensk lokal tid och visas som den är; annars created_at i Europe/Stockholm. */
+  const wikiTime = m.wiki_order_time || m.order_time
+  const inkom = wikiTime ? String(wikiTime).replace("T", " ").slice(0, 19) : formatDateTime(order.created_at)
 
   const grossFactor = Number(order.tax_total) > 0 ? 1 : 1.25
   const itemRows = items
@@ -280,7 +284,7 @@ function renderFoljesedel(order: any): string {
               <span class="value">${esc(shippingMethod)}</span>
             </div>
             <p class="muted" style="margin:-4px 0 0; font-size:11px; color:var(--muted); text-align:right;">
-              Standard / 2-3 vardagar. Fraktfritt vid köp över 999 kr.
+              ${esc(shipDesc)}
             </p>
             <div class="meta-row">
               <span class="label">Betalningstyp</span>
