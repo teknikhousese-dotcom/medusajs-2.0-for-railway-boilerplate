@@ -181,8 +181,8 @@ export function installGlobalMenu() {
     ";font-weight:" + (on ? "700" : "400") + ";font-size:" + (sub ? "11px" : "12px") + ";"
 
   let unread = "— st"
-  fetch("/admin/orders?limit=1", { credentials: "include" }).then((r) => r.json()).then((o) => {
-    unread = ((o && o.count) || 0) + " st"
+  fetch("/admin/order-fliks?unread=1", { credentials: "include" }).then((r) => r.json()).then((o) => {
+    unread = ((o && o.unread) || 0) + " st"
     const el = document.getElementById("bm-unread"); if (el) el.textContent = unread
   }).catch(() => {})
 
@@ -268,7 +268,7 @@ export function Snabbmeny({ active }: { active?: string }) {
   useHideNativeSidebar()
   useEffect(() => { installGlobalMenu() }, [])
   const [unread, setUnread] = useState(0)
-  useEffect(() => { jget(`${"/admin"}/orders?limit=1`).then((o) => setUnread(o.count || 0)).catch(() => {}) }, [])
+  useEffect(() => { jget("/admin/order-fliks?unread=1").then((o) => setUnread((o && o.unread) || 0)).catch(() => {}) }, [])
 
   const path = typeof window !== "undefined" ? window.location.pathname + window.location.search : ""
   const isActive = (m: MenuItem) => {
