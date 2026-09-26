@@ -1,6 +1,7 @@
 import ProductPreview from "@modules/products/components/product-preview"
 import NewsletterSignup from "./newsletter-signup"
 import RecentlyViewed from "./recently-viewed"
+import DeviceFinder from "./device-finder"
 
 // Teknikhouse 2027 homepage: light, warm Swedish-retail styling
 // (modelled on power.se / teknikdelar.se / 24.se). Scoped under .th.
@@ -241,22 +242,12 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <div className="hero"><div className="wrap">
         <div>
           <span className="badge"><span className="dot" style={{ background: "var(--red)" }} /> Sveriges bredaste reservdelslager</span>
-          <h1>Hitta rätt del<br />till <span className="red">din modell.</span></h1>
-          <p className="lead">Skärmar, batterier och baksidor till 6&nbsp;000+ modeller — testade och garanterade att passa. Välj din enhet, så visar vi bara det som passar.</p>
-          <div className="finder">
-            <div className="flab"><span className="dot" style={{ background: "var(--red)" }} /> Vilken enhet har du?</div>
-            <div className="row">
-              <div className="sel">Märke: Apple</div>
-              <div className="sel">Modell: iPhone 13</div>
-              <a className="go" href="/mobilreservdelar">Visa delar</a>
-            </div>
-            <div className="fit">✓ Varje del är märkt <b>&quot;Passar din enhet&quot;</b> — verifierad kompatibilitet.</div>
-          </div>
+          <DeviceFinder regionId={region?.id} />
           <div className="herochips"><span>Fri frakt över 999 kr</span><span>Livstidsgaranti på delar</span><span>Skickas idag</span></div>
         </div>
         <div className="heroart">
           <div className="ph" />
-          <div className="fc" style={{ top: "44px", left: "34px" }}><b>Skärm iPhone 13</b><span className="ok">✓ Passar din enhet</span></div>
+          <div className="fc" style={{ top: "44px", left: "34px" }}><b>Skärm iPhone 13</b><span className="ok">✓ Sorterat efter modell</span></div>
           <div className="fc" style={{ bottom: "44px", right: "34px" }}><b>Batteri · 649 kr</b><span className="p">Livstidsgaranti</span></div>
         </div>
       </div></div>
