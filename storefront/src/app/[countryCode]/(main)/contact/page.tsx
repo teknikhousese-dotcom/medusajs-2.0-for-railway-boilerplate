@@ -96,7 +96,7 @@ export default function ContactPage() {
               </div>
             </div>
             <div className="rounded-2xl bg-gray-50 p-5 text-sm text-gray-600 leading-relaxed">
-              Trygg e-handel sedan 2014. Vi är anslutna till Svensk Digital Handel, och alla köp har öppet köp i 30 dagar med garanti.
+              Handla tryggt och säkert hos oss. Du betalar med Swish, kort eller Klarna, och du har 30 dagars öppet köp och garanti mot fabrikationsfel på det du köper.
             </div>
           </div>
 
