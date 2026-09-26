@@ -1,5 +1,10 @@
+import type { Metadata } from "next"
 import { getCustomer } from "@lib/data/customer"
 import AccountLayout from "@modules/account/templates/account-layout"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+}
 
 export default async function AccountPageLayout({
   dashboard,
