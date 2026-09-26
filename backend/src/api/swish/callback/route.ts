@@ -9,7 +9,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const b: any = req.body || {}
     if (b && (b.id || b.payeePaymentReference)) {
-      console.log("[swish] callback", b.id || b.payeePaymentReference, b.status)
+      console.log("[swish] callback", b.id || b.payeePaymentReference, b.status, b.errorCode || "", b.errorMessage || "")
     }
   } catch { /* ignore */ }
   return res.status(200).json({ ok: true })
