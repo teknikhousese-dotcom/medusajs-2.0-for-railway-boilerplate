@@ -19,7 +19,7 @@ type ProductTemplateProps = {
 }
 
 const USP = [
-  { t: "Snabb leverans", s: "Skickas idag · 1–3 dagar", p: "M3 13h6l2-8 3 16 2-6h5" },
+  { t: "Snabb leverans", s: "Skickas idag · 1-3 dagar", p: "M3 13h6l2-8 3 16 2-6h5" },
   { t: "Öppet köp 30 dagar", s: "Enkelt att returnera", p: "M4 8a8 8 0 0116 0M20 4v4h-4|M20 16a8 8 0 01-16 0M4 20v-4h4" },
   { t: "Garanti ingår", s: "Trygg e-handel", p: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z|M9 12l2 2 4-4" },
   { t: "Trygg betalning", s: "Swish · Klarna · Kort", p: "M3 6h18v12H3z|M3 10h18" },
@@ -38,15 +38,15 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
     <>
       <ProductBreadcrumb title={product.title} />
 
-      <div className="content-container py-2 small:py-6">
+      <div className="content-container pb-2 pt-1 small:py-6">
         <div
-          className="flex flex-col small:flex-row small:items-start relative"
+          className="relative flex flex-col min-[768px]:flex-row min-[768px]:items-start min-[768px]:gap-x-6 small:gap-x-10"
           data-testid="product-container"
         >
-          <div className="w-full small:w-[600px] small:flex-none relative">
+          <div className="relative w-full min-w-0 min-[768px]:w-1/2 min-[768px]:sticky min-[768px]:top-24 medium:w-[600px] medium:flex-none">
             <ImageGallery images={product?.images || []} />
           </div>
-          <div className="flex flex-col w-full small:w-[440px] small:flex-none small:ml-auto small:sticky small:top-24 py-8 small:py-0 gap-y-5">
+          <div className="flex w-full min-w-0 flex-col gap-y-5 pt-6 pb-4 min-[768px]:w-1/2 min-[768px]:py-0 medium:ml-auto medium:w-[440px] medium:flex-none">
             <ProductInfo product={product} />
             <ProductActionsWrapper id={product.id} region={region} />
           </div>
@@ -58,13 +58,13 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         <ProductTabs product={product} />
       </div>
 
-        <ProductReviews productId={product.id} productTitle={product.title} />
+      <ProductReviews productId={product.id} productTitle={product.title} />
 
       {/* USP / trygghetsband */}
       <div style={{ background: "#faf8f6", borderTop: "1px solid #efeae5", borderBottom: "1px solid #efeae5", marginTop: "28px" }}>
         <div
           className="content-container"
-          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "20px", padding: "24px" }}
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,210px),1fr))", gap: "16px 20px", paddingTop: "22px", paddingBottom: "22px" }}
         >
           {USP.map((u) => (
             <div key={u.t} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -83,7 +83,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       </div>
 
       <div
-        className="content-container my-16 small:my-24"
+        className="content-container my-10 small:my-20"
         data-testid="related-products-container"
       >
         <Suspense fallback={<SkeletonRelatedProducts />}>
