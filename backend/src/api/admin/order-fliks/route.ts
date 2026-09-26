@@ -33,6 +33,15 @@ async function ensure(p: any) {
 
 const nyaCond = `(o.metadata->>'orderflik' IS NULL OR o.metadata->>'orderflik' IN ('nya',''))`
 
+/* Sortering som Wiki: nyast först efter ordertid (svensk lokal tid). Wiki-ordrar har metadata.wiki_order_time
+   (eller order_time), nya Medusa-ordrar saknar den och sorteras på created_at omräknat till svensk tid.
+   Därefter Wiki-ordernumret och id som stabil tie-breaker. Sortering + LIMIT/OFFSET sker i SQL över ALLA ordrar. */
+const TS_FMT = `'YYYY-MM-DD HH24:MI:SS'`
+const tsExpr = (k: string) => `CASE WHEN COALESCE(o.metadata->>'${k}','') = '' THEN NULL WHEN (o.metadata->>'${k}') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9:.]+(Z|[+-][0-9]{2}:{0,1}[0-9]{2})$' THEN to_char(((o.metadata->>'${k}')::timestamptz) AT TIME ZONE 'Europe/Stockholm', ${TS_FMT}) ELSE LEFT(REPLACE(o.metadata->>'${k}','T',' '), 19) END`
+const SORT_T = `COALESCE(${tsExpr("wiki_order_time")}, ${tsExpr("order_time")}, to_char(o.created_at AT TIME ZONE 'Europe/Stockholm', ${TS_FMT}))`
+const SORT_W = `COALESCE(CASE WHEN (o.metadata->>'wiki_order_id') ~ '^[0-9]{1,15}$' THEN (o.metadata->>'wiki_order_id')::bigint END, 0)`
+const ORDER_BY = `ORDER BY ${SORT_T} DESC, ${SORT_W} DESC, o.id DESC`
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const p = pg(req.scope)
   await ensure(p)
@@ -55,6 +64,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const since = String(qq.since || "2000-01-01")
     const r = await p.raw(`SELECT o.id, o.metadata->>'wiki_order_id' AS wid, o.metadata->>'wiki_order_time' AS t, o.metadata->>'wiki_activated' AS act, o.metadata->>'payment_method' AS pm, o.metadata->>'orderflik' AS flik, (o.metadata->>'ip_address') IS NOT NULL AS has_ip, (o.metadata->>'wiki_shipping_desc') IS NOT NULL AS has_ship, (o.metadata->>'wiki_klarna_order_id') IS NOT NULL AS has_kl FROM "order" o WHERE o.deleted_at IS NULL AND o.metadata->>'wiki_imported' = 'true' AND COALESCE(o.metadata->>'wiki_order_time','') >= ? ORDER BY o.metadata->>'wiki_order_time' ASC`, [since])
     return res.json({ orders: r.rows || [] })
+  }
+  /* Föregående/nästa order (samma sortering som listan, över alla ordrar). next = nyare, prev = äldre. */
+  if (qq.nav) {
+    const cur = (await p.raw(`SELECT ${SORT_T} AS t, ${SORT_W} AS w, o.id FROM "order" o WHERE o.id = ?`, [String(qq.nav)])).rows?.[0]
+    if (!cur) return res.json({ prev: null, next: null })
+    const sel = `SELECT o.id, o.display_id, o.metadata->>'wiki_order_id' AS wid FROM "order" o WHERE o.deleted_at IS NULL AND`
+    const tup = `(${SORT_T}, ${SORT_W}, o.id)`
+    const nx = (await p.raw(`${sel} ${tup} > (?, ?, ?) ORDER BY ${SORT_T} ASC, ${SORT_W} ASC, o.id ASC LIMIT 1`, [cur.t, cur.w, cur.id])).rows?.[0]
+    const pv = (await p.raw(`${sel} ${tup} < (?, ?, ?) ${ORDER_BY} LIMIT 1`, [cur.t, cur.w, cur.id])).rows?.[0]
+    const shape = (r: any) => r ? { id: r.id, display_id: r.display_id, metadata: { wiki_order_id: r.wid || undefined } } : null
+    return res.json({ prev: shape(pv), next: shape(nx) })
   }
   /* Täckning av Wiki-fält (för kontroll). */
   if (qq.wiki_stats) {
@@ -85,7 +105,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return res.json({ fliks, unread })
   }
 
-  const limit = Math.min(200, parseInt(String((req.query as any).limit || "50")) || 50)
+  const limit = Math.min(500, parseInt(String((req.query as any).limit || "100")) || 100)
   const offset = parseInt(String((req.query as any).offset || "0")) || 0
   const isNya = flik === "nya"
   const cond = isNya ? nyaCond : `o.metadata->>'orderflik' = ?`
@@ -93,7 +113,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   let count = 0
   try { count = (await p.raw(`SELECT count(*)::int AS c FROM "order" o WHERE o.deleted_at IS NULL AND ${cond}`, binds)).rows[0]?.c || 0 } catch { count = 0 }
-  const idRows = ((await p.raw(`SELECT o.id FROM "order" o WHERE o.deleted_at IS NULL AND ${cond} ORDER BY o.display_id DESC LIMIT ${limit} OFFSET ${offset}`, binds)).rows) || []
+  const idRows = ((await p.raw(`SELECT o.id FROM "order" o WHERE o.deleted_at IS NULL AND ${cond} ${ORDER_BY} LIMIT ${limit} OFFSET ${offset}`, binds)).rows) || []
   const ids = idRows.map((r: any) => r.id)
 
   let orders: any[] = []
