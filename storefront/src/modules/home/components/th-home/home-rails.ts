@@ -15,10 +15,13 @@ Bästsäljare: Medusa har ännu ingen försäljningshistorik att räkna på, så
 raden visar det butiken säljer mest av: skärmar och sedan batterier till de
 vanligaste modellerna (iPhone 11 till 15, Galaxy S21 och S22). Färgvarianter
 av samma del räknas som en produkt, så samma skärm syns aldrig två gånger.
+I varje rad visas högst en produkt per modell och deltyp, så att en rad
+inte fylls med fem nästan likadana skärmskydd.
 
 Produkter på rea: bara produkter där priset faktiskt är lägre än ordinarie
-pris (samma villkor som ger rött pris och överstruket pris på kortet),
-störst rabatt först. Från Fynd och outlet och från sortimentet i övrigt.
+pris (samma villkor som ger rött pris och överstruket pris på kortet).
+Delar till modeller från 2019 och framåt först, sedan störst rabatt. Från
+Fynd och outlet och från sortimentet i övrigt.
 
 Nyss inkommet: alla importerade produkter har samma skapandedatum, så datumet
 säger inget om vad som är nytt. Raden visar i stället delar till de nyaste
@@ -53,6 +56,9 @@ const BESTSELLER_MODELS = [
 ]
 
 const OUTLET = "outlet-fyndvaror"
+
+/* Rearaden visar delar till modeller från det här året och framåt först. */
+const RECENT_YEAR = 2019
 
 async function list(query: Record<string, unknown>): Promise<P[]> {
   try {
@@ -109,6 +115,14 @@ const groupKey = (title: string): string =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
 
+/* Modell i en titel, t.ex. "iphone13" eller "galaxys21". Tom om ingen hittas. */
+const modelKey = (title: string): string => {
+  const m = foldText(title).match(
+    /(iphone|ipad|galaxy|pixel|xperia|redmi|oneplus|huawei|nokia|moto)s*[a-z]*s*d+/
+  )
+  return m ? m[0].replace(/s+/g, "") : ""
+}
+
 /* Ungefärligt lanseringsår för modellen i en titel, 0 om okänt. */
 function modelYear(text: string): number {
   const t = foldText(text)
@@ -138,19 +152,33 @@ const createdAt = (p: P): number => {
   return Number.isFinite(t) ? t : 0
 }
 
-/* Plockar produkter utan dubbletter, varken samma id eller samma del i annan färg. */
+/*
+Plockar produkter utan dubbletter på sidan (samma id, eller samma del i en
+annan färg) och med högst en produkt per modell och deltyp i varje rad.
+*/
 function makePicker() {
   const ids = new Set<string>()
   const groups = new Set<string>()
-  return (cands: P[], n: number, ok: (p: P) => boolean): P[] => {
+  const perRail = new Map<string, Set<string>>()
+  return (rail: string, cands: P[], n: number, ok: (p: P) => boolean): P[] => {
+    let seen = perRail.get(rail)
+    if (!seen) {
+      seen = new Set<string>()
+      perRail.set(rail, seen)
+    }
     const out: P[] = []
     for (const p of cands) {
       if (out.length >= n) break
       if (!p?.id || ids.has(p.id) || !ok(p)) continue
-      const g = groupKey(p.title || "")
+      const title = p.title || ""
+      const g = groupKey(title)
       if (g && groups.has(g)) continue
+      const mk = modelKey(title)
+      const slot = mk ? mk + ":" + partIndexOf(title) : ""
+      if (slot && seen.has(slot)) continue
       ids.add(p.id)
       if (g) groups.add(g)
+      if (slot) seen.add(slot)
       out.push(p)
     }
     return out
@@ -264,17 +292,25 @@ export const getHomeRails = cache(async function (
     modelYear(b.title || "") - modelYear(a.title || "") ||
     createdAt(b) - createdAt(a)
 
-  const bestRail = pick(best, RAIL, sellable)
+  const isRecent = (p: P): number =>
+    modelYear(p.title || "") >= RECENT_YEAR ? 1 : 0
+
+  const bestRail = pick("best", best, RAIL, sellable)
   const saleRail = pick(
-    [...outlet, ...pool, ...recent].filter(onSale).sort((a, b) => discount(b) - discount(a)),
+    "sale",
+    [...outlet, ...pool, ...recent]
+      .filter(onSale)
+      .sort((a, b) => isRecent(b) - isRecent(a) || discount(b) - discount(a)),
     RAIL,
     onSale
   )
-  const newRail = pick([...newest, ...recent].sort(byNewModel), RAIL, sellable)
+  const newRail = pick("new", [...newest, ...recent].sort(byNewModel), RAIL, sellable)
 
-  bestRail.push(...pick(pool, RAIL - bestRail.length, sellable))
-  saleRail.push(...pick(outlet, RAIL - saleRail.length, sellable))
-  newRail.push(...pick([...recent].sort(byNewModel), RAIL - newRail.length, sellable))
+  bestRail.push(...pick("best", pool, RAIL - bestRail.length, sellable))
+  saleRail.push(...pick("sale", outlet, RAIL - saleRail.length, sellable))
+  newRail.push(
+    ...pick("new", [...recent].sort(byNewModel), RAIL - newRail.length, sellable)
+  )
 
   /* ThHome delar listan efter position, så en ofullständig rad avslutar listan. */
   const out: P[] = []
