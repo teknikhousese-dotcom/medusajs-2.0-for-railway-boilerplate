@@ -11,6 +11,7 @@ import { listCategories, listCategoryMetadata } from "@lib/data/categories"
 import { niceCategoryName } from "@lib/util/category-name"
 import { hideFromMenu, isHiddenInMenu } from "@lib/util/menu-categories"
 import ReadMore from "@modules/categories/components/read-more"
+import { legacyHtmlCss, sanitizeLegacyHtml } from "@lib/util/sanitize-legacy-html"
 
 type Cat = HttpTypes.StoreProductCategory
 
@@ -52,22 +53,14 @@ const displayName = (cat: Cat, byId: Record<string, Cat>) => {
   return niceCategoryName(raw, slug)
 }
 
-// Category texts imported from the old shop can carry their own JSON-LD. The
-// category page already outputs one BreadcrumbList, so drop any BreadcrumbList
-// block from the texts. Other blocks (FAQPage and so on) are kept as they are.
+// Category texts imported from the old shop can carry their own JSON-LD, inline
+// styles, fonts and layout tables. sanitizeLegacyHtml drops every JSON-LD block
+// except FAQPage (the page already outputs one BreadcrumbList), strips the old
+// styling so the text uses the site typography, turns layout tables into cards,
+// wraps data tables so they scroll on phones, and cleans internal links.
 const stripBreadcrumbLd = (html: string): string =>
-  html.replace(
-    /<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi,
-    (tag: string, body: string) => {
-      try {
-        const data = JSON.parse(body)
-        if (data && data["@type"] === "BreadcrumbList") return ""
-      } catch {
-        return tag
-      }
-      return tag
-    }
-  )
+  sanitizeLegacyHtml(html, { keepLdTypes: ["FAQPage"] })
+const LEGACY_CSS = legacyHtmlCss(".thintro") + "\n" + legacyHtmlCss(".thc")
 
 // Brand logos (teknikhouse /images/category), keyed by leaf slug. Used until a
 // category's own metadata.category_image (migrated to R2) is set.
@@ -237,6 +230,8 @@ export default async function CategoryTemplate({
           <h1 className="break-words" style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "clamp(22px, 6vw, 27px)", lineHeight: 1.25, color: "#1b1714", margin: "0 0 12px" }} data-testid="category-page-title">
             {displayName(self, byId)}
           </h1>
+
+          <style dangerouslySetInnerHTML={{ __html: LEGACY_CSS }} />
 
           {firstPara ? <ReadMore html={firstPara} /> : null}
 
