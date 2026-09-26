@@ -6,10 +6,10 @@
 
 export type CheckoutSteg = "leverans" | "betalning" | "adress" | "granska"
 
-export const CHECKOUT_PATH = "/checkout"
+export const CHECKOUT_PATH = "/kassa"
 
-/* false: länkar skrivs i gamla formatet (övergång), true: /kassa?steg=... */
-const SWEDISH_URLS = false
+/* true: länkar skrivs som /kassa?steg=..., false: gamla formatet /checkout?step=... */
+const SWEDISH_URLS = true
 
 const LEGACY_TO_SV: Record<string, CheckoutSteg> = {
   delivery: "leverans",
