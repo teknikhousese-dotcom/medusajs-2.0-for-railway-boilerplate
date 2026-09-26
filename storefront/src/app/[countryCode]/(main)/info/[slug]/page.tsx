@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { fitDescription, pageAlternates } from "@lib/seo"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 // Teknikhouse informationssidor, Nordic Teknik House AB.
@@ -396,8 +397,12 @@ export async function generateMetadata(props: {
     }
   } catch {}
   const page = PAGES[slug]
-  if (!page) return { title: "Information | Teknikhouse" }
-  return { title: `${page.title} | Teknikhouse`, description: page.intro || page.title }
+  if (!page) return { title: "Information | Teknikhouse", alternates: pageAlternates("/info/" + slug) }
+  return {
+    title: `${page.title} | Teknikhouse`,
+    description: fitDescription(page.intro || page.title),
+    alternates: pageAlternates("/info/" + slug),
+  }
 }
 
 export default async function InfoPage(props: {
