@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/"),
   title: "Mobilreservdelar till iPhone och Samsung | Teknikhouse",
   description:
-    "Skärmar, batterier och reservdelar till iPhone, Samsung, iPad och fler, plus mobiltillbehör och verktyg. Butik på Sveavägen 139 i Stockholm. Fri frakt över 999 kr och 30 dagars öppet köp.",
+    "Reservdelar till iPhone och Samsung, mobiltillbehör, laddare, hörlurar, datortillbehör och begagnade mobiler. Butik i Stockholm, fri frakt över 999 kr och 30 dagars öppet köp.",
 }
 
 export default async function Home({
