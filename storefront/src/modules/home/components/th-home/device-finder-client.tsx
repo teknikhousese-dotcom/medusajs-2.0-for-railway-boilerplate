@@ -467,24 +467,24 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
   const brandName = brand ? brands.find((b) => b.s === brand)?.n : null
   const modelCount = data?.counted ? data.models : all.length
 
+  const partCounts: number[] = items && items.length
+    ? PART_TYPES.map((_, i) => items.filter((x) => x.pi === i).length)
+    : model?.k || []
+  const partChips = partCounts.length ? PART_TYPES.map((p, i) => ({ ...p, i, c: partCounts[i] || 0 })).filter((p) => p.c > 0) : []
+  const totalParts = items && items.length ? items.length : model?.c || 0
   const hint = model ? (
     <>
       <b>{model.n}</b>
-      {model.c > 0 ? <>: {delar(model.c)} i sortimentet</> : null}
+      {totalParts > 0 ? <>: {delar(totalParts)} i sortimentet</> : null}
     </>
   ) : brandName ? (
     <>
       <b>{brandName}</b>: {all.filter((m) => m.b === brand).length} modeller. Sök eller välj i listan.
     </>
   ) : (
-    <>Välj märke och modell så visar vi delarna som passar.</>
+    <>Välj märke och modell så visar vi delarna.</>
   )
 
-  const partCounts: number[] = items && items.length
-    ? PART_TYPES.map((_, i) => items.filter((x) => x.pi === i).length)
-    : model?.k || []
-  const partChips = partCounts.length ? PART_TYPES.map((p, i) => ({ ...p, i, c: partCounts[i] || 0 })).filter((p) => p.c > 0) : []
-  const totalParts = items && items.length ? items.length : model?.c || 0
   const shown: Item[] = useMemo(() => {
     if (!items) return []
     if (part >= 0) return items.filter((x) => x.pi === part)
