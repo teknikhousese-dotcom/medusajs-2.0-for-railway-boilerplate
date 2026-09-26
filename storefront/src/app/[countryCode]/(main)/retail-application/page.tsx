@@ -40,7 +40,7 @@ export default function RetailApplicationPage() {
             <input required placeholder="Kontaktperson" value={f.name} onChange={upd("name")} className="border rounded-lg px-3 py-2" />
             <input required type="email" placeholder="E-post" value={f.email} onChange={upd("email")} className="border rounded-lg px-3 py-2" />
             <input placeholder="Telefon" value={f.phone} onChange={upd("phone")} className="border rounded-lg px-3 py-2 sm:col-span-2" />
-            <textarea placeholder="Meddelande (valfritt) — t.ex. bransch, volym, behov" value={f.message} onChange={upd("message")} rows={4} className="border rounded-lg px-3 py-2 sm:col-span-2" />
+            <textarea placeholder="Meddelande (valfritt), t.ex. bransch, volym och behov" value={f.message} onChange={upd("message")} rows={4} className="border rounded-lg px-3 py-2 sm:col-span-2" />
             {state === "error" && <div className="text-red-600 text-sm sm:col-span-2">Något gick fel. Försök igen eller mejla info@teknikhouse.se.</div>}
             <button disabled={state === "sending"} className="bg-[#D10000] text-white font-semibold rounded-lg px-6 py-3 hover:bg-[#b00000] disabled:opacity-60 sm:col-span-2">
               {state === "sending" ? "Skickar…" : "Skicka ansökan"}
