@@ -110,10 +110,14 @@ function ProduktFormPage() {
     for (const k of Object.keys(origMeta || {})) if (!(k in md) && !FORM_KEYS.has(k)) md[k] = origMeta[k]
     const imgs = imageList()
     const a = imgs.map((_, i) => String(alts[i] || "").trim())
-    const wi: any[] = Array.isArray(md.wiki_images) ? md.wiki_images.map((x: any) => ({ ...x })) : []
-    a.forEach((alt, i) => { if (wi[i]) wi[i].alt = alt; else wi[i] = { alt } })
-    if (wi.length) md.wiki_images = wi.slice(0, Math.max(imgs.length, 0) || wi.length)
-    md.image_alts = a
+    const hadWi = Array.isArray(md.wiki_images)
+    const anyAlt = a.some(Boolean)
+    if (hadWi || anyAlt) {
+      const wi: any[] = hadWi ? md.wiki_images.map((x: any) => ({ ...x })) : []
+      a.forEach((alt, i) => { if (wi[i]) wi[i].alt = alt; else wi[i] = { alt } })
+      md.wiki_images = wi
+    }
+    if (anyAlt || Array.isArray(md.image_alts)) md.image_alts = a
     await fetch(`/admin/products/${pid}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: md }) })
   }
 
