@@ -88,6 +88,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         "items.product_id",
         "shipping_methods.amount",
         "shipping_methods.name",
+        "items.adjustments.code",
+        "total",
       ],
     })
     const cart: any = rows?.[0]
@@ -96,8 +98,46 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return
     }
 
-    const { order_amount, order_tax_amount, order_lines } =
-      buildLinesFromCart(cart)
+    const built = buildLinesFromCart(cart)
+    const order_lines = built.order_lines
+    let order_amount = built.order_amount
+    let order_tax_amount = built.order_tax_amount
+
+    /*
+     * Discount codes: buildLinesFromCart only sums item prices and shipping,
+     * so the Kustom amount ignored cart promotions ("[kustom] amount differs").
+     * One negative "discount" line (25% VAT, VAT included like the other
+     * lines) for the difference makes order_amount equal the Medusa cart
+     * total exactly; the order tax stays the sum of the line taxes.
+     */
+    const cartTotal = Math.round(Number(cart.total ?? 0) * 100)
+    const diff = cartTotal - order_amount
+    if (cart.total != null && Number.isFinite(cartTotal) && cartTotal > 0 && diff < 0) {
+      const codes: string[] = []
+      for (const it of cart.items || []) {
+        for (const a of it?.adjustments || []) {
+          const c = String(a?.code || "").trim()
+          if (c && !codes.includes(c)) codes.push(c)
+        }
+      }
+      const tax = -Math.round(-diff * 0.2)
+      order_lines.push({
+        type: "discount",
+        reference: "rabatt",
+        name: codes.length ? "Rabatt (" + codes.join(", ") + ")" : "Rabatt",
+        quantity: 1,
+        quantity_unit: "pcs",
+        unit_price: diff,
+        tax_rate: 2500,
+        total_amount: diff,
+        total_discount_amount: 0,
+        total_tax_amount: tax,
+      })
+      order_amount += diff
+      order_tax_amount += tax
+    } else if (cart.total != null && Number.isFinite(cartTotal) && diff > 0) {
+      console.warn("[kustom] cart total above line sum", cart_id, cartTotal, order_amount)
+    }
 
     if (!order_lines.length || order_amount <= 0) {
       res.status(400).json({ error: "Tom kundvagn." })
@@ -112,6 +152,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       order_tax_amount,
       order_lines,
       merchant_reference1: cart_id,
+      merchant_data: JSON.stringify({ cart_id }),
       merchant_urls: merchantUrls(cart_id),
     }
 
