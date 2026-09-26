@@ -83,7 +83,7 @@ const CartDropdown = ({
       <Popover className="relative h-full flex items-center">
         <Popover.Button as="div" className="h-full flex items-center">
           <LocalizedClientLink
-            className="relative flex items-center justify-center gap-2 h-11 min-w-[44px] px-1 small:px-2 leading-none hover:text-[#F50000]"
+            className="relative flex items-center justify-center gap-2 small:gap-3 h-11 min-w-[44px] px-1 small:px-2 leading-none hover:text-[#F50000]"
             href="/cart"
             data-testid="nav-cart-link"
             aria-label={totalItems > 0 ? `Varukorg, ${totalItems} ${totalItems === 1 ? "vara" : "varor"}` : "Varukorg"}
