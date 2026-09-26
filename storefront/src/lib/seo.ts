@@ -348,3 +348,249 @@ export const productLd = (product: any, url: string, reviews?: ReviewData | null
 
   return data
 }
+
+/* ---------- Page titles and meta descriptions ---------- */
+
+export const TITLE_MAX = 65
+export const DESC_MAX = 160
+const BRAND_SUFFIX = " | " + SITE_NAME
+
+/** Correct casing for brand and model words (GOOGLE becomes Google, iphone becomes iPhone). */
+const WORD_CASE: Record<string, string> = {
+  iphone: "iPhone", ipad: "iPad", ipod: "iPod", imac: "iMac", macbook: "MacBook", airpods: "AirPods",
+  apple: "Apple", samsung: "Samsung", galaxy: "Galaxy", huawei: "Huawei", honor: "Honor",
+  sony: "Sony", xperia: "Xperia", google: "Google", pixel: "Pixel", oneplus: "OnePlus",
+  motorola: "Motorola", moto: "Moto", lenovo: "Lenovo", lg: "LG", htc: "HTC", asus: "ASUS",
+  zenfone: "Zenfone", nokia: "Nokia", lumia: "Lumia", xiaomi: "Xiaomi", redmi: "Redmi",
+  nexus: "Nexus", blackview: "Blackview", microsoft: "Microsoft",
+  pro: "Pro", max: "Max", plus: "Plus", mini: "Mini", ultra: "Ultra", lite: "Lite",
+  edge: "Edge", note: "Note", compact: "Compact", premium: "Premium", style: "Style", tab: "Tab",
+  hdmi: "HDMI", usb: "USB", ssd: "SSD", lcd: "LCD", oled: "OLED", led: "LED",
+}
+
+/** Drops a word run that repeats right after itself: "Samsung Galaxy Samsung Galaxy S22" becomes "Samsung Galaxy S22". */
+export const dedupeWords = (text: string): string => {
+  const words = String(text || "").split(/\s+/).filter(Boolean)
+  for (let n = 3; n >= 1; n--) {
+    let i = 0
+    while (i + 2 * n <= words.length) {
+      const a = words.slice(i, i + n).join(" ").toLowerCase()
+      const b = words.slice(i + n, i + 2 * n).join(" ").toLowerCase()
+      if (a === b) words.splice(i + n, n)
+      else i++
+    }
+  }
+  return words.join(" ")
+}
+
+/** Brand and model casing for a category name: ALL CAPS words are lowered, known brands keep their own casing. */
+export const properName = (name?: string | null): string => {
+  const words = String(name || "").replace(/\s+/g, " ").replace(/[.\s]+$/, "").trim().split(" ")
+  const cased = words.map((w, i) => {
+    const known = WORD_CASE[w.toLowerCase()]
+    if (known) return known
+    const letters = w.replace(/[^A-Za-zÅÄÖÉÜåäöéü]/g, "")
+    if (letters.length >= 4 && !/\d/.test(w) && w === w.toUpperCase()) {
+      const low = w.toLowerCase()
+      return i === 0 ? low.charAt(0).toUpperCase() + low.slice(1) : low
+    }
+    return w
+  })
+  return dedupeWords(cased.join(" "))
+}
+
+/** No en or em dashes in titles and descriptions: a spaced dash becomes a comma. */
+export const noDashes = (text?: string | null): string =>
+  String(text || "")
+    .replace(/\s+[–—-]+\s+/g, ", ")
+    .replace(/[–—]/g, "-")
+    .replace(/\s*,(\s*,)+/g, ",")
+    .replace(/\s+/g, " ")
+    .trim()
+
+const DANGLING_END = /(\s+(och|&|till|för|med|i|på|av|samt|från))+$/i
+
+/** Cuts text to at most max chars on a word boundary, never mid-word, without a dangling "och", comma or bracket. */
+export const cutAtWord = (text: string, max: number): string => {
+  const t = String(text || "").replace(/\s+/g, " ").trim()
+  if (t.length <= max) return t
+  const cut = t.slice(0, max + 1)
+  const sp = cut.lastIndexOf(" ")
+  let out = sp > 0 ? cut.slice(0, sp) : t.slice(0, max)
+  for (let k = 0; k < 3; k++) {
+    out = out.replace(/[\s,.;:/|+&(–—-]+$/, "").replace(DANGLING_END, "")
+    const open = out.lastIndexOf("(")
+    if (open > -1 && out.indexOf(")", open) === -1) out = out.slice(0, open)
+  }
+  return out.trim()
+}
+
+const BRAND_TAIL = /(\s*[-–—|:,]?\s*(köp (på|här)|teknik ?house|tekikhouse|teknikdelar|teknikh[a-z]*)(\.[a-z]{2,3})?\s*)+$/i
+
+/** Removes old shop names and "Köp på" leftovers from the end of a stored title. */
+export const stripBrand = (text?: string | null): string =>
+  String(text || "").replace(/\s+/g, " ").replace(BRAND_TAIL, "").replace(DANGLING_END, "").trim()
+
+/** A stored seo_title / meta_title is only used when it is clean; otherwise the builder decides. */
+export const cleanStoredTitle = (text?: string | null, maxLen: number = TITLE_MAX - BRAND_SUFFIX.length): string => {
+  const core = stripBrand(text)
+  if (!core || core.length > maxLen) return ""
+  if (/teknikdelar|köp (på|här)|\||[–—!]|\s-\s/i.test(core)) return ""
+  if (dedupeWords(core).toLowerCase() !== core.toLowerCase()) return ""
+  if (/(^|[^A-Za-zÅÄÖåäö])[A-ZÅÄÖ]{4,}([^A-Za-zÅÄÖåäö]|$)/.test(core)) return ""
+  return core
+}
+
+/** "<core> | Teknikhouse", at most 65 chars, cut on a word boundary. Page 2+ gets ", sida N". */
+export const pageTitle = (core: string, page?: number): string => {
+  const paged = page && page > 1 ? ", sida " + page : ""
+  const room = TITLE_MAX - BRAND_SUFFIX.length - paged.length
+  const clean = dedupeWords(noDashes(stripBrand(core))) || SITE_NAME
+  return cutAtWord(clean, room) + paged + BRAND_SUFFIX
+}
+
+const DESC_EXTRAS = [
+  "Eget lager i Stockholm och snabb leverans.",
+  "Fri frakt över 999 kr.",
+  "30 dagars öppet köp.",
+  "Garanti på allt du köper.",
+  "Betala med Klarna eller Swish.",
+]
+
+/** A standard sentence is skipped when the text already covers the topic. */
+const EXTRA_TOPICS: RegExp[] = [/leverans/i, /frakt/i, /öppet köp/i, /garanti/i, /klarna|swish/i]
+
+/** Meta description of about 140 to 160 chars: a lead sentence plus the standard sentences that fit. No dashes. */
+export const fitDescription = (lead?: string | null, extras: string[] = DESC_EXTRAS): string => {
+  let out = dedupeWords(noDashes(plainText(lead, 2000)))
+    .replace(/(fri frakt (över|från) )499\s*kr/gi, (_m: string, a: string) => a + "999 kr")
+    .replace(/\.se\.se\b/gi, ".se")
+  if (out.length > DESC_MAX || (out && !/[.!?]$/.test(out))) {
+    const head = out.slice(0, DESC_MAX)
+    const end = Math.max(head.lastIndexOf(". "), head.lastIndexOf("! "), head.lastIndexOf("? "), /[.!?]$/.test(head) ? head.length - 1 : -1)
+    if (end >= 70) out = head.slice(0, end + 1)
+    else if (out.length > DESC_MAX) out = cutAtWord(out, DESC_MAX - 1) + "…"
+    else out += "."
+  }
+  for (const e of extras) {
+    const topic = EXTRA_TOPICS.find((t) => t.test(e))
+    if (topic && topic.test(out)) continue
+    if (out.length + 1 + e.length <= DESC_MAX) out = (out ? out + " " : "") + e
+  }
+  return out
+}
+
+export type SeoCategory = {
+  id?: string
+  name?: string | null
+  handle?: string | null
+  description?: string | null
+  parent_category_id?: string | null
+  metadata?: Record<string, unknown> | null
+}
+
+const ROOT_TITLES: Record<string, string> = {
+  mobilreservdelar: "Mobilreservdelar till iPhone, Samsung och fler",
+  mobiltillbehor: "Mobiltillbehör: skal, skydd, laddare och kablar",
+  batterier: "Batterier till mobil och surfplatta",
+}
+
+/** Brand categories whose own name is not what people search for. */
+const BRAND_NAMES: Record<string, string> = {
+  apple: "iPhone och iPad",
+  google: "Google Pixel",
+  "ovriga-tillverkare": "Övriga tillverkare",
+}
+
+const BRAND_TREES = ["mobilreservdelar", "mobiltillbehor"]
+
+const handleSegment = (c?: SeoCategory, parent?: SeoCategory): string => {
+  const h = String((c && c.handle) || "")
+  const p = parent && parent.handle ? String(parent.handle) + "-" : ""
+  return p && h.indexOf(p) === 0 ? h.slice(p.length) : h
+}
+
+/** Display name for the last category in a root-to-leaf chain ("Xperia M2" under Sony Xperia becomes "Sony Xperia M2"). */
+export const categoryDisplayName = (chain: SeoCategory[]): string => {
+  const last = chain[chain.length - 1]
+  if (!last) return ""
+  const root = String((chain[0] && chain[0].handle) || "")
+  if (chain.length < 2 || BRAND_TREES.indexOf(root) === -1) return properName(last.name)
+  const brandSeg = handleSegment(chain[1], chain[0])
+  const brand = BRAND_NAMES[brandSeg] || properName(chain[1].name)
+  if (chain.length === 2) return brand
+  let name = properName(last.name)
+  if (BRAND_NAMES[brandSeg]) return name
+  if (/^övriga$/i.test(name)) return "Övriga " + brand
+  const first = brand.split(" ")[0].toLowerCase()
+  if (name.toLowerCase().split(" ").indexOf(first) === -1) name = dedupeWords(brand + " " + name)
+  return name
+}
+
+/**
+ * Category title, at most 65 chars:
+ * "Samsung Galaxy S22 Ultra reservdelar | Teknikhouse",
+ * "iPhone och iPad reservdelar: skärm och batteri | Teknikhouse".
+ * A stored seo_title is used only outside the brand trees and only when clean.
+ */
+export const categoryTitle = (chain: SeoCategory[], page?: number): string => {
+  const last = chain[chain.length - 1]
+  if (!last) return pageTitle(SITE_NAME, page)
+  const root = String((chain[0] && chain[0].handle) || "")
+  const md: any = last.metadata || {}
+  const custom = BRAND_TREES.indexOf(root) === -1 ? cleanStoredTitle(md.seo_title as string) : ""
+  const name = categoryDisplayName(chain)
+  let options: string[]
+  if (chain.length === 1) {
+    options = [ROOT_TITLES[root] || custom || name]
+  } else if (root === "mobilreservdelar") {
+    const base = /reservdel/i.test(name) ? name : name + " reservdelar"
+    options = [base + ": skärm, batteri och delar", base + ": skärm och batteri", base]
+  } else if (root === "mobiltillbehor") {
+    const base = /tillbehör/i.test(name) ? name : name + " tillbehör"
+    options = [base + ": skal, skydd och laddare", base + ": skal och skydd", base]
+  } else if (root === "batterier" && chain.length >= 3) {
+    options = [/batteri/i.test(name) ? name : name + " batterier"]
+  } else {
+    const rootName = properName(chain[0].name)
+    options = [custom, name.toLowerCase().indexOf(rootName.toLowerCase()) > -1 ? "" : name + " | " + rootName, name]
+  }
+  const paged = page && page > 1 ? ", sida " + page : ""
+  const room = TITLE_MAX - BRAND_SUFFIX.length - paged.length
+  const usable = options.filter(Boolean)
+  const pick = usable.find((o) => noDashes(o).length <= room) || usable[usable.length - 1] || name
+  return pageTitle(pick, page)
+}
+
+/** Category meta description, 140 to 160 chars, Swedish, no dashes. */
+export const categoryDescription = (chain: SeoCategory[]): string => {
+  const last = chain[chain.length - 1]
+  const md: any = (last && last.metadata) || {}
+  const stored = plainText(String(md.seo_desc || ""), 2000)
+  if (stored.length >= 100 && !/teknikdelar/i.test(stored)) return fitDescription(stored)
+  const root = String((chain[0] && chain[0].handle) || "")
+  const name = categoryDisplayName(chain)
+  if (chain.length <= 1) return fitDescription(plainText(last && last.description, 2000) || name + " hos Teknikhouse, stort urval till bra priser.")
+  if (root === "mobilreservdelar") return fitDescription("Reservdelar till " + name + ": skärmar, batterier, baksidor och smådelar i hög kvalitet.")
+  if (root === "mobiltillbehor") return fitDescription("Tillbehör till " + name + ": skal, skärmskydd, laddare och kablar.")
+  if (root === "batterier") return fitDescription("Nya batterier till " + name + " i hög kvalitet, enkla att byta själv.")
+  return fitDescription("Köp " + name + " hos Teknikhouse till bra priser.")
+}
+
+/** Product title "<title> | Teknikhouse", cut on a word boundary. A clean meta_title wins. */
+export const productTitle = (product: any): string => {
+  const md: any = (product && product.metadata) || {}
+  const stored = cleanStoredTitle(md.meta_title as string, 200)
+  return pageTitle(stored || String((product && product.title) || ""))
+}
+
+/** Product meta description, 140 to 160 chars, no dashes. */
+export const productDescription = (product: any): string => {
+  const md: any = (product && product.metadata) || {}
+  const sources = [md.meta_description, md.seo_desc, product && product.description, product && product.subtitle]
+  const src = sources
+    .map((s) => plainText(String(s || ""), 2000))
+    .find((s) => s.length >= 50 && !/teknikdelar/i.test(s))
+  const title = noDashes(String((product && product.title) || ""))
+  return fitDescription(src || title + " hos Teknikhouse.")
+}

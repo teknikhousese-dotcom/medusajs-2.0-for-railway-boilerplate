@@ -2,8 +2,9 @@ import InteractiveLink from "@modules/common/components/interactive-link"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "404",
-  description: "Something went wrong",
+  title: "Sidan hittades inte | Teknikhouse",
+  description: "Sidan du letar efter finns inte längre eller har flyttat.",
+  robots: { index: false, follow: true },
 }
 
 export default async function NotFound() {

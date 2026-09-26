@@ -12,7 +12,9 @@ import {
   jsonLd,
   metaDescription,
   pageAlternates,
+  productDescription,
   productLd,
+  productTitle,
 } from "@lib/seo"
 import { productReviews, productSeoContext } from "@lib/seo-data"
 
@@ -70,12 +72,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const _md: any = product.metadata || {}
-  const _metaTitle = (_md.meta_title && String(_md.meta_title).trim()) || `${product.title} | ${getStoreName()}`
-  const _metaDesc =
-    (_md.meta_description && String(_md.meta_description).trim()) ||
-    (_md.seo_desc && String(_md.seo_desc).trim()) ||
-    metaDescription(product.description) ||
-    product.title
+  const _metaTitle = productTitle(product)
+  const _metaDesc = productDescription(product)
   const { path } = await productSeoContext(product)
   const _url = absUrl(path)
   const _images = [product.thumbnail, ...(product.images || []).map((i) => i.url)]

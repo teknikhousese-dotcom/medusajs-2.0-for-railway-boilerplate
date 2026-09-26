@@ -13,8 +13,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
-  const DOMAIN = (process.env.GOOGLE_FEED_DOMAIN || "https://teknikhouse.se").replace(/\/$/, "")
-  const SITE = DOMAIN.replace(/^(https?:\/\/)www\./i, "$1")
+  const DOMAIN = (process.env.GOOGLE_FEED_DOMAIN || "https://www.teknikhouse.se").replace(/\/$/, "")
+  // Produktlänkar alltid på https://www.teknikhouse.se (apex 301:ar till www, Google ska inte följa en redirect).
+  const SITE = DOMAIN.replace(/^https?:\/\/(www\.)?teknikhouse\.se/i, "https://www.teknikhouse.se")
   const SHIPPING = process.env.GOOGLE_FEED_SHIPPING || ""
 
   const esc = (s: any) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;")

@@ -99,7 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: Entry[] = [
     { url: absUrl("/"), lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: absUrl("/store"), changeFrequency: "daily", priority: 0.8 },
-    { url: absUrl("/kampanjer"), changeFrequency: "daily", priority: 0.7 },
+    { url: absUrl("/campaigns"), changeFrequency: "daily", priority: 0.7 },
     { url: absUrl("/blogg"), changeFrequency: "weekly", priority: 0.6 },
     { url: absUrl("/contact"), changeFrequency: "yearly", priority: 0.4 },
     { url: absUrl("/retail-application"), changeFrequency: "yearly", priority: 0.3 },

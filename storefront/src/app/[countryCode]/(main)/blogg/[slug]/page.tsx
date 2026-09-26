@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import Link from "next/link"
+import { cleanStoredTitle, fitDescription, pageTitle } from "@lib/seo"
 import { notFound } from "next/navigation"
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://backend-production-c278d.up.railway.app"
@@ -33,8 +34,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { post } = await getPost(slug)
   if (!post) return { title: "Inlägget hittades inte | Teknikhouse" }
   const canonical = `https://www.teknikhouse.se/blogg/${post.slug}`
-  const title = post.meta_title || `${post.title} | Teknikhouse`
-  const desc = post.meta_desc || post.excerpt || ""
+  const title = pageTitle(cleanStoredTitle(post.meta_title, 200) || post.title)
+  const desc = fitDescription(post.meta_desc || post.excerpt || post.title)
   return {
     title, description: desc,
     alternates: { canonical },
