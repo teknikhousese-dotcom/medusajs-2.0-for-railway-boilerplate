@@ -4,7 +4,7 @@ import { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "404",
+  title: "Sidan hittades inte | Teknikhouse",
   description: "Något gick fel",
 }
 
