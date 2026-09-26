@@ -3,12 +3,15 @@ import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 
 import Divider from "@modules/common/components/divider"
+import { PICKUP_DESCRIPTION, PICKUP_TITLE, isPickupName } from "@lib/util/pickup-text"
 
 type ShippingDetailsProps = {
   order: HttpTypes.StoreOrder
 }
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
+  const methodName: string = (order as any).shipping_methods?.[0]?.name || ""
+  const pickup = isPickupName(methodName)
   return (
     <div>
       <Heading level="h2" className="flex flex-row text-3xl-regular my-6">
@@ -56,7 +59,7 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
         >
           <Text className="txt-medium-plus text-ui-fg-base mb-1">Leveranssätt</Text>
           <Text className="txt-medium text-ui-fg-subtle">
-            {(order as any).shipping_methods[0]?.name} (
+            {pickup ? PICKUP_TITLE : methodName} (
             {convertToLocale({
               amount: order.shipping_methods?.[0].total ?? 0,
               currency_code: order.currency_code,
@@ -65,6 +68,11 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
               .replace(/\./g, ",")}
             )
           </Text>
+          {pickup && (
+            <Text className="txt-medium text-ui-fg-subtle mt-1">
+              {PICKUP_DESCRIPTION}
+            </Text>
+          )}
         </div>
       </div>
       <Divider className="mt-8" />
