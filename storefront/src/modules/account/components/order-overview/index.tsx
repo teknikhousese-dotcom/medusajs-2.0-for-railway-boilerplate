@@ -29,7 +29,7 @@ const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
     >
       <h2 className="text-large-semi">Inget att se här än</h2>
       <p className="text-base-regular">
-        Du har inga beställningar än – låt oss ändra på det {":)"}
+        Du har inga beställningar än. Dags att fynda något?
       </p>
       <div className="mt-4">
         <LocalizedClientLink href="/" passHref>
