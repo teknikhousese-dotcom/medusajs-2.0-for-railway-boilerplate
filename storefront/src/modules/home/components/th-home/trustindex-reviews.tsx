@@ -2,13 +2,15 @@
 
 import { useEffect, useRef } from "react"
 
-// Riktiga omdömen om Teknikhouse.se hämtade från Trustindex
+// Omdömen om Teknikhouse.se från Trustindex. De senaste omdömena med 4 eller
+// 5 stjärnor hämtas live på servern av trustindex-data.ts (cache 6 timmar).
+// REVIEWS nedan är reservlistan som visas om hämtningen misslyckas. Källa:
 // (https://www.trustindex.io/reviews/teknikhouse.se). Texterna är ordagranna,
 // ibland förkortade med "…". Namn visas som förnamn och initial.
 // Karusellen rullar långsamt från höger till vänster, pausar vid hover,
 // fokus och touch, går att svepa och står still vid prefers-reduced-motion.
 
-type Review = {
+export type Review = {
   name: string
   date: string
   source: "Google" | "Trustindex"
@@ -48,7 +50,8 @@ function Card({ r, hidden }: { r: Review; hidden?: boolean }) {
   )
 }
 
-export default function TrustindexReviews() {
+export default function TrustindexReviews({ reviews }: { reviews?: Review[] }) {
+  const list = reviews && reviews.length >= 6 ? reviews : REVIEWS
   const ref = useRef<HTMLDivElement>(null)
   const api = useRef<{ nudge: (dir: number) => void }>({ nudge: () => {} })
 
@@ -139,12 +142,12 @@ export default function TrustindexReviews() {
       <div className="tiscroll" ref={ref} role="region" aria-label="Kundomdömen från Trustindex" tabIndex={0}>
         <div className="titrack">
           <div className="tiset" data-set="a">
-            {REVIEWS.map((r, i) => (
+            {list.map((r, i) => (
               <Card key={"a" + i} r={r} />
             ))}
           </div>
           <div className="tiset" data-set="b" aria-hidden="true">
-            {REVIEWS.map((r, i) => (
+            {list.map((r, i) => (
               <Card key={"b" + i} r={r} hidden />
             ))}
           </div>
