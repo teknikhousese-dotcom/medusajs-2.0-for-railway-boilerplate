@@ -41,7 +41,7 @@ const AccountNav = ({
         ) : (
           <>
             <div className="text-xl-semi mb-4 px-8">
-              Hello {customer?.first_name}
+              Hej {customer?.first_name}
             </div>
             <div className="text-base-regular">
               <ul>
@@ -129,7 +129,7 @@ const AccountNav = ({
                   route={route!}
                   data-testid="profile-link"
                 >
-                  Profile
+                  Profil
                 </AccountNavLink>
               </li>
               <li>
@@ -138,7 +138,7 @@ const AccountNav = ({
                   route={route!}
                   data-testid="addresses-link"
                 >
-                  Addresses
+                  Adresser
                 </AccountNavLink>
               </li>
               <li>
@@ -147,7 +147,7 @@ const AccountNav = ({
                   route={route!}
                   data-testid="orders-link"
                 >
-                  Orders
+                  Beställningar
                 </AccountNavLink>
               </li>
               <li className="text-grey-700">
