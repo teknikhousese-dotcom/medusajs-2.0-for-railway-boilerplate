@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { Modules } from "@medusajs/framework/utils"
 import { getPg, q, genId } from "../../admin/editable/db"
+import { ensureTables as ensureTemplateTables } from "../../admin/email-templates/db"
+import { sendReturnMails } from "../../../modules/email-notifications/return-mails"
 
 /**
  * Teknikhouse.se — customer return / reklamation submission.
@@ -66,17 +67,18 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     await q(pg,
       `INSERT INTO "return_request" ("id","reference","order_id","order_display","email","type","items","message","status") VALUES (?,?,?,?,?,?,?,?,?)`,
       [id, reference, order.id, num, email, type, JSON.stringify(items), message, "pending"])
+    /* Customer receipt + shop notification (info@teknikhouse.se). Never blocks the response on failure. */
     try {
-      const notif: any = req.scope.resolve(Modules.NOTIFICATION)
-      const lines = items.map((x: any) => "- " + x.title + " x" + (x.quantity || 1) + (x.reason ? " (" + x.reason + ")" : "")).join("\n")
-      await notif.createNotifications({
-        to: "info@teknikhouse.se",
-        channel: "email",
-        template: "return-request",
-        content: { subject: "Ny " + type + " " + reference, text: "Order " + num + " — " + email + "\n" + lines + (message ? "\n\nMeddelande: " + message : "") },
-        data: { reference, order: num, email, type, items, message },
-      })
-    } catch { /* notification module not configured */ }
+      let customerName = ""
+      try {
+        const nrows = await q(pg, `SELECT a."first_name", a."last_name" FROM "order" o JOIN "order_address" a ON a."id" = COALESCE(o."billing_address_id", o."shipping_address_id") WHERE o."id" = ? LIMIT 1`, [order.id])
+        if (nrows && nrows[0]) customerName = `${nrows[0].first_name || ""} ${nrows[0].last_name || ""}`.trim()
+      } catch { /* name is optional */ }
+      try { await ensureTemplateTables(pg) } catch { /* templates optional */ }
+      await sendReturnMails({ pg, reference, orderNumber: num, orderId: order.id, email: String(order.email || email), type, items, message, customerName })
+    } catch (e: any) {
+      console.error("[retur] could not send return mails", reference, e && e.message)
+    }
     return res.json({ ok: true, reference })
   } catch (e: any) {
     return res.status(500).json({ error: "Något gick fel. Försök igen eller kontakta kundtjänst." })
