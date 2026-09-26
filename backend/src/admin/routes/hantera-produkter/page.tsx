@@ -276,8 +276,10 @@ function GridPage() {
   return opts.map((o: any) => { const ot = (r.options || []).find((x: any) => x.id === o.option_id); return (ot ? ot.title : "Val") + ": " + o.value }).join(", ")
   }
   const catName = (row: any) => (row.categories || []).map((c: any) => c.name).join(", ") || "—"
-  const th: any = { border: "1px solid #bbb", padding: "6px 8px", fontWeight: 700, fontSize: "11px", textAlign: "left", background: "#cccccc" }
-  const td: any = { border: "1px solid #e2e2e2", padding: "5px 8px", fontSize: "12px" }
+  const th: any = { borderBottom: "1px solid #aaa", borderRight: "1px solid #bbb", padding: "6px 8px", fontWeight: 700, fontSize: "11px", textAlign: "left", background: "#cccccc", position: "sticky", top: 0, zIndex: 1, whiteSpace: "nowrap" }
+  const td: any = { borderBottom: "1px solid #e6e6e6", padding: "5px 8px", fontSize: "12px", verticalAlign: "middle" }
+  const tdNum: any = { ...td, textAlign: "right", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }
+  const tools: any = { display: "flex", flexWrap: "wrap", columnGap: "8px", rowGap: "2px", fontSize: "11px", lineHeight: "16px" }
   const sel = ids()
 
   return (
@@ -329,51 +331,61 @@ function GridPage() {
         </div>
         {note && <div style={{ fontSize: "12px", color: "#036", marginBottom: "8px" }}>{note}</div>}
 
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "75vh", border: "1px solid #ccc", borderRadius: "3px" }}>
+        <table style={{ width: "100%", minWidth: "860px", borderCollapse: "separate", borderSpacing: 0, tableLayout: "fixed" }}>
+          <colgroup>
+            <col style={{ width: "30px" }} />
+            <col />
+            <col style={{ width: "110px" }} />
+            <col style={{ width: "58px" }} />
+            <col style={{ width: "84px" }} />
+            <col style={{ width: "150px" }} />
+            <col style={{ width: "200px" }} />
+          </colgroup>
           <thead><tr>
-            <th style={{ ...th, width: "28px", textAlign: "center" }}><input type="checkbox" checked={allChecked} onChange={toggleAll} /></th>
-            <th style={th}>Namn</th><th style={{ ...th, width: "120px" }}>SKU</th><th style={{ ...th, width: "180px" }}>Variant</th><th style={{ ...th, width: "60px", textAlign: "right" }}>Lager</th><th style={{ ...th, width: "90px" }}>Status</th>
-            <th style={{ ...th, width: "180px" }}>Varugrupp</th><th style={{ ...th, width: "270px" }}>Verktyg</th>
+            <th style={{ ...th, textAlign: "center" }}><input type="checkbox" checked={allChecked} onChange={toggleAll} /></th>
+            <th style={th}>Namn</th><th style={th}>Art.nr</th><th style={{ ...th, textAlign: "right" }}>Lager</th><th style={th}>Status</th>
+            <th style={th}>Varugrupp</th><th style={{ ...th, borderRight: "none" }}>Verktyg</th>
           </tr></thead>
           <tbody>
-            {rows.length === 0 ? <tr><td colSpan={8} style={{ ...td, textAlign: "center", color: "#666" }}>{busy ? "Hämtar…" : "Inga produkter."}</td></tr> :
-              rows.map((r) => (<Fragment key={r.id}>
-                <tr key={r.id} style={{ borderBottom: "1px solid #eee", background: checked[r.id] ? "#fffbe6" : "transparent" }}>
+            {rows.length === 0 ? <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: "#666" }}>{busy ? "Hämtar…" : "Inga produkter."}</td></tr> :
+              rows.map((r, i) => (<Fragment key={r.id}>
+                <tr key={r.id} style={{ background: checked[r.id] ? "#fffbe6" : i % 2 ? "#fafafa" : "#fff" }}>
                   <td style={{ ...td, textAlign: "center" }}><input type="checkbox" checked={!!checked[r.id]} onChange={(e) => setChecked({ ...checked, [r.id]: e.target.checked })} /></td>
-                  <td style={td}><a href={`${ADMIN}/products/${r.id}`} style={{ color: "#0060cc", textDecoration: "none" }}>{r.title}</a></td>
-                  <td style={td}>{(r.variants || [])[0]?.sku || "—"}</td>
-                  <td style={{ ...td, color: "#555" }}>{(r.variants || []).length > 1 ? `${(r.variants || []).length} varianter` : ""}</td>
-                  <td style={{ ...td, textAlign: "right" }}>{lagerProdukt(r)}</td>
-                  <td style={td}>{r.status === "published" ? <span style={{ color: "#2a7" }}>Publicerad</span> : <span style={{ color: "#a70" }}>Utkast</span>}</td>
-                  <td style={td}>{catName(r)}</td>
-                  <td style={{ ...td, whiteSpace: "nowrap" }}>
-                    <a href={`${ADMIN}/produkt-form?id=${r.id}`} style={{ color: "#0060cc" }}>Redigera</a>
-                    <span style={{ color: "#bbb" }}> | </span>
-                    <a href={`${ADMIN}/valalternativ?id=${r.id}`} style={{ color: "#0060cc" }}>Valalternativ</a>
-                    <span style={{ color: "#bbb" }}> | </span>
-                    <a href={`${ADMIN}/associera?id=${r.id}`} style={{ color: "#0060cc" }}>Associera</a>
-                    <span style={{ color: "#bbb" }}> | </span>
-                    <a href={`${ADMIN}/hantera-produkter?action=copy&id=${r.id}`} style={{ color: "#0060cc" }}>Kopiera</a>
-                    <span style={{ color: "#bbb" }}> | </span>
-                    <a href="#" onClick={(e) => { e.preventDefault(); if (!busy) taBortProdukt(r) }} style={{ color: "#a00" }}>Ta bort</a>
+                  <td style={{ ...td, overflowWrap: "anywhere" }}>
+                    <a href={`${ADMIN}/products/${r.id}`} style={{ color: "#0060cc", textDecoration: "none" }}>{r.title}</a>
+                    {(r.variants || []).length > 1 && <div style={{ fontSize: "11px", color: "#888", marginTop: "1px" }}>{(r.variants || []).length} varianter</div>}
+                  </td>
+                  <td style={{ ...td, overflowWrap: "anywhere" }}>{(r.variants || [])[0]?.sku || "—"}</td>
+                  <td style={tdNum}>{lagerProdukt(r)}</td>
+                  <td style={{ ...td, whiteSpace: "nowrap" }}>{r.status === "published" ? <span style={{ color: "#2a7" }}>Publicerad</span> : <span style={{ color: "#a70" }}>Utkast</span>}</td>
+                  <td style={{ ...td, fontSize: "11px", color: "#444", overflowWrap: "anywhere" }}>{catName(r)}</td>
+                  <td style={td}>
+                    <div style={tools}>
+                      <a href={`${ADMIN}/produkt-form?id=${r.id}`} style={{ color: "#0060cc" }}>Redigera</a>
+                      <a href={`${ADMIN}/valalternativ?id=${r.id}`} style={{ color: "#0060cc" }}>Valalternativ</a>
+                      <a href={`${ADMIN}/associera?id=${r.id}`} style={{ color: "#0060cc" }}>Associera</a>
+                      <a href={`${ADMIN}/hantera-produkter?action=copy&id=${r.id}`} style={{ color: "#0060cc" }}>Kopiera</a>
+                      <a href="#" onClick={(e) => { e.preventDefault(); if (!busy) taBortProdukt(r) }} style={{ color: "#a00" }}>Ta bort</a>
+                    </div>
                   </td>
                 </tr>
                 {(r.variants || []).length > 1 && (r.variants || []).map((v: any) => (
-                <tr key={v.id} style={{ borderBottom: "1px solid #eee", background: "#f6f8fb" }}>
+                <tr key={v.id} style={{ background: "#f6f8fb" }}>
                 <td style={td}></td>
-                <td style={{ ...td, paddingLeft: "22px", color: "#555" }}>↳ {v.title || r.title}</td>
-                <td style={td}>{v.sku || "—"}</td>
-                <td style={td}>{variantText(v, r)}</td>
-                <td style={{ ...td, textAlign: "right" }}>{lagerVariant(v)}</td>
+                <td style={{ ...td, paddingLeft: "22px", color: "#555", fontSize: "11px", overflowWrap: "anywhere" }}>↳ {variantText(v, r) || v.title || r.title}</td>
+                <td style={{ ...td, fontSize: "11px", overflowWrap: "anywhere" }}>{v.sku || "—"}</td>
+                <td style={{ ...tdNum, fontSize: "11px" }}>{lagerVariant(v)}</td>
                 <td style={td}></td>
                 <td style={td}></td>
-                <td style={{ ...td, whiteSpace: "nowrap" }}><a href={`${ADMIN}/valalternativ?id=${r.id}`} style={{ color: "#0060cc" }}>Valalternativ</a></td>
+                <td style={td}><div style={tools}><a href={`${ADMIN}/valalternativ?id=${r.id}`} style={{ color: "#0060cc" }}>Valalternativ</a></div></td>
                 </tr>
                 ))}
                 </Fragment>
               ))}
           </tbody>
         </table>
+        </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", fontSize: "12px" }}>
           <span>{total > 0 ? `${offset + 1}–${Math.min(offset + PAGE, total)} av ${total}` : "0 produkter"}</span>
