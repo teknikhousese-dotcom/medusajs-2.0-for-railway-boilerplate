@@ -2,7 +2,7 @@ const asSentence = (value: string): string => {
   const trimmed = value.trim()
 
   if (!trimmed) {
-    return "Something went wrong."
+    return "Något gick fel."
   }
 
   const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
@@ -37,7 +37,7 @@ export default function medusaError(error: any): never {
   if (error instanceof TypeError) {
     console.error("Could not reach the Medusa backend:", error.message)
 
-    throw new Error("Could not reach the store. Please try again.")
+    throw new Error("Vi når inte butiken just nu. Försök igen om en stund.")
   }
 
   console.error("Unexpected error talking to Medusa:", error)
