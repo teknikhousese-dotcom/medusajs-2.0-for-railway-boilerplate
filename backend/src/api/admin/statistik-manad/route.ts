@@ -8,7 +8,7 @@ import { getPg, q } from "../lagerbevakning/db"
 //  GET /admin/statistik-manad?debug=1          -> adds per-month breakdown per exclusion group
 // Definitions (Wiki):
 //  - Datum: Wikis ordertid (metadata.wiki_order_time, svensk lokal tid); egna ordrar: created_at i Europe/Stockholm.
-//  - Räknas: ej Makulerade (flik/wiki_status/canceled), ej ofullständiga köp (wiki_activated=false), ej counts_in_stats=false, ej utkast.
+//  - Räknas: ej Makulerade (flik/wiki_status/canceled), ej ej-aktiverade Wiki-ordrar (wiki_activated ej true = rött/blått ID i Wiki), ej counts_in_stats=false, ej utkast.
 //  - Beställda varor: summa antal på varurader (rader med negativt pris, t.ex. rabatter, räknas inte).
 //  - Varuvärde: varornas värde inkl. moms. Frakt, avgifter och rabatter ej inräknade.
 //  - Ordervärde: vad kunden betalade för hela ordern inkl. moms (Wiki: total exkl. moms + moms).
@@ -19,7 +19,7 @@ function baseSql(where: string, keyExpr: string) {
   return `
 WITH o AS (
   SELECT o."id", o."version", o."status", o."metadata" AS m,
-    CASE WHEN o."metadata"->>'wiki_order_time' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN substr(o."metadata"->>'wiki_order_time', 1, 19)
+    CASE WHEN COALESCE(o."metadata"->>'wiki_order_time', o."metadata"->>'order_time') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN substr(COALESCE(o."metadata"->>'wiki_order_time', o."metadata"->>'order_time'), 1, 19)
          ELSE to_char(o."created_at" AT TIME ZONE 'Europe/Stockholm', 'YYYY-MM-DD HH24:MI:SS') END AS lt
   FROM "order" o
   WHERE o."deleted_at" IS NULL AND COALESCE(o."status"::text, '') <> 'draft'
@@ -28,7 +28,7 @@ c AS (
   SELECT o.*,
     CASE
       WHEN lower(COALESCE(o.m->>'orderflik', '')) LIKE 'makuler%' OR lower(COALESCE(o.m->>'wiki_status', '')) LIKE 'makuler%' OR COALESCE(o."status"::text, '') = 'canceled' OR lower(COALESCE(o.m->>'wiki_cancelled', o.m->>'makulerad', '')) IN ('true', '1') THEN 'M'
-      WHEN lower(COALESCE(o.m->>'wiki_activated', '')) IN ('false', '0') THEN 'N'
+      WHEN lower(COALESCE(o.m->>'wiki_activated', '')) IN ('false', '0') OR (o.m->>'wiki_order_id' IS NOT NULL AND lower(COALESCE(o.m->>'wiki_activated', '')) NOT IN ('true', '1')) THEN 'N'
       WHEN lower(COALESCE(o.m->>'counts_in_stats', '')) IN ('false', '0') THEN 'X'
       ELSE 'A' END AS grp
   FROM o
