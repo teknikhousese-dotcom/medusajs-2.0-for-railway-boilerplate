@@ -7,9 +7,10 @@ import ProductPreview from "@modules/products/components/product-preview"
 import { HttpTypes } from "@medusajs/types"
 
 export const metadata: Metadata = {
-  title: "Kampanjer – Våra Erbjudanden | Teknikhouse",
+  title: "Kampanjer och erbjudanden | Teknikhouse",
   description:
-    "Ett stort urval av populära produkter till kampanjpris hos Teknikhouse. Fynda reservdelar, tillbehör och mer till rea-pris.",
+    "Fynda reservdelar, mobiltillbehör och mer till kampanjpris hos Teknikhouse. Eget lager i Stockholm, fri frakt över 999 kr och 30 dagars öppet köp.",
+  alternates: { canonical: "https://www.teknikhouse.se/campaigns" },
 }
 
 const onSale = (product: any) => {
