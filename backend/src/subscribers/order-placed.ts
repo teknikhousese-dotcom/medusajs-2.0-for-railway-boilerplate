@@ -2,7 +2,8 @@ import { Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { INotificationModuleService, IOrderModuleService } from '@medusajs/framework/types'
 import { SubscriberArgs, SubscriberConfig } from '@medusajs/medusa'
 import { EmailTemplates } from '../modules/email-notifications/templates'
-import { RESEND_FROM_EMAIL } from '../lib/constants'
+import { SHOP_EMAIL, fromAddress, loadDbTemplate, fillTemplate, sendShopMail, htmlToText } from '../modules/email-notifications/shop-mail'
+import { loadOrderForMail, orderNumber, orderPlaceholderMap, sendShopOrderNotification } from '../modules/email-notifications/order-mails'
 
 export default async function orderPlacedHandler({
   event: { data },
@@ -28,25 +29,61 @@ export default async function orderPlacedHandler({
     }
   }
 
+  /*
+   * Totals (item_total, shipping_total, total) are not populated by
+   * retrieveOrder, so the confirmation used to hide Delsumma/Frakt. Merge them
+   * in from query.graph. Also used by the shop notification below.
+   */
+  let mailOrder: any = null
   try {
-    await notificationModuleService.createNotifications({
-      to: order.email,
-      channel: 'email',
-      template: EmailTemplates.ORDER_PLACED,
-      data: {
-        emailOptions: {
-          // RESEND_FROM_EMAIL comes from lib/constants, which falls back to
-          // RESEND_FROM. Reading process.env directly here missed that
-          // fallback, so the reply-to was empty on every deploy configured
-          // with RESEND_FROM, which is what the Railway template sets.
-          replyTo: process.env.ORDER_REPLY_TO_EMAIL || RESEND_FROM_EMAIL,
-          subject: 'Din order är bekräftad – Teknikhouse.se'
-        },
-        order,
-        shippingAddress,
-        preview: 'Tack för din beställning hos Teknikhouse!'
+    mailOrder = await loadOrderForMail(container, data.id)
+  } catch (error) {
+    console.error('Could not load order totals for emails', data.id, error)
+  }
+  const orderForTemplate: any = mailOrder
+    ? { ...order, item_total: mailOrder.item_total, shipping_total: mailOrder.shipping_total, total: mailOrder.total, subtotal: mailOrder.subtotal }
+    : order
+  const nr = mailOrder ? orderNumber(mailOrder) : String((order as any).display_id || '')
+
+  try {
+    /* Epostmallar override: if the shop has created a template named
+       "Orderbekräftelse (kund)" with content, send that one instead. */
+    let sentFromDb = false
+    try {
+      const pg = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+      const tpl = await loadDbTemplate(pg, 'Orderbekräftelse (kund)')
+      if (tpl && mailOrder) {
+        const map = orderPlaceholderMap(mailOrder)
+        const html = fillTemplate(tpl.body_html, map)
+        const r = await sendShopMail({
+          to: order.email as string,
+          subject: fillTemplate(tpl.subject || 'Orderbekräftelse, order {{ordernummer}}', map),
+          html,
+          text: htmlToText(html),
+          replyTo: process.env.ORDER_REPLY_TO_EMAIL || SHOP_EMAIL,
+        })
+        sentFromDb = r.ok
       }
-    })
+    } catch (error) {
+      console.error('Epostmallar order confirmation failed, falling back to built-in template', error)
+    }
+    if (!sentFromDb) {
+      await notificationModuleService.createNotifications({
+        to: order.email as string,
+        from: fromAddress(),
+        channel: 'email',
+        template: EmailTemplates.ORDER_PLACED,
+        data: {
+          emailOptions: {
+            replyTo: process.env.ORDER_REPLY_TO_EMAIL || SHOP_EMAIL,
+            subject: `Orderbekräftelse, order ${nr} hos Teknikhouse.se`
+          },
+          order: orderForTemplate,
+          shippingAddress,
+          preview: 'Tack för din beställning hos Teknikhouse!'
+        }
+      } as any)
+    }
   } catch (error) {
     console.error('Error sending order confirmation notification:', error)
   }
@@ -83,6 +120,14 @@ export default async function orderPlacedHandler({
     }
   } catch (error) {
     console.error('Could not stamp payment_method on order', data.id, error)
+  }
+
+  /* Shop notification to info@teknikhouse.se (replaces the old Wiki "Order <nr> (<namn>)" mail). */
+  try {
+    const r = await sendShopOrderNotification(container, data.id)
+    if (!r.ok) console.error('Shop order notification failed for', data.id, r.error)
+  } catch (error) {
+    console.error('Shop order notification crashed for', data.id, error)
   }
 }
 
