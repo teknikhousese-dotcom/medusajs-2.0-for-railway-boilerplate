@@ -56,7 +56,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
         </div>
 
         <h1
-          className="text-2xl leading-8 font-semibold text-ui-fg-base"
+          className="break-words text-[21px] leading-[1.3] small:text-2xl small:leading-8 font-semibold text-ui-fg-base"
           data-testid="product-title"
           style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', letterSpacing: "-0.01em" }}
         >
@@ -64,7 +64,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
         </h1>
 
         {(sku || ean) && (
-          <div className="text-[11px] text-ui-fg-muted">
+          <div className="break-words text-[11px] leading-relaxed text-ui-fg-muted">
             {sku && (
               <>
                 Artikelnr: <span className="text-ui-fg-subtle">{sku}</span>
