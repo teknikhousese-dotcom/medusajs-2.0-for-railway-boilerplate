@@ -19,11 +19,11 @@ export default function CheckoutError({
   return (
     <div className="flex flex-col gap-4 items-center justify-center min-h-[calc(100vh-64px)] px-6">
       <h1 className="text-2xl-semi text-ui-fg-base">
-        Checkout could not continue
+        Kassan kunde inte laddas
       </h1>
       <p className="text-small-regular text-ui-fg-base text-center max-w-md">
-        Något gick fel while loading this step. Your cart has been kept,
-        so nothing has been lost and you have not been charged.
+        Något gick fel när det här steget skulle laddas. Din varukorg finns
+        kvar och ingen betalning har dragits.
       </p>
       {error.digest && (
         <p className="text-small-regular text-ui-fg-muted">
@@ -33,7 +33,7 @@ export default function CheckoutError({
       <Button onClick={reset} variant="secondary">
         Försök igen
       </Button>
-      <InteractiveLink href="/cart">Back to shopping cart</InteractiveLink>
+      <InteractiveLink href="/cart">Tillbaka till varukorgen</InteractiveLink>
     </div>
   )
 }
