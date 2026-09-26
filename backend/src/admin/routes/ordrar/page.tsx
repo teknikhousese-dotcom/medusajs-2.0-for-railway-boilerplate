@@ -36,7 +36,7 @@ const orderTime = (o: any): string => {
   return dt(o?.created_at)
 }
 const viaText = (v?: string): string => {
-  const map: Record<string, string> = { Mobil: "Mobiltelefon", Dator: "Dator/surfplatta" }
+  const map: Record<string, string> = { Mobil: "Mobiltelefon", Dator: "Dator/surfplatta", "Dator/Platta": "Dator/surfplatta" }
   return (v && map[v]) || v || "—"
 }
 const payText = (st?: string): string => {
@@ -416,13 +416,18 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   const betalsatt = paymentOf(o)
   const isKlarna = /klarna/i.test(betalsatt || "")
   const paidLike = paid || m.kustom_captured === true || (!!m.wiki_order_id && m.wiki_activated === true)
-  const klarnaPending = isKlarna && !paidLike && m.kustom_cancelled !== true && (m.wiki_activated === false || !!(klarna && klarna.kustom && !klarna.captured && !klarna.cancelled))
-  const statusText = paidLike ? "Betald – transaktionen är genomförd" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : (m.kustom_cancelled === true ? "Transaktionen har avbrutits" : payText(o.payment_status)))
-  const headText = paidLike ? "Betald" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : (m.kustom_cancelled === true ? "Avbruten" : payText(o.payment_status)))
+  const klarnaExpired = !!(klarna && klarna.wiki && klarna.status === "EXPIRED")
+  const klarnaPending = isKlarna && !paidLike && !klarnaExpired && m.kustom_cancelled !== true && (m.wiki_activated === false || !!(klarna && klarna.kustom && !klarna.captured && !klarna.cancelled))
+  /* Wiki: rött ID = ej slutfört köp. För Klarna visar Wiki "Transaktionen har avbrutits." */
+  const wikiRed = !!m.wiki_order_id && m.wiki_id_color === "red" && !paidLike && !klarnaPending
+  const otherText = klarnaExpired ? "Klarna-reservationen har gått ut – ej aktiverad" : (m.kustom_cancelled === true || (wikiRed && isKlarna) ? "Transaktionen har avbrutits" : (wikiRed ? "Ej slutfört köp" : payText(o.payment_status)))
+  const statusText = paidLike ? "Betald – transaktionen är genomförd" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : otherText)
+  const headText = paidLike ? "Betald" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : otherText)
   const statusColor = paidLike ? "#161" : (klarnaPending ? "#b36b00" : "#a00")
   const shipName = (sm && sm.name) || m.wiki_shipping_method || "Standard"
   const shipDesc = m.wiki_shipping_desc || (m.wiki_order_id ? "" : (shipName === "Standard" ? "2-3 vardagar. Fraktfritt vid köp över 999 kr." : ""))
-  const klarnaCanAct = !!(klarna && klarna.kustom && (!klarna.wiki || klarna.reachable))
+  const klarnaCanAct = !!(klarna && klarna.kustom && (!klarna.wiki || (klarna.reachable && (klarna.status === "AUTHORIZED" || klarna.status === "PART_CAPTURED"))))
+  const telefon = m.wiki_order_id ? (m.phone || "") : (sa.phone || m.phone || "")
 
   const itemsExcl = (o.items || []).reduce((s: number, it: any) => s + Number(it.unit_price) * Number(it.quantity), 0)
   const shipExcl = Number(sm ? sm.amount : (o.shipping_total ?? 0))
@@ -469,7 +474,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
           <KV k="Gatuadress" v={sa.address_1 || ""} />
           <KV k="Postnr och Ort" v={`${sa.postal_code || ""} ${sa.city || ""}`.trim()} />
           <KV k="Land" v={countryName(sa.country_code)} />
-          <KV k="Telefon" v={sa.phone || m.phone || ""} />
+          {telefon ? <KV k="Telefon" v={telefon} /> : null}
           <KV k="Mobil" v={m.cell_phone || m.mobil || m.mobile || sa.phone || ""} />
           <KV k="E-mail" v={<a href={`mailto:${o.email}`} style={{ color: "#06c" }}>{o.email}</a>} />
         </tbody></table>
@@ -493,7 +498,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
           <div style={{ margin: "0 0 14px", padding: "10px 12px", border: "1px solid #e5c07b", background: "#fff9ec", fontSize: "11px", fontFamily: WF, width: "600px", maxWidth: "100%", boxSizing: "border-box", lineHeight: 1.6 }}>
             <div style={{ fontWeight: 700, marginBottom: "4px" }}>Klarna Checkout</div>
             {klarna.captured ? (
-              <div style={{ color: "#161", marginBottom: "6px" }}>Transaktionen är aktiverad och levererad.</div>
+              <div style={{ color: "#161", marginBottom: "6px" }}>Transaktionen är nu genomförd - varorna kan skickas!</div>
             ) : (
               <div>
                 <div style={{ marginBottom: "8px" }}>Klarna har godkänt kunden för betalning! I samband med leveransen ska du aktivera transaktionen nedan - alternativt kan transaktionen avbrytas om kunden ångrar sig. Ändring i varulistan kan göras under "Redigera order" innan aktiveringen.</div>
@@ -503,7 +508,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
                     <button onClick={() => klarnaAction("cancel")} style={{ background: "#fff", color: "#a00", border: "1px solid #a00", borderRadius: "3px", padding: "5px 12px", cursor: "pointer", fontFamily: WF, fontSize: "11px" }}>Avbryt</button>
                   </div>
                 ) : (
-                  <div style={{ marginBottom: "8px", padding: "6px 8px", background: "#fff", border: "1px dashed #c9a13b", color: "#7a5b00" }}>Ordern lades i Wiki-butiken och Klarna-reservationen kan inte nås via vår Kustom-koppling. Aktivera i Klarna/Kustom portalen.</div>
+                  <div style={{ marginBottom: "8px", padding: "6px 8px", background: "#fff", border: "1px dashed #c9a13b", color: "#7a5b00" }}>{klarnaExpired ? "Klarna-reservationen har gått ut och kan inte längre aktiveras." : (klarna.reachable ? ("Klarna-status: " + (klarna.status || "okänd") + " – kan inte aktiveras härifrån.") : "Klarna-reservationen kan inte nås via vår Kustom-koppling. Aktivera i Klarna/Kustom portalen.")}</div>
                 )}
               </div>
             )}
