@@ -15,12 +15,12 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
   const currency_code = cart?.currency_code
 
   return (
-    <div className="sticky top-0 flex flex-col-reverse small:flex-col gap-y-8 py-8 small:py-0 ">
+    <div className="small:sticky small:top-24 flex flex-col-reverse small:flex-col gap-y-8 py-8 small:py-0">
       <div className="w-full bg-white flex flex-col">
         <Divider className="my-6 small:hidden" />
         <Heading
           level="h2"
-          className="flex flex-row text-3xl-regular items-baseline"
+          className="flex flex-row items-center text-[22px] small:text-[28px] font-semibold leading-tight text-[#14161C]"
         >
           Din varukorg
         </Heading>
@@ -37,13 +37,13 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
             </p>
           ) : (
             <p className="txt-small text-emerald-700 mb-2 font-medium">
-              Grattis – du har fri frakt!
+              Du har fri frakt!
             </p>
           )}
           <div className="h-1.5 w-full rounded-full bg-gray-200 overflow-hidden">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all"
-              style={{ width: `${pct}%` }}
+              style={{ width: pct + "%" }}
             />
           </div>
         </div>
@@ -59,7 +59,7 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
           <span>·</span>
           <span>30 dagars öppet köp</span>
           <span>·</span>
-          <span>4,7 ★ omdöme</span>
+          <span>4,6 av 5 på Trustpilot</span>
         </div>
       </div>
     </div>
