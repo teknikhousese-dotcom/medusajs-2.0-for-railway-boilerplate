@@ -5,6 +5,7 @@ import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { omit } from "lodash"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import {
   getAuthHeaders,
   getCacheDirectives,
@@ -426,11 +427,63 @@ export async function prepareKustomCart(kustomOrderId: string) {
   }
 }
 
+/**
+ * Order details the admin shows under each order, like the old Wiki orders:
+ * the shopper's IP address and whether they ordered from a phone ("Mobil") or
+ * a computer/tablet ("Dator/Platta"). Written to the cart metadata right before
+ * completion; Medusa copies the cart metadata onto the order. Used by Swish and
+ * by Klarna (/kassa-klar). Best effort: never blocks the order.
+ */
+async function stampOrderContext(cartId: string) {
+  try {
+    const h = await headers()
+    const first = (v: string | null) => String(v || "").split(",")[0].trim()
+    let ip =
+      first(h.get("cf-connecting-ip")) ||
+      first(h.get("x-forwarded-for")) ||
+      first(h.get("x-real-ip"))
+    if (!/^[0-9A-Fa-f:.]{3,45}$/.test(ip)) {
+      ip = ""
+    }
+    const ua = String(h.get("user-agent") || "")
+    let via = ""
+    if (ua) {
+      const tablet =
+        /ipad|tablet|kindle|silk|playbook/i.test(ua) ||
+        (/android/i.test(ua) && !/mobile/i.test(ua))
+      const phone = /iphone|ipod|android|windows phone|mobi/i.test(ua)
+      via = !tablet && phone ? "Mobil" : "Dator/Platta"
+    }
+    if (!ip && !via) {
+      return
+    }
+    const authHeaders = await getAuthHeaders()
+    const current: any = await sdk.store.cart
+      .retrieve(cartId, { fields: "id,metadata" }, authHeaders)
+      .then((r: any) => r?.cart)
+      .catch(() => null)
+    const metadata: Record<string, any> = {
+      ...((current && current.metadata) || {}),
+    }
+    if (ip) {
+      metadata.ip_address = ip
+    }
+    if (via) {
+      metadata.ordered_via = via
+    }
+    await sdk.store.cart.update(cartId, { metadata }, {}, authHeaders)
+  } catch {
+    /* best effort */
+  }
+}
+
 export async function placeOrder() {
   const cartId = await getCartId()
   if (!cartId) {
     throw new Error("No existing cart found when placing an order")
   }
+
+  await stampOrderContext(cartId)
 
   const cartRes = await sdk.store.cart
     .complete(cartId, {}, await getAuthHeaders())
