@@ -4,7 +4,7 @@ import LoginTemplate from "@modules/account/templates/login-template"
 import { getStoreName } from "@lib/util/env"
 
 export const metadata: Metadata = {
-  title: "Logga in",
+  title: "Logga in | Teknikhouse",
   description: `Logga in på ditt ${getStoreName()}-konto.`,
 }
 
