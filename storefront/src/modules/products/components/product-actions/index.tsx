@@ -64,6 +64,7 @@ const CSS = `
 .thstick .sb{background:#F50000;color:#fff;border:0;border-radius:12px;padding:13px 24px;font-family:"Poppins",system-ui,sans-serif;font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap;flex:0 0 auto}
 .thstick .sb:disabled{background:#c9c2ba}
 @media(max-width:640px){.thstick .st{display:none}.thstick .si{display:none}.thstick .in{padding:0 16px;gap:12px;height:64px}.thstick .sp{margin-left:0;font-size:18px}.thstick .sb{margin-left:auto;padding:12px 18px}}
+@media(min-width:768px) and (max-width:860px){.thb .addcart svg{display:none}.thb .addcart{padding:0 10px}}
 @media(max-width:400px){.thb .addcart svg{display:none}.thb .addcart{font-size:15.5px;padding:0 10px}.thb .qty button{width:34px}.thb .fav{width:46px}.thstick .sp .w{display:none}}
 body:has(.thstick.show){padding-bottom:calc(68px + env(safe-area-inset-bottom))}
 `
