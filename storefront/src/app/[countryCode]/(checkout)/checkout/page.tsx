@@ -10,6 +10,7 @@ import { getCustomer } from "@lib/data/customer"
 import { getRegion } from "@lib/data/regions"
 import { getProductsList } from "@lib/data/products"
 import ProductPreview from "@modules/products/components/product-preview"
+import { checkoutHref, normalizeSteg } from "@lib/util/checkout-step"
 
 export const metadata: Metadata = {
   title: "Kassa | Teknikhouse",
@@ -34,10 +35,11 @@ export default async function Checkout({
   searchParams,
 }: {
   params: Promise<{ countryCode: string }>
-  searchParams: Promise<{ step?: string }>
+  searchParams: Promise<{ step?: string; steg?: string }>
 }) {
   const { countryCode } = await params
-  const { step } = await searchParams
+  const sp = await searchParams
+  const step = normalizeSteg(sp.steg || sp.step)
   const cart = await fetchCart()
   /*
    * Klarna-first checkout: 1 Leverans -> 2 Betalning -> 3 Leveransadress
@@ -50,10 +52,10 @@ export default async function Checkout({
   const hasShipping = (cart?.shipping_methods?.length ?? 0) > 0
   if (
     !step ||
-    (step !== "delivery" && !hasShipping) ||
-    ((step === "address" || step === "review") && !hasSession)
+    (step !== "leverans" && !hasShipping) ||
+    ((step === "adress" || step === "granska") && !hasSession)
   ) {
-    redirect("/checkout?step=delivery")
+    redirect(checkoutHref("leverans"))
   }
   const customer = await getCustomer()
 
