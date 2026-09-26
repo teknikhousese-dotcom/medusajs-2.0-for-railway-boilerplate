@@ -2,7 +2,7 @@ import ProductPreview from "@modules/products/components/product-preview"
 import NewsletterSignup from "./newsletter-signup"
 import RecentlyViewed from "./recently-viewed"
 
-// Teknikhouse 2027 homepage — light, warm Swedish-retail styling
+// Teknikhouse 2027 homepage: light, warm Swedish-retail styling
 // (modelled on power.se / teknikdelar.se / 24.se). Scoped under .th.
 // Server component. Real products via <ProductPreview>. Rendered from
 // app/[countryCode]/(main)/page.tsx.
@@ -47,10 +47,10 @@ const CSS = `
 
 /* usp */
 .th .usp{background:var(--bg);border-bottom:1px solid var(--line)}
-.th .usp .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:28px 24px}
-.th .uspitem{display:flex;gap:13px;align-items:center}
+.th .usp .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:26px 24px}
+.th .uspitem{display:flex;gap:13px;align-items:center;justify-content:center}
 .th .uspitem svg{width:28px;height:28px;stroke:var(--red);stroke-width:1.7;fill:none;flex:0 0 auto}
-.th .uspitem b{font-family:var(--round);display:block;font-size:14.5px}
+.th .uspitem b{font-family:var(--round);display:block;font-size:14.5px;font-weight:600}
 .th .uspitem span{font-size:12.5px;color:var(--sub)}
 
 /* sections */
@@ -59,12 +59,12 @@ const CSS = `
 .th .shead h2{font-family:var(--round);font-weight:600;font-size:clamp(22px,3vw,28px);letter-spacing:-.02em}
 .th .shead a{font-family:var(--round);color:var(--red);font-weight:600;font-size:14px;white-space:nowrap}
 
-/* category tiles */
+/* category tiles: icon centred, label centred under it */
 .th .cats{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
-.th .cat{border-radius:18px;height:150px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:16px;transition:.18s}
+.th .cat{border-radius:18px;min-height:150px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:18px 12px;text-align:center;transition:transform .18s,box-shadow .18s}
 .th .cat:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(27,23,20,.16)}
-.th .cat b{font-family:var(--round);font-weight:600;font-size:15.5px;color:#fff;position:relative;z-index:2;letter-spacing:-.01em;text-shadow:0 1px 8px rgba(0,0,0,.28)}
-.th .cat svg{position:absolute;top:14px;right:14px;width:38px;height:38px;stroke:rgba(255,255,255,.92);stroke-width:1.5;fill:none;z-index:2}
+.th .cat svg{width:42px;height:42px;stroke:rgba(255,255,255,.95);stroke-width:1.5;fill:none;flex:0 0 auto;display:block}
+.th .cat b{font-family:var(--round);font-weight:600;font-size:15px;line-height:1.25;color:#fff;letter-spacing:-.01em;text-shadow:0 1px 8px rgba(0,0,0,.2);overflow-wrap:anywhere;hyphens:auto;max-width:100%}
 .th .cat.c1{background:linear-gradient(150deg,#ff5a4d,#f50000)}
 .th .cat.c2{background:linear-gradient(150deg,#4f7cff,#2b52d6)}
 .th .cat.c3{background:linear-gradient(150deg,#22b07a,#0e8a56)}
@@ -94,13 +94,18 @@ const CSS = `
 .th .repair .l{padding:40px}
 .th .repair .rey{font-family:var(--round);color:#ff7a6a;font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
 .th .repair h3{font-family:var(--round);font-size:clamp(22px,3.4vw,30px);font-weight:600;margin:12px 0 10px;letter-spacing:-.02em}
-.th .repair p{color:#c9c2ba;max-width:440px;font-size:15px}
+.th .repair p{color:#c9c2ba;max-width:460px;font-size:15px}
 .th .steps{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
 .th .steps .st{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:11px 15px;font-family:var(--round);font-size:13px;font-weight:600}
 .th .steps .st span{display:block;color:#ff7a6a;font-size:11px;font-weight:600}
 .th .repair .cta{margin-top:22px;display:inline-flex;background:var(--red);color:#fff;font-family:var(--round);font-weight:600;border-radius:12px;padding:13px 22px;font-size:14px}
-.th .repair .rr{background:radial-gradient(circle at 55% 40%,rgba(245,0,0,.28),transparent 60%);display:flex;align-items:center;justify-content:center;min-height:230px}
-.th .repair .play{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;box-shadow:0 0 0 12px rgba(245,0,0,.16)}
+.th .repair .cta:hover{background:var(--red-d)}
+.th .repair .rr{background:radial-gradient(circle at 55% 40%,rgba(245,0,0,.28),transparent 60%);display:flex;align-items:center;justify-content:center;min-height:230px;padding:24px}
+.th .repair .pin{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.th .repair .pin i{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 12px rgba(245,0,0,.16)}
+.th .repair .pin svg{width:28px;height:28px;stroke:#fff;stroke-width:1.8;fill:none}
+.th .repair .pin b{font-family:var(--round);font-weight:600;font-size:16px;margin-top:8px}
+.th .repair .pin span{color:#c9c2ba;font-size:13.5px}
 
 /* brands */
 .th .brands{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}
@@ -114,15 +119,37 @@ const CSS = `
 .th .rev p{margin:10px 0 14px;font-size:15px;line-height:1.55;color:var(--ink)}
 .th .rev .who{font-family:var(--round);font-size:13px;color:var(--sub);font-weight:600}
 
-/* intro */
-.th .intro{background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:34px}
-.th .intro h3{font-family:var(--round);font-size:22px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
-.th .intro p{color:var(--ink2);font-size:14.5px;max-width:860px;margin-top:10px}
+/* SEO text */
+.th .intro{background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:40px}
+.th .intro .itx{max-width:760px;margin:0 auto}
+.th .intro h2{font-family:var(--round);font-size:clamp(22px,2.8vw,28px);font-weight:600;line-height:1.2;letter-spacing:-.02em;margin:0 0 14px;color:var(--ink)}
+.th .intro h3{font-family:var(--round);font-size:18px;font-weight:600;line-height:1.3;margin:26px 0 8px;color:var(--ink)}
+.th .intro p{color:var(--ink2);font-size:15.5px;line-height:1.7;margin:0 0 12px}
+.th .intro a{color:var(--red-d);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.th .intro a:hover{color:var(--red)}
+.th .intro .imore{display:none}
+.th .intro .itoggle{display:none}
 
 /* newsletter */
-.th .news{background:linear-gradient(135deg,#1b1714,#332c26);border-radius:24px;padding:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;color:#fff}
-.th .news h2{font-family:var(--round);font-size:26px;margin:0 0 6px;color:#fff;letter-spacing:-.02em}
-.th .news p{margin:0;color:#c9c2ba;font-size:15px;max-width:420px}
+.th .news{background:linear-gradient(135deg,#1b1714,#332c26);border-radius:24px;padding:44px;display:grid;grid-template-columns:1fr minmax(0,460px);align-items:center;gap:32px;color:#fff}
+.th .news h2{font-family:var(--round);font-size:clamp(22px,2.8vw,28px);font-weight:600;line-height:1.2;margin:0 0 8px;color:#fff;letter-spacing:-.02em}
+.th .news p{margin:0;color:#c9c2ba;font-size:15px;line-height:1.6;max-width:460px}
+.th .newsform{width:100%}
+.th .newsrow{display:flex;gap:8px;background:#fff;border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.th .newsrow input{flex:1 1 auto;min-width:0;border:0;outline:0;background:transparent;font-size:16px;color:var(--ink);padding:12px 12px;border-radius:10px;font-family:inherit}
+.th .newsrow input::placeholder{color:var(--faint)}
+.th .newsrow:focus-within{box-shadow:0 0 0 3px rgba(245,0,0,.45),0 10px 30px rgba(0,0,0,.25)}
+.th .newsrow button{flex:0 0 auto;background:var(--red);color:#fff;border:0;border-radius:10px;padding:0 22px;min-height:46px;font-family:var(--round);font-weight:600;font-size:15px;cursor:pointer;transition:background .15s}
+.th .newsrow button:hover{background:var(--red-d)}
+.th .newsrow button:disabled{opacity:.65;cursor:default}
+.th .newsnote{margin-top:10px;font-size:12.5px;line-height:1.5;color:#a79f96}
+.th .newsnote a{color:#fff;text-decoration:underline;text-underline-offset:2px}
+.th .newsmsg{margin-top:10px;font-size:13.5px;font-weight:600;line-height:1.45}
+.th .newsmsg.err{color:#ffb3a8}
+.th .newsok{display:flex;gap:12px;align-items:flex-start;background:rgba(26,157,85,.16);border:1px solid rgba(26,157,85,.5);border-radius:14px;padding:16px 18px;color:#fff;font-size:15px;line-height:1.5}
+.th .newsok b{display:block;font-family:var(--round);font-weight:600}
+.th .newsok span{color:#c9c2ba;font-size:13.5px}
+.th .newsok i{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:14px}
 
 /* section subheading */
 .th .shead .stext{display:flex;flex-direction:column;gap:3px}
@@ -147,6 +174,8 @@ const CSS = `
 .th .gtag{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 8px 24px rgba(27,23,20,.08);display:flex;gap:12px;align-items:center;font-family:var(--round);font-weight:600;font-size:13.5px;color:var(--ink)}
 .th .gtag svg{width:22px;height:22px;stroke:var(--red);stroke-width:1.7;fill:none;flex:0 0 auto}
 .th .gtag span{display:block;font-weight:400;font-size:12px;color:var(--sub);font-family:system-ui,Arial,sans-serif}
+.th a.gtag{transition:transform .15s,box-shadow .15s}
+.th a.gtag:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(27,23,20,.12)}
 
 @media(max-width:1000px){
   .th .rvgrid{grid-template-columns:repeat(3,1fr)}
@@ -162,7 +191,45 @@ const CSS = `
   .th .finder .row{grid-template-columns:1fr 1fr}
   .th .finder .go{grid-column:1/-1;justify-content:center;padding:13px}
 }
-@media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}.th .rvgrid{grid-template-columns:repeat(2,1fr)}}`
+@media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}.th .rvgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1000px){
+  .th .news{grid-template-columns:1fr;padding:34px 28px}
+  .th .usp .wrap{gap:18px 14px}
+  .th .uspitem{justify-content:flex-start}
+}
+@media(max-width:640px){
+  .th .wrap{padding:0 16px}
+  .th section.blk{padding:34px 0}
+  .th .usp .wrap{padding:20px 16px}
+  .th .uspitem{flex-direction:column;text-align:center;justify-content:flex-start;gap:8px}
+  .th .cat{min-height:128px;gap:10px;padding:16px 8px}
+  .th .cat svg{width:36px;height:36px}
+  .th .cat b{font-size:14px}
+  .th .intro{padding:26px 20px}
+  .th .intro .itoggle{display:block;position:absolute;opacity:0;width:1px;height:1px;margin:0}
+  .th .intro .itx{position:relative}
+  .th .intro .ibody{position:relative;max-height:300px;overflow:hidden}
+  .th .intro .ibody:after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(rgba(250,248,246,0),var(--bg))}
+  .th .intro .itoggle:checked ~ .ibody{max-height:none}
+  .th .intro .itoggle:checked ~ .ibody:after{display:none}
+  .th .intro .imore{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-family:var(--round);font-weight:600;font-size:14.5px;color:var(--red-d);cursor:pointer;padding:8px 0}
+  .th .intro .imore .less{display:none}
+  .th .intro .itoggle:checked ~ .imore .less{display:inline}
+  .th .intro .itoggle:checked ~ .imore .more{display:none}
+  .th .intro .itoggle:focus-visible ~ .imore{outline:2px solid var(--red);outline-offset:3px;border-radius:6px}
+  .th .guide{padding:28px 22px}
+  .th .repair .l{padding:28px 22px}
+  .th .deal{padding:28px 24px}
+  .th .deal h3,.th .deal p{max-width:100%}
+  .th .news{padding:28px 20px;border-radius:20px}
+}
+@media(max-width:420px){
+  .th .newsrow{flex-direction:column;background:transparent;box-shadow:none;padding:0;gap:10px}
+  .th .newsrow:focus-within{box-shadow:none}
+  .th .newsrow input{background:#fff;border-radius:12px;padding:14px}
+  .th .newsrow input:focus{box-shadow:0 0 0 3px rgba(245,0,0,.45)}
+  .th .newsrow button{width:100%;min-height:50px;border-radius:12px}
+}`
 
 export default function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
   const has = (n: number) => region && products && products.length > n
@@ -196,22 +263,22 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
 
       {/* USP */}
       <div className="usp"><div className="wrap">
-        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M3 13h6l2-8 3 16 2-6h5" /></svg><div><b>Snabb leverans</b><span>Skickas idag · 1–3 dagar hem</span></div></div>
-        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg><div><b>Livstidsgaranti</b><span>Testade delar, trygg reparation</span></div></div>
+        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></svg><div><b>Fri frakt över 999 kr</b><span>Spårbart med PostNord och DHL</span></div></div>
+        <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg><div><b>Butik på Sveavägen 139</b><span>Hämta din order i Stockholm</span></div></div>
         <div className="uspitem"><svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0116 0M20 4v4h-4" /><path d="M20 16a8 8 0 01-16 0M4 20v-4h4" /></svg><div><b>30 dagars öppet köp</b><span>Enkelt att returnera</span></div></div>
-        <div className="uspitem"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></svg><div><b>Swish · Klarna · Kort</b><span>Trygg betalning</span></div></div>
+        <div className="uspitem"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></svg><div><b>Swish, Klarna och kort</b><span>Trygg betalning</span></div></div>
       </div></div>
 
       {/* CATEGORY TILES */}
       <section className="blk"><div className="wrap">
-        <div className="shead"><div className="stext"><h2>Populära kategorier</h2><span className="ssub">Utforska produkter efter kategorier</span></div><a href="/store">Alla kategorier →</a></div>
+        <div className="shead"><div className="stext"><h2>Populära kategorier</h2><span className="ssub">Det som flest letar efter hos oss</span></div><a href="/store">Alla kategorier →</a></div>
         <div className="cats">
-          <a className="cat c1" href="/mobilreservdelar"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3" /><path d="M9 6h6" /></svg><b>MOBILRESERVDELAR</b></a>
-          <a className="cat c2" href="/batterier"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="9" rx="2" /><path d="M19 11h2v3h-2" /></svg><b>BATTERIER</b></a>
-          <a className="cat c3" href="/mobiltillbehor"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3" /><circle cx="10" cy="7" r="1.4" /><circle cx="14" cy="7" r="1.4" /></svg><b>MOBILTILLBEHÖR</b></a>
-          <a className="cat c4" href="/kablar-laddare"><svg viewBox="0 0 24 24"><path d="M9 2v5M15 2v5" /><path d="M6.5 7h11v3.5a5.5 5.5 0 01-11 0z" /><path d="M12 16v6" /></svg><b>KABLAR &amp; LADDARE</b></a>
-          <a className="cat c5" href="/horlurar-hogtalare"><svg viewBox="0 0 24 24"><path d="M5 15v-3a7 7 0 0114 0v3" /><rect x="3" y="14" width="4" height="6" rx="1.5" /><rect x="17" y="14" width="4" height="6" rx="1.5" /></svg><b>HÖRLURAR &amp; LJUD</b></a>
-          <a className="cat c6" href="/mobiler-surfplattor"><svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0114-5M20 4v4h-4" /><path d="M20 16a8 8 0 01-14 5M4 20v-4h4" /></svg><b>BEGAGNAT</b></a>
+          <a className="cat c1" href="/mobilreservdelar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3" /><path d="M9 6h6" /></svg><b>Mobilreservdelar</b></a>
+          <a className="cat c2" href="/batterier"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="16" height="9" rx="2" /><path d="M19 11h2v3h-2" /></svg><b>Batterier</b></a>
+          <a className="cat c3" href="/mobiltillbehor"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3" /><circle cx="10" cy="7" r="1.4" /><circle cx="14" cy="7" r="1.4" /></svg><b>Mobiltillbehör</b></a>
+          <a className="cat c4" href="/kablar-laddare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2v5M15 2v5" /><path d="M6.5 7h11v3.5a5.5 5.5 0 01-11 0z" /><path d="M12 16v6" /></svg><b>Kablar &amp; laddare</b></a>
+          <a className="cat c5" href="/horlurar-hogtalare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15v-3a7 7 0 0114 0v3" /><rect x="3" y="14" width="4" height="6" rx="1.5" /><rect x="17" y="14" width="4" height="6" rx="1.5" /></svg><b>Hörlurar &amp; ljud</b></a>
+          <a className="cat c6" href="/mobiler-surfplattor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a8 8 0 0114-5M20 4v4h-4" /><path d="M20 16a8 8 0 01-14 5M4 20v-4h4" /></svg><b>Begagnat</b></a>
         </div>
       </div></section>
 
@@ -231,15 +298,14 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="deals">
           <div className="deal d1">
-            <div className="burst">−40%<small>upp till</small></div>
-            <h3>Veckans kampanjer</h3>
-            <p>Skärmar &amp; batterikit till grymma priser — så länge lagret räcker.</p>
-            <a className="db" href="/outlet-fyndvaror">Handla kampanjer</a>
+            <h3>Fynd och outlet</h3>
+            <p>Restlager, utgående modeller och kampanjpriser. När det är slut är det slut.</p>
+            <a className="db" href="/outlet-fyndvaror">Se fynden</a>
           </div>
           <div className="deal d2">
-            <h3>Laga din teknik själv</h3>
-            <p>Du fixar mobilen — vi har reservdelarna, verktygen och guiden.</p>
-            <a className="db" href="/mobilreservdelar">Kom igång</a>
+            <h3>Laga mobilen själv</h3>
+            <p>Vi har delarna och verktygen. Du står för tålamodet.</p>
+            <a className="db" href="/mobilreservdelar">Hitta din del</a>
           </div>
         </div>
       </div></section>
@@ -272,17 +338,17 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="repair">
           <div className="l">
-            <div className="rey">Laga själv — eller lämna till oss</div>
-            <h3>Byt skärmen på 12 minuter.</h3>
-            <p>Steg-för-steg-guider för just din modell, med exakt rätt del och verktyg länkade. Vill du hellre slippa? Vår butik Phone Rep (Sveavägen 139, Stockholm) lagar åt dig — med samma delar vi säljer.</p>
+            <div className="rey">Hellre att vi fixar det?</div>
+            <h3>Lämna in mobilen hos Phone Rep</h3>
+            <p>I vår verkstad på Sveavägen 139 i Stockholm byter vi skärmar, batterier och laddkontakter med samma delar som vi säljer här på sajten. Felsökningen är gratis och du får ett pris innan vi börjar.</p>
             <div className="steps">
-              <div className="st"><span>Steg 1</span>Välj modell</div>
-              <div className="st"><span>Steg 2</span>Följ guiden</div>
-              <div className="st"><span>Steg 3</span>Klart!</div>
+              <div className="st"><span>Steg 1</span>Kom in eller skicka</div>
+              <div className="st"><span>Steg 2</span>Gratis felsökning</div>
+              <div className="st"><span>Steg 3</span>Vi lagar</div>
             </div>
-            <a className="cta" href="/mobilreparation">Se guider för din modell →</a>
+            <a className="cta" href="/mobilreparation">Läs om mobilreparation →</a>
           </div>
-          <div className="rr"><div className="play">▶</div></div>
+          <div className="rr"><div className="pin"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg></i><b>Sveavägen 139</b><span>113 46 Stockholm</span></div></div>
         </div>
       </div></section>
 
@@ -296,7 +362,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
           <a className="brand" href="/mobilreservdelar/xiaomi">Xiaomi</a>
           <a className="brand" href="/mobilreservdelar/oneplus">OnePlus</a>
           <a className="brand" href="/mobilreservdelar/sony-xperia">Sony</a>
-          <a className="brand" href="/mobilreservdelar">Motorola</a>
+          <a className="brand" href="/mobilreservdelar/motorola">Motorola</a>
           <a className="brand" href="/mobilreservdelar/apple">iPad</a>
         </div>
       </div></section>
@@ -316,36 +382,53 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
         <div style={{ textAlign: "center", marginTop: 18, fontSize: 14 }}><a href="https://se.trustpilot.com/review/teknikhouse.se" target="_blank" rel="noreferrer" style={{ color: "#6f685f", fontWeight: 600, textDecoration: "none", margin: "0 10px" }}>Fler omdömen på Trustpilot →</a><a href="https://www.google.com/maps/place/Teknikhouse.se" target="_blank" rel="noreferrer" style={{ color: "#6f685f", fontWeight: 600, textDecoration: "none", margin: "0 10px" }}>Google →</a></div>
       </div></section>
 
-      {/* SEO INTRO */}
+      {/* SEO TEXT */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="intro">
-          <h3>Mobilreservdelar &amp; mobiltillbehör — Sveriges bredaste sortiment</h3>
-          <p>Hos Teknikhouse hittar du marknadens bredaste sortiment av mobilreservdelar och mobiltillbehör till iPhone, Samsung, iPad och fler. Vi lagerför skärmar, batterier, baksidor, kameror och smådelar — med livstidsgaranti på skärmar, fri frakt och snabb leverans från eget lager.</p>
-          <p>Teknikhouse.se ägs och drivs av Nordic Teknik House AB med säte i Stockholm. Vi hjälper både privatpersoner och företag att reparera sina enheter. Alla produkter testas av experter — och garanti ingår alltid.</p>
+          <div className="itx">
+            <h2>Mobilreservdelar och mobiltillbehör från vår butik i Stockholm</h2>
+            <input type="checkbox" id="th-seo-more" className="itoggle" aria-label="Visa hela texten" />
+            <div className="ibody">
+              <p>Teknikhouse.se drivs av Nordic Teknik House AB och vi har butik och verkstad på Sveavägen 139 i Stockholm. Här säljer vi mobilreservdelar, verktyg och mobiltillbehör till iPhone, Samsung, iPad och en lång rad andra märken. Det är samma delar som vi själva använder när vi lagar telefoner i verkstaden, så vi vet ganska väl vad som håller och vad som inte gör det.</p>
+
+              <h3>Reservdelar till iPhone, Samsung och iPad</h3>
+              <p>Det vi säljer mest av är skärmar och batterier. En ny skärm till iPhone löser sprucket glas, fläckar i bilden och touch som slutat svara. Ett nytt batteri till Samsung eller iPhone gör stor skillnad när telefonen stänger av sig vid 20 procent eller inte klarar en hel dag. Vi har också baksidor, kameror, laddkontakter, högtalare och flexkablar. Börja med ditt märke, till exempel <a href="/mobilreservdelar/apple">reservdelar till iPhone och iPad</a> eller <a href="/mobilreservdelar/samsung">reservdelar till Samsung</a>, och välj sedan din modell så ser du bara delar som passar. Letar du efter något annat finns alla märken samlade under <a href="/mobilreservdelar">mobilreservdelar</a>, och lösa batterier hittar du under <a href="/batterier">batterier</a>.</p>
+
+              <h3>Laga mobilen själv, eller låt oss göra det</h3>
+              <p>Många byter batteri eller skärm hemma vid köksbordet, och det brukar gå bra med rätt verktyg och lite tålamod. Under <a href="/verktyg">verktyg</a> finns skruvmejslar, bändverktyg och lim, och i <a href="/blogg">bloggen</a> har vi skrivit guider om till exempel batteribyte och hur du tar reda på vilken iPad du har. Känns det för pilligt kan du lämna in telefonen hos oss i stället. Läs mer om vår <a href="/mobilreparation">mobilreparation i Stockholm</a>.</p>
+
+              <h3>Tillbehör, frakt och öppet köp</h3>
+              <p>Utöver reservdelar har vi <a href="/mobiltillbehor">mobiltillbehör</a> som skal och skärmskydd, <a href="/kablar-laddare">kablar och laddare</a>, <a href="/powerbank">powerbanks</a> och <a href="/horlurar-hogtalare">hörlurar</a>. Vi skickar med PostNord och DHL, och frakten är gratis när du handlar för över 999 kr. Bor du i Stockholm kan du välja att hämta din order i butiken. Du har 30 dagars öppet köp och garanti mot fabrikationsfel, allt står i våra <a href="/info/oppet-kop-retur">regler för öppet köp och retur</a>. Undrar du om en del passar din telefon? Mejla oss på info@teknikhouse.se så svarar någon av oss som jobbar med det här varje dag.</p>
+            </div>
+            <label htmlFor="th-seo-more" className="imore" aria-hidden="true"><span className="more">Läs mer ↓</span><span className="less">Visa mindre ↑</span></label>
+          </div>
         </div>
       </div></section>
 
-      {/* GUIDER OCH TIPS — last banner */}
+      {/* GUIDER OCH TIPS: links to the blog */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="guide">
           <div>
-            <div className="ge">Kunskap &amp; inspiration</div>
+            <div className="ge">Från bloggen</div>
             <h3>Guider och tips</h3>
-            <p>Steg-för-steg-guider för skärm- och batteribyte, köphjälp och smarta råd som får din teknik att hålla längre — skrivet av våra tekniker.</p>
-            <a className="gcta" href="/mobilreparation">Läs våra guider →</a>
+            <p>Vi skriver om sådant vi får frågor om i butiken varje vecka. Hur du ser vilken modell du har, när batteriet behöver bytas och vad du ska kolla innan du köper en begagnad iPhone.</p>
+            <a className="gcta" href="/blogg">Till bloggen →</a>
           </div>
           <div className="gicons">
-            <span className="gtag"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3" /><path d="M9 6h6" /></svg>Byt skärm steg-för-steg<span>Verktyg &amp; del länkade</span></span>
-            <span className="gtag"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="9" rx="2" /><path d="M19 11h2v3h-2" /><path d="M8 10l-2 3h3l-2 3" /></svg>Batteri-hälsa<span>Så håller batteriet längre</span></span>
-            <span className="gtag"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>Köpguider<span>Välj rätt del &amp; tillbehör</span></span>
+            <a className="gtag" href="/blogg/sa-har-lagar-du-din-mobil-sjalv-en-guide-till-iphone-och-samsung-reservdelar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3" /><path d="M9 6h6" /></svg><div>Laga mobilen själv<span>iPhone och Samsung</span></div></a>
+            <a className="gtag" href="/blogg/iphone-batteriguide-den-kompletta-guiden"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="16" height="9" rx="2" /><path d="M19 11h2v3h-2" /><path d="M8 10l-2 3h3l-2 3" /></svg><div>Batteriguide för iPhone<span>När är det dags att byta?</span></div></a>
+            <a className="gtag" href="/blogg/sa-har-identifierar-du-din-ipad-modell-en-komplett-guide-for-att-hitta-ratt-enhet"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg><div>Vilken iPad har jag?<span>Hitta modellnumret</span></div></a>
           </div>
         </div>
       </div></section>
 
       {/* NEWSLETTER */}
-      <section className="blk"><div className="wrap">
+      <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
         <div className="news">
-          <div><h2>Få 10% på din första order</h2><p>Anmäl dig till nyhetsbrevet för guider, nyheter och exklusiva erbjudanden.</p></div>
+          <div>
+            <h2>Nyheter och tips från oss</h2>
+            <p>Vi mejlar när det kommer nya delar, när vi har kampanj och när vi har skrivit något matnyttigt. Du kan avsluta prenumerationen när du vill.</p>
+          </div>
           <NewsletterSignup />
         </div>
       </div></section>
