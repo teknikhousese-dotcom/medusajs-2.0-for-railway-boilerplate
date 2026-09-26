@@ -83,7 +83,7 @@ const SideMenu = ({
                   className="relative h-full min-w-[44px] flex items-center gap-2 transition-all ease-out duration-200 focus:outline-none focus-visible:text-[#F50000] hover:text-ui-fg-base font-medium"
                 >
                   <svg className="shrink-0 block" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-                  Meny
+                  <span className="max-[359px]:sr-only">Meny</span>
                 </Popover.Button>
               </div>
 
