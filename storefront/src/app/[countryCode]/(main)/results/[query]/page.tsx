@@ -1,46 +1,41 @@
 import { Metadata } from "next"
 
 import SearchResultsTemplate from "@modules/search/templates/search-results-template"
-
-import { search } from "@modules/search/actions"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { searchProducts, type SearchSort } from "@modules/search/actions"
 
 export const metadata: Metadata = {
   title: "Sök",
   description: "Sök i hela vårt sortiment.",
+  robots: { index: false, follow: true },
 }
 
-// Always render fresh — search results must never be served from a stale
+// Always render fresh: search results must never be served from a stale
 // per-query static cache (Railway persists .next/cache across deploys).
 export const dynamic = "force-dynamic"
 
 type Params = {
   params: Promise<{ query: string; countryCode: string }>
   searchParams: Promise<{
-    sortBy?: SortOptions
+    sort?: string
+    sortBy?: string
     page?: string
   }>
 }
 
+const SORTS: SearchSort[] = ["relevance", "price_asc", "price_desc", "newest", "name"]
+
+function pickSort(sort?: string, sortBy?: string): SearchSort {
+  const s = sort || (sortBy === "created_at" ? "newest" : sortBy === "title" ? "name" : sortBy)
+  return SORTS.includes(s as SearchSort) ? (s as SearchSort) : "relevance"
+}
+
 export default async function SearchResults({ params, searchParams }: Params) {
   const { query, countryCode } = await params
-  const { sortBy, page } = await searchParams
+  const sp = await searchParams
+  const sort = pickSort(sp.sort, sp.sortBy)
+  const page = Math.max(1, parseInt(sp.page || "1", 10) || 1)
 
-  const hits = await search(query).then((data) => data)
+  const result = await searchProducts({ query, page, limit: 24, sort })
 
-  const ids = hits
-    .map((h) => h.id)
-    .filter((id): id is string => {
-      return typeof id === "string"
-    })
-
-  return (
-    <SearchResultsTemplate
-      query={query}
-      ids={ids}
-      sortBy={sortBy}
-      page={page}
-      countryCode={countryCode}
-    />
-  )
+  return <SearchResultsTemplate result={result} sort={sort} page={page} countryCode={countryCode} />
 }

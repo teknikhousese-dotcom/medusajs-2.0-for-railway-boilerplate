@@ -12,6 +12,7 @@ type Item = { id: string; t: string; href: string; img: string | null; price: st
 type Section = { title: string; items: M[] }
 
 const SAVE_KEY = "th:device"
+const RECENT_KEY = "th:devices"
 const POPULAR = ["iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11", "Galaxy S24", "Galaxy S23", "Galaxy S22", "Galaxy S21 5G"]
 const TOP_BRANDS = 5
 const PARTS_CACHE = new Map<string, Item[]>()
@@ -168,6 +169,7 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
   const [query, setQuery] = useState("")
   const [model, setModel] = useState<M | null>(null)
   const [saved, setSaved] = useState<M | null>(null)
+  const [recentM, setRecentM] = useState<M[]>([])
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
   const [expanded, setExpanded] = useState(false)
@@ -201,6 +203,19 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
   /* Sparad enhet från förra besöket. */
   useEffect(() => {
     if (!all.length) return
+    try {
+      const rl = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]")
+      if (Array.isArray(rl)) {
+        const found: M[] = []
+        for (const r of rl) {
+          const m = all.find((x) => x.id === r?.id) || all.find((x) => x.path === r?.path)
+          if (m && !found.includes(m)) found.push(m)
+        }
+        setRecentM(found.slice(0, 4))
+      }
+    } catch {
+      /* ignorera trasig lista */
+    }
     try {
       const raw = localStorage.getItem(SAVE_KEY)
       if (!raw) return
@@ -247,8 +262,12 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
         if (!pop.includes(m)) pop.push(m)
       }
     }
-    return pop.length ? [{ title: "Populära modeller", items: pop }] : []
-  }, [all, brand, qf, searching])
+    const rest = pop.filter((m) => !recentM.includes(m))
+    const out: Section[] = []
+    if (recentM.length) out.push({ title: "Dina senaste enheter", items: recentM })
+    if (rest.length) out.push({ title: "Populära modeller", items: rest })
+    return out
+  }, [all, brand, qf, searching, recentM])
 
   const flat = useMemo(() => sections.flatMap((s) => s.items), [sections])
 
@@ -372,6 +391,9 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
     setSaved(m)
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({ id: m.id, path: m.path, n: m.n }))
+      const nextRecent = [m, ...recentM.filter((x) => x.id !== m.id)].slice(0, 4)
+      setRecentM(nextRecent)
+      localStorage.setItem(RECENT_KEY, JSON.stringify(nextRecent.map((x) => ({ id: x.id, path: x.path, n: x.n }))))
     } catch {
       /* privat läge */
     }

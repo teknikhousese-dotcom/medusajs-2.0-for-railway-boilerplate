@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import Link from "next/link"
 import { listCategories } from "@lib/data/categories"
 import { buildCategoryPathMap, productHref } from "@lib/util/teknik-url"
+import { WishlistHeart } from "@modules/wishlist"
 
 // teknikhouse stock snapshot lives in metadata.in_stock (false = slut).
 const isOutOfStock = (product: HttpTypes.StoreProduct) => {
@@ -56,6 +57,9 @@ export default async function ProductPreview({
     <Link href={_href} className="group block h-full" data-testid="product-wrapper">
       <div className="flex h-full flex-col overflow-hidden rounded-xl small:rounded-2xl border border-ui-border-base bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-ui-border-strong">
         <div className="relative aspect-square overflow-hidden bg-white">
+          <WishlistHeart
+            item={{ id: product.id!, handle: product.handle || "", title: product.title || "", thumbnail: img, href: _href }}
+          />
           {onSale && savings > 0 && (
             <span className="absolute left-2 top-2 z-10 rounded-md bg-red-600 px-1.5 py-0.5 small:px-2 small:py-1 text-[10.5px] small:text-[11px] font-semibold leading-tight text-white shadow-sm">
               Spara {savings.toLocaleString("sv-SE")} kr
