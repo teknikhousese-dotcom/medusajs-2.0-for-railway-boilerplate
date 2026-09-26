@@ -4,7 +4,49 @@ import {
   createOrder,
   buildLinesFromCart,
   merchantUrls,
+  kustomBase,
 } from "../../../lib/kustom"
+
+/*
+ * KCO v3 "options": the Klarna/Kustom iframe styled like teknikhouse.se
+ * (brand red #F50000, dark text, rounded corners) and B2B enabled so the
+ * shopper can pick Privat or Foretag inside Klarna.
+ */
+const BRAND_OPTIONS: Record<string, any> = {
+  color_button: "#F50000",
+  color_button_text: "#FFFFFF",
+  color_checkbox: "#F50000",
+  color_checkbox_checkmark: "#FFFFFF",
+  color_header: "#14161C",
+  color_link: "#F50000",
+  radius_border: "12px",
+}
+
+const B2B_OPTIONS: Record<string, any> = {
+  allowed_customer_types: ["person", "organization"],
+}
+
+async function postKcoOrder(body: Record<string, any>) {
+  const u = (process.env.KUSTOM_USERNAME || "").trim()
+  const p = (process.env.KUSTOM_PASSWORD || "").trim()
+  const res = await fetch(kustomBase() + "/checkout/v3/orders", {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + Buffer.from(u + ":" + p).toString("base64"),
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+  })
+  const text = await res.text()
+  let json: any = null
+  try {
+    json = text ? JSON.parse(text) : null
+  } catch {
+    json = null
+  }
+  return { status: res.status, ok: res.ok, json, text }
+}
 
 // Publikt: kassan anropar detta för att skapa en Kustom Checkout-order och
 // få tillbaka html_snippet (iframe) för "Klarna/Kort"-fliken.
@@ -62,7 +104,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return
     }
 
-    const r = await createOrder({
+    const base = {
       purchase_country: "SE",
       purchase_currency: (cart.currency_code || "SEK").toUpperCase(),
       locale: "sv-SE",
@@ -71,7 +113,28 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       order_lines,
       merchant_reference1: cart_id,
       merchant_urls: merchantUrls(cart_id),
-    })
+    }
+
+    /*
+     * Try brand colours + B2B first. If Kustom rejects the options (for
+     * example B2B not enabled on the merchant account) fall back step by
+     * step, so order creation never breaks because of styling.
+     */
+    let r: any = await postKcoOrder({
+      ...base,
+      options: { ...BRAND_OPTIONS, ...B2B_OPTIONS },
+      customer: { type: "person" },
+    }).catch((e: any) => ({ ok: false, status: 0, json: null, text: String(e?.message || e) }))
+    if (!r.ok || !r.json) {
+      console.warn("[kustom] order with b2b options fail", r.status, String(r.text || "").slice(0, 300))
+      r = await postKcoOrder({ ...base, options: { ...BRAND_OPTIONS } }).catch(
+        (e: any) => ({ ok: false, status: 0, json: null, text: String(e?.message || e) })
+      )
+    }
+    if (!r.ok || !r.json) {
+      console.warn("[kustom] order with colour options fail", r.status, String(r.text || "").slice(0, 300))
+      r = await createOrder(base)
+    }
 
     if (!r.ok || !r.json) {
       console.error("[kustom] create order fail", r.status, r.text?.slice(0, 300))
