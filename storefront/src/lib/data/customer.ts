@@ -72,7 +72,7 @@ export async function signup(_currentState: unknown, formData: FormData) {
       // emailpass always returns a token string. The other shapes in the union
       // are OAuth redirect, MFA challenge and pending email verification, none
       // of which this storefront implements.
-      return "Account created, but automatic sign-in is not available. Please sign in."
+      return "Kontot är skapat, men vi kunde inte logga in dig automatiskt. Logga in med dina nya uppgifter."
     }
 
     await setAuthToken(loginToken)
@@ -80,7 +80,11 @@ export async function signup(_currentState: unknown, formData: FormData) {
     await revalidateCacheTag("customers")
     return createdCustomer
   } catch (error: any) {
-    return error.toString()
+    const message = String(error?.message || error || "")
+    if (/exist/i.test(message)) {
+      return "Det finns redan ett konto med den e-postadressen. Logga in i stället."
+    }
+    return "Vi kunde inte skapa kontot. Kontrollera uppgifterna och försök igen."
   }
 }
 
@@ -96,13 +100,17 @@ export async function login(_currentState: unknown, formData: FormData) {
 
     if (typeof token !== "string") {
       // See the note in signup: only the string form is supported here.
-      return "This account requires a sign-in step that is not supported here."
+      return "Det här kontot kräver ett inloggningssteg som inte stöds här. Kontakta oss så hjälper vi dig."
     }
 
     await setAuthToken(token)
     await revalidateCacheTag("customers")
   } catch (error: any) {
-    return error.toString()
+    const message = String(error?.message || error || "")
+    if (/invalid|unauthori|password|credential/i.test(message)) {
+      return "Fel e-postadress eller lösenord. Försök igen."
+    }
+    return "Vi kunde inte logga in dig just nu. Försök igen om en stund."
   }
 }
 
@@ -122,7 +130,7 @@ export async function requestPasswordReset(
   const email = (formData.get("email") as string)?.trim()
 
   if (!email) {
-    return { success: false, error: "Enter the email address on your account." }
+    return { success: false, error: "Ange e-postadressen som hör till ditt konto." }
   }
 
   try {
@@ -131,7 +139,10 @@ export async function requestPasswordReset(
   } catch (error: any) {
     // A failure here is the request never reaching Medusa, not a rejected
     // address, so it is worth surfacing rather than swallowing.
-    return { success: false, error: error.toString() }
+    return {
+      success: false,
+      error: "Vi kunde inte skicka länken just nu. Försök igen om en stund.",
+    }
   }
 }
 
@@ -154,16 +165,16 @@ export async function resetPassword(
   if (!token) {
     return {
       success: false,
-      error: "This reset link is missing its token. Request a new one.",
+      error: "Återställningslänken är ofullständig. Begär en ny länk nedan.",
     }
   }
 
   if (!password || password.length < 8) {
-    return { success: false, error: "Use a password of at least 8 characters." }
+    return { success: false, error: "Välj ett lösenord med minst 8 tecken." }
   }
 
   if (password !== confirmPassword) {
-    return { success: false, error: "The two passwords do not match." }
+    return { success: false, error: "Lösenorden stämmer inte överens." }
   }
 
   try {
@@ -180,7 +191,7 @@ export async function resetPassword(
     return {
       success: false,
       error:
-        "This reset link is no longer valid. It can only be used once and expires after 15 minutes. Request a new one below.",
+        "Länken gäller inte längre. Den kan bara användas en gång och slutar gälla efter 15 minuter. Begär en ny länk nedan.",
     }
   }
 }
@@ -217,7 +228,10 @@ export const addCustomerAddress = async (
       return { success: true, error: null }
     })
     .catch((err) => {
-      return { success: false, error: err.toString() }
+      return {
+        success: false,
+        error: "Vi kunde inte spara adressen. Kontrollera uppgifterna och försök igen.",
+      }
     })
 }
 
@@ -261,6 +275,9 @@ export const updateCustomerAddress = async (
       return { success: true, error: null }
     })
     .catch((err) => {
-      return { success: false, error: err.toString() }
+      return {
+        success: false,
+        error: "Vi kunde inte spara adressen. Kontrollera uppgifterna och försök igen.",
+      }
     })
 }
