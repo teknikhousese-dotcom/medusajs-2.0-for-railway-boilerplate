@@ -14,13 +14,18 @@ const ShippingAddress = ({
   cart,
   checked,
   onChange,
+  isCompany = false,
 }: {
   customer: HttpTypes.StoreCustomer | null
   cart: HttpTypes.StoreCart | null
   checked: boolean
   onChange: () => void
+  isCompany?: boolean
 }) => {
   const [formData, setFormData] = useState<Record<string, any>>({})
+  const [orgNr, setOrgNr] = useState<string>(
+    String((cart?.metadata as Record<string, any> | null)?.org_nr || "")
+  )
 
   const countriesInRegion = useMemo(
     () => cart?.region?.countries?.map((c) => c.iso_2),
@@ -88,7 +93,7 @@ const ShippingAddress = ({
       {customer && (addressesInRegion?.length || 0) > 0 && (
         <Container className="mb-6 flex flex-col gap-y-4 p-5">
           <p className="text-small-regular">
-            {`Hi ${customer.first_name}, do you want to use one of your saved addresses?`}
+            {"Hej " + customer.first_name + ", vill du använda en sparad adress?"}
           </p>
           <AddressSelect
             addresses={customer.addresses}
@@ -101,7 +106,33 @@ const ShippingAddress = ({
           />
         </Container>
       )}
-      <div className="grid grid-cols-2 gap-4">
+      {isCompany ? (
+        <div className="grid grid-cols-1 small:grid-cols-2 gap-3 small:gap-4 mb-3 small:mb-4">
+          <Input
+            label="Företagsnamn"
+            name="shipping_address.company"
+            value={formData["shipping_address.company"]}
+            onChange={handleChange}
+            autoComplete="organization"
+            required
+            data-testid="shipping-company-input"
+          />
+          <Input
+            label="Organisationsnummer"
+            name="org_nr"
+            value={orgNr}
+            onChange={(e) => setOrgNr(e.target.value)}
+            inputMode="numeric"
+            pattern="[0-9]{6}-?[0-9]{4}"
+            title="Skriv organisationsnumret som 556677-8899."
+            required
+            data-testid="shipping-org-nr-input"
+          />
+        </div>
+      ) : (
+        <input type="hidden" name="shipping_address.company" value="" />
+      )}
+      <div className="grid grid-cols-2 gap-3 small:gap-4">
         <Input
           label="Förnamn"
           name="shipping_address.first_name"
@@ -120,27 +151,22 @@ const ShippingAddress = ({
           required
           data-testid="shipping-last-name-input"
         />
-        <Input
-          label="Adress"
-          name="shipping_address.address_1"
-          autoComplete="address-line1"
-          value={formData["shipping_address.address_1"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-address-input"
-        />
-        <Input
-          label="Företag"
-          name="shipping_address.company"
-          value={formData["shipping_address.company"]}
-          onChange={handleChange}
-          autoComplete="organization"
-          data-testid="shipping-company-input"
-        />
+        <div className="col-span-2 small:col-span-1">
+          <Input
+            label="Gatuadress"
+            name="shipping_address.address_1"
+            autoComplete="address-line1"
+            value={formData["shipping_address.address_1"]}
+            onChange={handleChange}
+            required
+            data-testid="shipping-address-input"
+          />
+        </div>
         <Input
           label="Postnummer"
           name="shipping_address.postal_code"
           autoComplete="postal-code"
+          inputMode="numeric"
           value={formData["shipping_address.postal_code"]}
           onChange={handleChange}
           required
@@ -155,28 +181,31 @@ const ShippingAddress = ({
           required
           data-testid="shipping-city-input"
         />
-        <CountrySelect
-          name="shipping_address.country_code"
-          autoComplete="country"
-          region={cart?.region}
-          value={formData["shipping_address.country_code"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-country-select"
-        />
-        {/* Optional, matching Medusa's address type and the account address
-            forms. Most of Europe has no state or province, so requiring it
-            blocked checkout outright for the countries the seed covers. */}
-        <Input
-          label="Län"
-          name="shipping_address.province"
-          autoComplete="address-level1"
-          value={formData["shipping_address.province"]}
-          onChange={handleChange}
-          data-testid="shipping-province-input"
-        />
+        <div className="col-span-2 small:col-span-1">
+          <CountrySelect
+            name="shipping_address.country_code"
+            autoComplete="country"
+            region={cart?.region}
+            value={formData["shipping_address.country_code"]}
+            onChange={handleChange}
+            required
+            data-testid="shipping-country-select"
+          />
+        </div>
+        {/* Optional, matching Medusa's address type. Most of Europe has no
+            state or province, so it is not required. */}
+        <div className="col-span-2 small:col-span-1">
+          <Input
+            label="Län (valfritt)"
+            name="shipping_address.province"
+            autoComplete="address-level1"
+            value={formData["shipping_address.province"]}
+            onChange={handleChange}
+            data-testid="shipping-province-input"
+          />
+        </div>
       </div>
-      <div className="my-8">
+      <div className="my-6 small:my-8">
         <Checkbox
           label="Fakturaadress samma som leveransadress"
           name="same_as_billing"
@@ -185,7 +214,7 @@ const ShippingAddress = ({
           data-testid="billing-address-checkbox"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 small:grid-cols-2 gap-3 small:gap-4 mb-4">
         <Input
           label="E-post"
           name="email"
@@ -198,9 +227,10 @@ const ShippingAddress = ({
           data-testid="shipping-email-input"
         />
         <Input
-          label="Telefon"
+          label="Mobilnummer"
           name="shipping_address.phone"
           autoComplete="tel"
+          type="tel"
           value={formData["shipping_address.phone"]}
           onChange={handleChange}
           data-testid="shipping-phone-input"
