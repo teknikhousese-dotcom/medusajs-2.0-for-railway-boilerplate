@@ -76,8 +76,8 @@ const paymentOf = (o: any): string => {
     for (const pc of (o?.payment_collections || [])) {
       for (const pm of (pc?.payments || [])) {
         const id = (pm?.provider_id || "").toLowerCase()
-        if (id.includes("klarna")) return "Klarna"
-        if (id.includes("swish")) return "Swish"
+        if (id.includes("klarna") || id.includes("kustom")) return "KLARNA"
+        if (id.includes("swish")) return "SWISH"
         if (id.includes("stripe") || id.includes("card")) return "Kort"
         if (id.includes("paypal")) return "PayPal"
         if (id.includes("payson")) return "Payson"
@@ -85,6 +85,27 @@ const paymentOf = (o: any): string => {
     }
   } catch { /* ignore */ }
   return ""
+}
+/* Färg på order-ID i listan (som Wiki order_list.php):
+   Wiki-ordrar: aktiverad/betald = svart, wiki_id_color blue / ej aktiverad Klarna = blått (måste behandlas),
+   wiki_id_color red = rött (ej slutfört köp / avbruten).
+   Nya ordrar: Klarna (Kustom) aktiverad eller Swish betald = svart, Klarna godkänd men ej aktiverad = blått,
+   avbruten eller ej betald = rött. */
+const ID_BLACK = "#333", ID_BLUE = "#0000ff", ID_RED = "#cc0000"
+const idColorOf = (o: any): string => {
+  const m = o?.metadata || {}
+  if (m.kustom_captured === true) return ID_BLACK
+  if (m.kustom_cancelled === true) return ID_RED
+  if (m.wiki_order_id) {
+    if (m.wiki_activated === true) return ID_BLACK
+    if (m.wiki_id_color === "blue" || m.wiki_activated === false) return ID_BLUE
+    if (m.wiki_id_color === "red") return ID_RED
+    return ID_BLACK
+  }
+  const ps = String(o?.payment_status || "")
+  if (["captured", "partially_captured", "paid", "completed", "refunded", "partially_refunded"].includes(ps)) return ID_BLACK
+  if (ps === "authorized" || ps === "partially_authorized") return /SWISH/i.test(paymentOf(o)) ? ID_BLACK : ID_BLUE
+  return ID_RED
 }
 
 
@@ -313,7 +334,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
             const paid = o.payment_status === "captured" || o.payment_status === "paid"
             const fulfilled = ["fulfilled", "shipped", "delivered", "partially_fulfilled", "partially_shipped", "partially_delivered"].includes(o.fulfillment_status)
             // Wiki: rött ID = ej slutfört köp (ej betalt); blått ID = måste behandlas (betalt, ej hanterat); annars svart
-            const idColor = o.metadata?.kustom_cancelled ? "#999" : ((o.metadata?.kustom_captured || o.metadata?.wiki_activated === true) ? "#333" : ((o.payment_status === "authorized" || o.payment_status === "partially_authorized" || o.metadata?.wiki_activated === false) ? "#0000ff" : ((o.payment_status === "captured" || o.payment_status === "partially_captured" || o.payment_status === "paid" || o.payment_status === "refunded" || o.payment_status === "partially_refunded" || o.metadata?.wiki_order_id) ? "#333" : "#cc0000")))
+            const idColor = idColorOf(o)
             const unread = o.metadata?.read !== true               // Olästa ordrar i fet stil
             const isMak = flikOf(o) === "makulerade"                // Makulerade ordrar med grå bakgrund
             const baseBg = isMak ? "#e6e6e6" : "#ffffff"
@@ -416,15 +437,24 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
     let alive = true
     ;(async () => {
       try {
-        const f = "*items,*shipping_address,*billing_address,*shipping_methods,payment_collections.payments.provider_id,+metadata,+display_id,+email,+currency_code,+total,+item_total,+item_subtotal,+shipping_total,+tax_total,+payment_status,+created_at"
+        const f = "*items,*shipping_address,*billing_address,*shipping_methods,payment_collections.payments.provider_id,payment_collections.payments.data,+metadata,+display_id,+email,+currency_code,+total,+item_total,+item_subtotal,+shipping_total,+tax_total,+payment_status,+created_at"
         const r = await fetch(`/admin/orders/${id}?fields=${f}`, { credentials: "include" })
         const d = await r.json()
         if (!alive) return
         setO(d.order); setLoading(false); fetch("/admin/kustom-order?order_id=" + id, { credentials: "include" }).then((kr) => kr.json()).then((kj) => { if (alive) setKlarna(kj) }).catch(() => {})
         const m = d.order?.metadata || {}
         setNote(m.internal_comment || ""); setFlik(m.orderflik || "nya"); setStat(m.counts_in_stats !== false)
-        if (m.read !== true) { // markera som läst (Olästa = fet stil i listan)
-          try { fetch(`/admin/orders/${id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: Object.assign({}, m, { read: true }) }) }) } catch { /* ignore */ }
+        /* Markera som läst (olästa = fet stil i listan). Nya ordrar utan betalsätt/Klarna-id i metadata får det här från betalningen. */
+        const pay0: any = ((d.order?.payment_collections || [])[0]?.payments || [])[0] || {}
+        const pid0 = String(pay0.provider_id || "").toLowerCase()
+        const fix: any = {}
+        if (!m.payment_method && !m.wiki_order_id) { if (/kustom|klarna/.test(pid0)) fix.payment_method = "KLARNA"; else if (/swish/.test(pid0)) fix.payment_method = "SWISH" }
+        if (!m.kustom_order_id && !m.wiki_order_id && /kustom/.test(pid0) && pay0.data && pay0.data.kustom_order_id) fix.kustom_order_id = String(pay0.data.kustom_order_id)
+        if (m.read !== true || Object.keys(fix).length) {
+          const nm = Object.assign({}, m, fix, { read: true })
+          fetch(`/admin/orders/${id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: nm }) })
+            .then(() => { if (fix.kustom_order_id) return fetch("/admin/kustom-order?order_id=" + id, { credentials: "include" }).then((kr) => kr.json()).then((kj) => { if (alive) setKlarna(kj) }) })
+            .catch(() => { /* ignore */ })
         }
         /* prev/next i samma ordning som orderlistan (ordertid, nyast först) */
         const nr = await fetch(`/admin/order-fliks?nav=${encodeURIComponent(id)}`, { credentials: "include" })
@@ -449,7 +479,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   const isKlarna = /klarna/i.test(betalsatt || "")
   const paidLike = paid || m.kustom_captured === true || (!!m.wiki_order_id && m.wiki_activated === true)
   const klarnaExpired = !!(klarna && klarna.wiki && klarna.status === "EXPIRED")
-  const klarnaPending = isKlarna && !paidLike && !klarnaExpired && m.kustom_cancelled !== true && (m.wiki_activated === false || !!(klarna && klarna.kustom && !klarna.captured && !klarna.cancelled))
+  const klarnaPending = isKlarna && !paidLike && !klarnaExpired && m.kustom_cancelled !== true && (m.wiki_activated === false || !!(klarna && klarna.kustom && !klarna.captured && !klarna.cancelled) || (!m.wiki_order_id && (o.payment_status === "authorized" || o.payment_status === "partially_authorized")))
   /* Wiki: rött ID = ej slutfört köp. För Klarna visar Wiki "Transaktionen har avbrutits." */
   const wikiRed = !!m.wiki_order_id && m.wiki_id_color === "red" && !paidLike && !klarnaPending
   const otherText = klarnaExpired ? "Klarna-reservationen har gått ut – ej aktiverad" : (m.kustom_cancelled === true || (wikiRed && isKlarna) ? "Transaktionen har avbrutits" : (wikiRed ? "Ej slutfört köp" : payText(o.payment_status)))
