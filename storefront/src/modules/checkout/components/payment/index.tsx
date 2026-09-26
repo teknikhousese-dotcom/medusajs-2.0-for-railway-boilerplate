@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useContext, useEffect, useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { RadioGroup } from "@headlessui/react"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
@@ -20,6 +20,7 @@ import {
 import { StripeContext } from "@modules/checkout/components/payment-wrapper"
 import { initiatePaymentSession } from "@lib/data/cart"
 import KustomPaymentButton from "@modules/checkout/components/payment-button/KustomPaymentButton"
+import { checkoutHref, readSteg } from "@lib/util/checkout-step"
 
 const Payment = ({
   cart,
@@ -42,9 +43,8 @@ const Payment = ({
 
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "payment"
+  const isOpen = readSteg(searchParams) === "betalning"
 
   const isStripe = isStripeFunc(activeSession?.provider_id)
   const stripeReady = useContext(StripeContext)
@@ -72,18 +72,8 @@ const Payment = ({
     }
   }, [])
 
-  const createQueryString = useCallback(
-    (name: string, value: string) => {
-      const params = new URLSearchParams(searchParams)
-      params.set(name, value)
-
-      return params.toString()
-    },
-    [searchParams]
-  )
-
   const handleEdit = () => {
-    router.push(pathname + "?" + createQueryString("step", "payment"), {
+    router.push(checkoutHref("betalning"), {
       scroll: false,
     })
   }
@@ -133,9 +123,7 @@ const Payment = ({
         /* Step 3 (Leveransadress) unless the details are already filled in. */
         const detailsFilled = !!(cart?.shipping_address?.address_1 && cart?.email)
         return router.push(
-          pathname +
-            "?" +
-            createQueryString("step", detailsFilled ? "review" : "address"),
+          checkoutHref(detailsFilled ? "granska" : "adress"),
           {
             scroll: false,
           }
