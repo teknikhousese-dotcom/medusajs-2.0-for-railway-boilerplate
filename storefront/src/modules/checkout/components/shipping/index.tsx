@@ -201,15 +201,13 @@ const Shipping: React.FC<ShippingProps> = ({
             }
           )}
         >
-          Leverans
+          1. Leverans
           {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
             <CheckCircleSolid />
           )}
         </Heading>
         {!isOpen &&
-          cart?.shipping_address &&
-          cart?.billing_address &&
-          cart?.email && (
+          (cart.shipping_methods?.length ?? 0) > 0 && (
             <Text>
               <button
                 onClick={handleEdit}
