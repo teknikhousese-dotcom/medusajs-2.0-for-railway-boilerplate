@@ -11,9 +11,15 @@ import { StripeCardElementOptions } from "@stripe/stripe-js"
 
 import Divider from "@modules/common/components/divider"
 import PaymentContainer from "@modules/checkout/components/payment-container"
-import { isStripe as isStripeFunc, paymentInfoMap } from "@lib/constants"
+import {
+  isStripe as isStripeFunc,
+  isKustom as isKustomFunc,
+  isSwish as isSwishFunc,
+  paymentInfoMap,
+} from "@lib/constants"
 import { StripeContext } from "@modules/checkout/components/payment-wrapper"
 import { initiatePaymentSession } from "@lib/data/cart"
+import KustomPaymentButton from "@modules/checkout/components/payment-button/KustomPaymentButton"
 
 const Payment = ({
   cart,
@@ -89,7 +95,12 @@ const Payment = ({
     setError(null)
     setSelectedPaymentMethod(value)
 
-    if (isStripeFunc(value)) {
+    /*
+     * Stripe: card input first. Klarna (Kustom): KustomPaymentButton below
+     * creates the KCO order + session itself. Swish: the session (a Swish
+     * request) is created on "Fortsätt", not on every radio click.
+     */
+    if (isStripeFunc(value) || isKustomFunc(value) || isSwishFunc(value)) {
       return
     }
 
@@ -119,8 +130,12 @@ const Payment = ({
       }
 
       if (!shouldInputCard) {
+        /* Step 3 (Leveransadress) unless the details are already filled in. */
+        const detailsFilled = !!(cart?.shipping_address?.address_1 && cart?.email)
         return router.push(
-          pathname + "?" + createQueryString("step", "review"),
+          pathname +
+            "?" +
+            createQueryString("step", detailsFilled ? "review" : "address"),
           {
             scroll: false,
           }
@@ -150,7 +165,7 @@ const Payment = ({
             }
           )}
         >
-          Betalning
+          2. Betalning
           {!isOpen && paymentReady && <CheckCircleSolid />}
         </Heading>
         {!isOpen && paymentReady && (
@@ -233,21 +248,34 @@ const Payment = ({
             data-testid="payment-method-error-message"
           />
 
-          <Button
-            size="large"
-            className="mt-6"
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            disabled={
-              (isStripe && !cardComplete) ||
-              (!selectedPaymentMethod && !paidByGiftcard)
-            }
-            data-testid="submit-payment-button"
-          >
-            {!activeSession && isStripeFunc(selectedPaymentMethod)
-              ? " Ange kortuppgifter"
-              : "Fortsätt till granskning"}
-          </Button>
+          {isOpen && isKustomFunc(selectedPaymentMethod) ? (
+            <div className="mt-4" data-testid="kustom-checkout-container">
+              <Text className="txt-medium text-ui-fg-subtle mb-3">
+                Fyll i dina uppgifter och slutför köpet i Klarnas kassa nedan.
+              </Text>
+              <KustomPaymentButton
+                cart={cart}
+                notReady={!(cart?.shipping_methods?.length > 0)}
+                data-testid="kustom-checkout"
+              />
+            </div>
+          ) : (
+            <Button
+              size="large"
+              className="mt-6"
+              onClick={handleSubmit}
+              isLoading={isLoading}
+              disabled={
+                (isStripe && !cardComplete) ||
+                (!selectedPaymentMethod && !paidByGiftcard)
+              }
+              data-testid="submit-payment-button"
+            >
+              {!activeSession && isStripeFunc(selectedPaymentMethod)
+                ? " Ange kortuppgifter"
+                : "Fortsätt till leveransadress"}
+            </Button>
+          )}
         </div>
 
         <div className={isOpen ? "hidden" : "block"}>
