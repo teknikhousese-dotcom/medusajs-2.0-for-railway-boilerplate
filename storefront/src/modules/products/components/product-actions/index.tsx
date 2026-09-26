@@ -12,6 +12,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
+import BevakaProdukt from "@modules/products/components/product-actions/bevaka-produkt"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -251,6 +252,9 @@ export default function ProductActions({
             </svg>
           </button>
         </div>
+        {!inStock && (!!selectedVariant || metaOutOfStock(product)) && (
+          <BevakaProdukt productId={product.id} variantId={selectedVariant?.id} />
+        )}
         <div className="klarnacta">Köp nu, betala senare med Klarna · Fri frakt över 999 kr</div>
 
         <div className="trust">
