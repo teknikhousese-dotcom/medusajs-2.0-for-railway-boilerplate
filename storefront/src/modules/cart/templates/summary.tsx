@@ -7,6 +7,7 @@ import Divider from "@modules/common/components/divider"
 import DiscountCode from "@modules/checkout/components/discount-code"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
+import { CheckoutSteg, checkoutHref } from "@lib/util/checkout-step"
 
 type SummaryProps = {
   cart: HttpTypes.StoreCart & {
@@ -15,8 +16,8 @@ type SummaryProps = {
 }
 
 /* The checkout always starts at 1 Leverans, then 2 Betalning. */
-function getCheckoutStep(cart: HttpTypes.StoreCart) {
-  return cart?.shipping_methods?.length ? "payment" : "delivery"
+function getCheckoutStep(cart: HttpTypes.StoreCart): CheckoutSteg {
+  return cart?.shipping_methods?.length ? "betalning" : "leverans"
 }
 
 const Summary = ({ cart }: SummaryProps) => {
@@ -34,7 +35,7 @@ const Summary = ({ cart }: SummaryProps) => {
       <Divider />
       <CartTotals totals={cart} />
       <LocalizedClientLink
-        href={"/checkout?step=" + step}
+        href={checkoutHref(step)}
         data-testid="checkout-button"
       >
         <span className="flex w-full h-12 items-center justify-center rounded-full bg-[#F50000] hover:bg-[#C90000] text-white text-[16px] font-semibold shadow-[0_6px_16px_-6px_rgba(245,0,0,0.55)] transition-colors">
