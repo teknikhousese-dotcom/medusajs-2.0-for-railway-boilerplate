@@ -38,7 +38,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     if (lev === "__none__") where.push(`COALESCE(trim(p.metadata->>'leverantor'), '') = ''`)
     else if (lev) { where.push(`trim(p.metadata->>'leverantor') = ?`); b.push(lev) }
     let order = `p.title ASC, p.id ASC`
-    if (urval === "kampanj") where.push(`(p.metadata->>'kampanj') = 'true'`)
+    if (urval === "kampanj") {
+      // Aktiva kampanjer: kampanj ikryssad och dagens datum inom start/slut (tomt = obegränsat).
+      where.push(`(p.metadata->>'kampanj') = 'true' AND COALESCE(NULLIF(p.metadata->>'kampanj_start', ''), '0000-00-00') <= to_char(now(), 'YYYY-MM-DD') AND COALESCE(NULLIF(p.metadata->>'kampanj_slut', ''), '9999-99-99') >= to_char(now(), 'YYYY-MM-DD')`)
+    }
     else if (urval === "dolda") where.push(`(p.status <> 'published' OR COALESCE(p.metadata->>'visning', 'show') IN ('hide_shop', 'hide_full'))`)
     else if (urval === "nya") {
       where.push(`p.id IN (SELECT n.id FROM product n WHERE n.deleted_at IS NULL ORDER BY CASE WHEN (n.metadata->>'wiki_id') ~ '^[0-9]+$' THEN (n.metadata->>'wiki_id')::int ELSE 2147483647 END DESC, n.created_at DESC LIMIT 200)`)
