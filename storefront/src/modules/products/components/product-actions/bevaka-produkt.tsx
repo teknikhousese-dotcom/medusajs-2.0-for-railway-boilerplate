@@ -9,19 +9,20 @@ const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
 const PUBKEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
 
 const CSS = `
-.bevaka{margin-top:14px;border:1px solid #f1c9c9;background:#fff7f7;border-radius:8px;padding:14px 16px}
+.bevaka{margin-top:4px;border:1px solid #f1c9c9;background:#fff7f7;border-radius:16px;padding:14px 16px}
 .bevaka .oos{display:flex;align-items:center;gap:8px;color:#c0392b;font-weight:700;font-size:15px}
 .bevaka .oos svg{width:18px;height:18px;stroke:#c0392b;stroke-width:2.5;fill:none}
 .bevaka .h{display:block;margin-top:10px;font-size:14px;color:#222}
 .bevaka .t{margin:4px 0 10px;font-size:13px;color:#444;line-height:1.45}
 .bevaka form{display:flex;gap:8px;flex-wrap:wrap}
-.bevaka input[type=email]{flex:1 1 200px;min-width:0;border:1px solid #ccc;border-radius:6px;padding:9px 11px;font-size:14px}
-.bevaka button{border:0;border-radius:6px;background:#222;color:#fff;font-weight:700;padding:9px 18px;font-size:14px;cursor:pointer}
+.bevaka input[type=email]{flex:1 1 180px;min-width:0;border:1.5px solid #e6e0da;border-radius:12px;padding:0 12px;height:46px;font-size:16px;background:#fff}
+.bevaka button{flex:0 0 auto;border:0;border-radius:12px;background:#1b1714;color:#fff;font-weight:600;padding:0 20px;height:46px;font-size:15px;cursor:pointer}
 .bevaka button[disabled]{opacity:.6;cursor:default}
-.bevaka .st{margin-top:10px;font-size:13px;border-radius:6px;padding:8px 10px}
+.bevaka .st{margin-top:10px;font-size:13px;border-radius:10px;padding:8px 10px}
 .bevaka .ok{background:#e8f6ea;color:#1d6b2c}
 .bevaka .warn{background:#fff4dc;color:#7a5600}
 .bevaka .err{background:#fde8e8;color:#a61b1b}
+@media(max-width:420px){.bevaka button{flex:1 1 100%}}
 .bevaka .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 `
 
