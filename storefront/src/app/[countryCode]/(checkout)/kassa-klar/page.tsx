@@ -45,7 +45,7 @@ export default function KustomConfirmationPage() {
     <div
       style={{
         maxWidth: 640,
-        margin: "80px auto",
+        margin: "56px auto 80px",
         textAlign: "center",
         padding: "0 20px",
       }}
@@ -62,11 +62,16 @@ export default function KustomConfirmationPage() {
         </>
       ) : (
         <>
+          <div
+            aria-hidden="true"
+            className="mx-auto mb-5 h-10 w-10 rounded-full border-4 border-[#FFE0E0] border-t-[#F50000] animate-spin"
+          />
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "#14161C" }}>
-            Slutför din order…
+            Vi slutför din order
           </h1>
           <p style={{ color: "#6B7280", marginTop: 8, lineHeight: 1.5 }}>
-            Ett ögonblick, vi bekräftar din betalning och skapar din order.
+            Ett ögonblick, vi bekräftar betalningen och skapar din order.
+            Stäng inte sidan.
           </p>
         </>
       )}
