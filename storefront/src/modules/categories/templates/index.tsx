@@ -134,7 +134,7 @@ export default async function CategoryTemplate({
   return (
     <div className="content-container py-6" data-testid="category-container">
       <div className="flex flex-col small:flex-row small:items-start gap-x-8">
-        {/* Left sidebar — PRODUKTER category tree */}
+        {/* Left sidebar: PRODUKTER category tree (desktop) */}
         <aside className="hidden small:block small:w-[248px] small:flex-none">
           <div style={{ border: "1px solid #efeae5", borderRadius: "12px", overflow: "hidden" }}>
             <div style={{ background: "#faf8f6", padding: "12px 16px", fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "12.5px", letterSpacing: ".05em", textTransform: "uppercase", color: "#6f685f", borderBottom: "1px solid #efeae5" }}>
@@ -176,8 +176,9 @@ export default async function CategoryTemplate({
         </aside>
 
         {/* Main content */}
-        <div className="w-full">
-          <nav aria-label="Brödsmulor" style={{ fontSize: "12.5px", color: "#6f685f", marginBottom: "10px" }}>
+        <div className="w-full min-w-0">
+          <nav aria-label="Brödsmulor" className="thcbc" style={{ fontSize: "12.5px", color: "#6f685f", marginBottom: "10px" }}>
+            <style>{`.thcbc{white-space:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.thcbc::-webkit-scrollbar{display:none}@media(min-width:1024px){.thcbc{white-space:normal;overflow:visible}}`}</style>
             <LocalizedClientLink href="/" style={{ color: "#6f685f" }}>Hem</LocalizedClientLink>
             {chain.map((c, i) => (
               <span key={c.id}>
@@ -193,19 +194,51 @@ export default async function CategoryTemplate({
             ))}
           </nav>
 
-          <h1 style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "27px", color: "#1b1714", margin: "0 0 14px" }} data-testid="category-page-title">
+          <h1 className="break-words" style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "clamp(22px, 6vw, 27px)", lineHeight: 1.25, color: "#1b1714", margin: "0 0 12px" }} data-testid="category-page-title">
             {displayName(self, byId)}
           </h1>
 
           {firstPara ? <ReadMore html={firstPara} /> : null}
 
+          {/* Phones and tablets: the category tree as a compact drawer */}
+          <details className="thmcat small:hidden" style={{ marginTop: "14px", border: "1px solid #efeae5", borderRadius: "12px", background: "#fff" }}>
+            <style>{`.thmcat>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;font-family:"Poppins",ui-rounded,system-ui,sans-serif;font-weight:600;font-size:14px;color:#1b1714}.thmcat>summary::-webkit-details-marker{display:none}.thmcat>summary svg{transition:transform .18s ease;color:#a49c92;flex:0 0 auto}.thmcat[open]>summary svg{transform:rotate(180deg)}.thmcat a{display:block;padding:10px 14px;font-size:14px;color:#4a4640;border-top:1px solid #f4f0ec}.thmcat a.on{color:#F50000;font-weight:600}.thmcat a.sub{padding-left:28px;font-size:13.5px;color:#6f685f}.thmcat a.sub.on{color:#F50000}`}</style>
+            <summary>
+              <span>Alla kategorier</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+            </summary>
+            <div style={{ maxHeight: "60vh", overflowY: "auto", paddingBottom: "4px" }}>
+              {departments.map((d) => {
+                const active = !!dept && d.id === dept.id
+                return (
+                  <div key={d.id}>
+                    <LocalizedClientLink href={pathOf(d, byId)} className={active ? "on" : undefined}>
+                      {d.name}
+                    </LocalizedClientLink>
+                    {active &&
+                      kids(d.id).map((c) => (
+                        <LocalizedClientLink
+                          key={c.id}
+                          href={pathOf(c, byId)}
+                          className={"sub" + (chain.some((x) => x.id === c.id) ? " on" : "")}
+                        >
+                          {displayName(c, byId)}
+                        </LocalizedClientLink>
+                      ))}
+                  </div>
+                )
+              })}
+            </div>
+          </details>
+
           {hasChildren ? (
-            <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-4" data-testid="subcategories">
+            <ul className="mt-4 grid grid-cols-2 min-[600px]:grid-cols-3 medium:grid-cols-4 large:grid-cols-5 gap-3 small:gap-4" data-testid="subcategories">
               {children.map((c) => (
                 <li key={c.id}>
                   <LocalizedClientLink
                     href={pathOf(c, byId)}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: "118px", padding: "18px 12px", border: "1px solid #efeae5", borderRadius: "14px", background: "#fff", gap: "10px" }}
+                    className="h-full transition-colors hover:border-[#d9d2ca]"
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: "112px", padding: "16px 10px", border: "1px solid #efeae5", borderRadius: "14px", background: "#fff", gap: "10px" }}
                   >
                     {tileImg(c, byId) ? (
                       <img
@@ -218,7 +251,7 @@ export default async function CategoryTemplate({
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 18h2" /></svg>
                       </span>
                     )}
-                    <span style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "14px", color: "#1b1714" }}>
+                    <span style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "14px", lineHeight: 1.3, color: "#1b1714", overflowWrap: "anywhere" }}>
                       {displayName(c, byId)}
                     </span>
                   </LocalizedClientLink>
@@ -227,7 +260,7 @@ export default async function CategoryTemplate({
             </ul>
           ) : (
             <>
-              <div className="mb-4">
+              <div className="mt-4">
                 <RefinementList sortBy={sort} data-testid="sort-by-container" />
               </div>
               <Suspense key={`${sort}-${pageNumber}`} fallback={<SkeletonProductGrid />}>
