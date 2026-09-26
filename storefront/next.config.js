@@ -45,8 +45,8 @@ const nextConfig = {
     return [
       { source: "/retur", destination: "/return", permanent: true },
       { source: "/retur/:path*", destination: "/return/:path*", permanent: true },
-      { source: "/kampanjer", destination: "/campaigns", permanent: true },
-      { source: "/kampanjer/:path*", destination: "/campaigns/:path*", permanent: true },
+      { source: "/kampanjer", destination: "/campaigns", statusCode: 301 },
+      { source: "/kampanjer/:path*", destination: "/campaigns/:path*", statusCode: 301 },
       { source: "/nyheter", destination: "/news", permanent: true },
       { source: "/nyheter/:path*", destination: "/news/:path*", permanent: true },
       { source: "/customer-login", destination: "/account", permanent: true },
