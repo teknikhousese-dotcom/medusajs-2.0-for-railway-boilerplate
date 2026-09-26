@@ -1,6 +1,5 @@
 import React from "react"
 
-import UnderlineLink from "@modules/common/components/interactive-link"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 import AccountNav from "../components/account-nav"
@@ -30,9 +29,13 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({
             </span>
           </div>
           <div>
-            <UnderlineLink href="/contact">
-              Kundtjänst
-            </UnderlineLink>
+            <LocalizedClientLink
+              href="/contact"
+              className="hover:border-[#F50000] hover:text-[#F50000] transition-colors"
+              style={{ display: "inline-flex", alignItems: "center", minHeight: "44px", padding: "0 18px", border: "1px solid #d9d2ca", borderRadius: "12px", fontWeight: 600, fontSize: "14.5px", color: "#1b1714" }}
+            >
+              Kontakta kundtjänst
+            </LocalizedClientLink>
           </div>
         </div>
       </div>
