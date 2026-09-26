@@ -24,13 +24,21 @@ export default async function CheckoutForm({
     return null
   }
 
+  /*
+   * Order: 1 Leverans -> 2 Betalning -> 3 Dina uppgifter (only for Swish and
+   * other non-Klarna methods) -> Slutför köp. With Klarna (Kustom Checkout)
+   * the KCO iframe is shown inside step 2 and Klarna collects email, phone
+   * and address, so steps 3/4 are hidden.
+   */
+  const activeProvider: string =
+    cart.payment_collection?.payment_sessions?.find(
+      (s: any) => s.status === "pending"
+    )?.provider_id ?? ""
+  const klarnaChosen = activeProvider.startsWith("pp_kustom")
+
   return (
     <div>
       <div className="w-full grid grid-cols-1 gap-y-8">
-        <div>
-          <Addresses cart={cart} customer={customer} />
-        </div>
-
         <div>
           <Shipping cart={cart} availableShippingMethods={shippingMethods} />
         </div>
@@ -39,9 +47,17 @@ export default async function CheckoutForm({
           <Payment cart={cart} availablePaymentMethods={paymentMethods} />
         </div>
 
-        <div>
-          <Review cart={cart} />
-        </div>
+        {!klarnaChosen && (
+          <div>
+            <Addresses cart={cart} customer={customer} />
+          </div>
+        )}
+
+        {!klarnaChosen && (
+          <div>
+            <Review cart={cart} />
+          </div>
+        )}
       </div>
     </div>
   )
