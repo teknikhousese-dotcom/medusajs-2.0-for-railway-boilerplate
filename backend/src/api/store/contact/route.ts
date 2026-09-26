@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { getPg, q } from "../../admin/newsletter/db"
+import { SHOP_EMAIL, brandedHtml, esc, nl2br, h1, para, label, kvTable, htmlToText, sendShopMail } from "../../../modules/email-notifications/shop-mail"
 
 // Public contact + retail-application intake — matches teknikhouse /contact/ and /retail-application/.
 // Persists every submission to "contact_message" and best-effort emails info@teknikhouse.se via Resend.
@@ -7,9 +8,6 @@ export const AUTHENTICATE = false
 
 function genId() {
   return "msg_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10)
-}
-function esc(s: any) {
-  return String(s ?? "").replace(/[<>&]/g, (c) => (({ "<": "&lt;", ">": "&gt;", "&": "&amp;" } as any)[c]))
 }
 
 async function ensureTable(pg: any) {
@@ -20,19 +18,6 @@ async function ensureTable(pg: any) {
     "subject" text NULL, "message" text NULL, "payload" jsonb NULL,
     "created_at" timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT "contact_message_pkey" PRIMARY KEY ("id"))`)
-}
-
-async function sendMail(subject: string, html: string, replyTo?: string | null) {
-  const key = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM_EMAIL
-  if (!key || !from) return
-  try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: "info@teknikhouse.se", subject, html, reply_to: replyTo || undefined }),
-    })
-  } catch {}
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -57,17 +42,43 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       )
     }
   } catch (e) {}
-  const rows = Object.entries(b)
-    .map(
-      ([k, v]) =>
-        `<tr><td style="padding:4px 10px;border:1px solid #eee"><b>${esc(k)}</b></td><td style="padding:4px 10px;border:1px solid #eee">${esc(v)}</td></tr>`
-    )
-    .join("")
-  const title = kind === "retail" ? "Ny företagsansökan (retail-application)" : "Nytt kontaktmeddelande"
-  await sendMail(
-    `${title} – ${name || email || ""}`,
-    `<h2>${esc(title)}</h2><table style="border-collapse:collapse;font-family:sans-serif;font-size:14px">${rows}</table>`,
-    email
-  )
+  /* Readable mail to the shop: Swedish labels, known fields first, reply-to = customer. */
+  try {
+    const LABELS: Record<string, string> = {
+      name: "Namn", email: "E-post", phone: "Telefon", orderNo: "Ordernummer", order: "Ordernummer",
+      company: "Företag", orgnr: "Org.nr", subject: "Ämne", message: "Meddelande",
+    }
+    const SKIP = new Set(["kind", "message"])
+    const known = ["name", "email", "phone", "orderNo", "order", "company", "orgnr", "subject"]
+    const extra = Object.keys(b).filter((k) => !known.includes(k) && !SKIP.has(k))
+    const fmt = (k: string, v: any) => {
+      const t = typeof v === "object" ? JSON.stringify(v) : String(v ?? "")
+      if (!t.trim()) return ""
+      if (k === "email") return `<a href="mailto:${esc(t)}" style="color:#F50000;text-decoration:none">${esc(t)}</a>`
+      if (k === "phone") return `<a href="tel:${esc(t.replace(/\s+/g, ""))}" style="color:#14161C;text-decoration:none">${esc(t)}</a>`
+      return esc(t)
+    }
+    const rows: Array<[string, string]> = [...known, ...extra].map((k) => [LABELS[k] || k, fmt(k, (b as any)[k])] as [string, string])
+    const isRetail = kind === "retail"
+    const who = name || (b.company ? String(b.company) : "") || email || "okänd avsändare"
+    const mailSubject = isRetail
+      ? `Företagsansökan från webbshopen, ${who}`
+      : `Kontaktmail från webbshopen, ${who}${subject ? ": " + subject : ""}`
+    const inner =
+      h1(isRetail ? "Ny företagsansökan" : "Nytt meddelande från kontaktformuläret") +
+      kvTable(rows) +
+      label("Meddelande") +
+      `<div style="font-size:14px;line-height:1.7;background:#F7F7FA;border-radius:8px;padding:14px 16px;white-space:normal">${message ? nl2br(message) : "(inget meddelande)"}</div>` +
+      para(`<span style="color:#8A8F9A;font-size:12px">Skickat ${esc(new Date().toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" }))} via teknikhouse.se. Svara direkt på det här mejlet så går svaret till kunden.</span>`)
+    await sendShopMail({
+      to: SHOP_EMAIL,
+      subject: mailSubject.slice(0, 180),
+      html: brandedHtml(inner, message ? message.slice(0, 120) : ""),
+      text: htmlToText(inner),
+      replyTo: email && /@/.test(email) ? email : SHOP_EMAIL,
+    })
+  } catch (e: any) {
+    console.error("[contact] mail failed", e && e.message)
+  }
   return res.json({ ok: true })
 }
