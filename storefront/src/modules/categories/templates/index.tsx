@@ -9,6 +9,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { HttpTypes } from "@medusajs/types"
 import { listCategories, listCategoryMetadata } from "@lib/data/categories"
 import { niceCategoryName } from "@lib/util/category-name"
+import { hideFromMenu, isHiddenInMenu } from "@lib/util/menu-categories"
 import ReadMore from "@modules/categories/components/read-more"
 
 type Cat = HttpTypes.StoreProductCategory
@@ -50,6 +51,23 @@ const displayName = (cat: Cat, byId: Record<string, Cat>) => {
   const raw = parent && cat.name === parent.name ? pretty(slug) : cat.name
   return niceCategoryName(raw, slug)
 }
+
+// Category texts imported from the old shop can carry their own JSON-LD. The
+// category page already outputs one BreadcrumbList, so drop any BreadcrumbList
+// block from the texts. Other blocks (FAQPage and so on) are kept as they are.
+const stripBreadcrumbLd = (html: string): string =>
+  html.replace(
+    /<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi,
+    (tag: string, body: string) => {
+      try {
+        const data = JSON.parse(body)
+        if (data && data["@type"] === "BreadcrumbList") return ""
+      } catch {
+        return tag
+      }
+      return tag
+    }
+  )
 
 // Brand logos (teknikhouse /images/category), keyed by leaf slug. Used until a
 // category's own metadata.category_image (migrated to R2) is set.
@@ -132,16 +150,44 @@ export default async function CategoryTemplate({
     return (m ? { ...c, metadata: m } : c) as Cat
   })
   const hasChildren = children.length > 0
-  const departments = kids(null)
+  // Left tree: leave out categories hidden from the menus (metadata.hide_in_menu).
+  // Their own pages, breadcrumbs and links keep working as before.
+  const menuIds = new Set(hideFromMenu(all).map((c) => c.id))
+  const departments = kids(null).filter((c) => menuIds.has(c.id))
+  const treeKidsAll = dept ? kids(dept.id) : []
+  const treeKidsMeta = treeKidsAll.length
+    ? await listCategoryMetadata(treeKidsAll.map((c) => c.id), ["hide_in_menu"])
+    : new Map<string, Record<string, unknown>>()
+  const treeKids = treeKidsAll.filter(
+    (c) =>
+      menuIds.has(c.id) &&
+      !isHiddenInMenu({ id: c.id, metadata: treeKidsMeta.get(c.id) || null })
+  )
 
   const rawDesc = (((category as any).description || (self as any).description || "")) as string
   const nedre = (((category as any).metadata || {}).description2 || "") as string
-  const firstPara = rawDesc
-  const restDesc = nedre
+  const firstPara = stripBreadcrumbLd(rawDesc)
+  const restDesc = stripBreadcrumbLd(nedre)
   const hasRest = restDesc.replace(/<[^>]+>/g, "").trim().length > 0
 
   return (
     <div className="content-container py-6" data-testid="category-container">
+      <nav aria-label="Brödsmulor" className="thcbc" style={{ fontSize: "12.5px", color: "#6f685f", marginBottom: "10px" }}>
+        <style>{`.thcbc{white-space:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.thcbc::-webkit-scrollbar{display:none}@media(min-width:1024px){.thcbc{white-space:normal;overflow:visible}}`}</style>
+        <LocalizedClientLink href="/" style={{ color: "#6f685f" }}>Hem</LocalizedClientLink>
+        {chain.map((c, i) => (
+          <span key={c.id}>
+            <span style={{ margin: "0 7px", color: "#a49c92" }}>/</span>
+            {i === chain.length - 1 ? (
+              <span style={{ color: "#1b1714" }}>{displayName(c, byId)}</span>
+            ) : (
+              <LocalizedClientLink href={pathOf(c, byId)} style={{ color: "#6f685f" }}>
+                {displayName(c, byId)}
+              </LocalizedClientLink>
+            )}
+          </span>
+        ))}
+      </nav>
       <div className="flex flex-col small:flex-row small:items-start gap-x-8">
         {/* Left sidebar: PRODUKTER category tree (desktop) */}
         <aside className="hidden small:block small:w-[248px] small:flex-none">
@@ -152,7 +198,7 @@ export default async function CategoryTemplate({
             <nav style={{ padding: "6px 0" }}>
               {departments.map((d) => {
                 const active = !!dept && d.id === dept.id
-                const deptKids = active ? kids(d.id) : []
+                const deptKids = active ? treeKids : []
                 return (
                   <div key={d.id}>
                     <LocalizedClientLink
@@ -188,23 +234,6 @@ export default async function CategoryTemplate({
 
         {/* Main content */}
         <div className="w-full min-w-0">
-          <nav aria-label="Brödsmulor" className="thcbc" style={{ fontSize: "12.5px", color: "#6f685f", marginBottom: "10px" }}>
-            <style>{`.thcbc{white-space:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.thcbc::-webkit-scrollbar{display:none}@media(min-width:1024px){.thcbc{white-space:normal;overflow:visible}}`}</style>
-            <LocalizedClientLink href="/" style={{ color: "#6f685f" }}>Hem</LocalizedClientLink>
-            {chain.map((c, i) => (
-              <span key={c.id}>
-                <span style={{ margin: "0 7px", color: "#a49c92" }}>/</span>
-                {i === chain.length - 1 ? (
-                  <span style={{ color: "#1b1714" }}>{displayName(c, byId)}</span>
-                ) : (
-                  <LocalizedClientLink href={pathOf(c, byId)} style={{ color: "#6f685f" }}>
-                    {displayName(c, byId)}
-                  </LocalizedClientLink>
-                )}
-              </span>
-            ))}
-          </nav>
-
           <h1 className="break-words" style={{ fontFamily: '"Poppins",ui-rounded,system-ui,sans-serif', fontWeight: 600, fontSize: "clamp(22px, 6vw, 27px)", lineHeight: 1.25, color: "#1b1714", margin: "0 0 12px" }} data-testid="category-page-title">
             {displayName(self, byId)}
           </h1>
@@ -227,7 +256,7 @@ export default async function CategoryTemplate({
                       {d.name}
                     </LocalizedClientLink>
                     {active &&
-                      kids(d.id).map((c) => (
+                      treeKids.map((c) => (
                         <LocalizedClientLink
                           key={c.id}
                           href={pathOf(c, byId)}
