@@ -3,6 +3,7 @@
 import { isEqual } from "lodash"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { useWishlist } from "@modules/wishlist"
 
 import { useIntersection } from "@lib/hooks/use-in-view"
 import Divider from "@modules/common/components/divider"
@@ -93,7 +94,8 @@ export default function ProductActions({
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [qty, setQty] = useState(1)
-  const [fav, setFav] = useState(false)
+  const wl = useWishlist()
+  const fav = wl.ready && wl.has(product.id)
   const countryCode = useParams().countryCode as string
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -251,8 +253,17 @@ export default function ProductActions({
           <button
             type="button"
             className={"fav" + (fav ? " on" : "")}
-            aria-label="Spara som favorit"
-            onClick={() => setFav((f) => !f)}
+            aria-label={fav ? "Ta bort från önskelistan" : "Spara i önskelistan"}
+            aria-pressed={fav}
+            onClick={() =>
+              wl.toggle({
+                id: product.id!,
+                handle: product.handle || "",
+                title: product.title || "",
+                thumbnail: product.thumbnail || null,
+                href: window.location.pathname,
+              })
+            }
           >
             <svg viewBox="0 0 24 24">
               <path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5C19 16.5 12 21 12 21z" />
