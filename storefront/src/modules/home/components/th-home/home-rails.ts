@@ -27,8 +27,11 @@ Nyss inkommet: alla importerade produkter har samma skapandedatum, så datumet
 säger inget om vad som är nytt. Raden visar i stället delar till de nyaste
 telefonmodellerna, och inom samma modellår de senast skapade produkterna.
 
-Bara produkter i lager och med pris visas. Allt hämtas med ett fåtal anrop
-som cachas i tio minuter för alla besökare.
+Bara produkter i lager och med pris visas. Allt hämtas med ett fåtal smala
+anrop (bara de fält korten behöver, ingen produkttext) som cachas i tio
+minuter för alla besökare. Hela produkter med beskrivning blir för stora för
+Next data cache (max 2 MB per svar), och då hämtades allt på nytt vid varje
+sidvisning.
 */
 
 type P = HttpTypes.StoreProduct
@@ -37,6 +40,10 @@ type Price = { calc: number; orig: number; sale: boolean }
 const RAIL = 5
 
 const FIELDS =
+  "id,title,handle,thumbnail,created_at,+metadata,*variants.calculated_price,categories.id,categories.handle,categories.parent_category_id"
+
+/* Reserv om det smala anropet skulle avvisas: samma fält som produktlistorna. */
+const FULL_FIELDS =
   "*variants.calculated_price,+categories.handle,+categories.parent_category_id,+categories.id,+metadata"
 
 const RAIL_CACHE = {
@@ -60,15 +67,24 @@ const OUTLET = "outlet-fyndvaror"
 /* Rearaden visar delar till modeller från det här året och framåt först. */
 const RECENT_YEAR = 2019
 
+async function fetchList(query: Record<string, unknown>): Promise<P[]> {
+  const res = await sdk.client.fetch<HttpTypes.StoreProductListResponse>(
+    "/store/products",
+    { method: "GET", query, ...RAIL_CACHE }
+  )
+  return res?.products || []
+}
+
 async function list(query: Record<string, unknown>): Promise<P[]> {
   try {
-    const res = await sdk.client.fetch<HttpTypes.StoreProductListResponse>(
-      "/store/products",
-      { method: "GET", query, ...RAIL_CACHE }
-    )
-    return res?.products || []
+    return await fetchList(query)
   } catch {
-    return []
+    try {
+      const limit = Math.min(Number(query.limit) || 50, 50)
+      return await fetchList({ ...query, fields: FULL_FIELDS, limit })
+    } catch {
+      return []
+    }
   }
 }
 
@@ -204,7 +220,7 @@ async function bestsellerCandidates(regionId: string): Promise<P[]> {
   if (!ids.length) return []
   const products = await list({
     category_id: ids,
-    limit: 200,
+    limit: 150,
     region_id: regionId,
     fields: FIELDS,
   })
@@ -244,7 +260,7 @@ async function outletProducts(regionId: string): Promise<P[]> {
   }
   return list({
     category_id: Array.from(ids).slice(0, 100),
-    limit: 200,
+    limit: 100,
     region_id: regionId,
     fields: FIELDS,
   })
@@ -281,8 +297,8 @@ export const getHomeRails = cache(async function (
 
   const [best, pool, recent, outlet, newest] = await Promise.all([
     bestsellerCandidates(regionId),
-    list({ ...base, limit: 200 }),
-    list({ ...base, limit: 200, order: "-created_at" }),
+    list({ ...base, limit: 100 }),
+    list({ ...base, limit: 100, order: "-created_at" }),
     outletProducts(regionId),
     newestModelProducts(regionId),
   ])
