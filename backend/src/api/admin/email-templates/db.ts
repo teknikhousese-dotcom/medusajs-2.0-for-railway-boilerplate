@@ -114,25 +114,28 @@ const DEFAULTS: Record<string, { subject: string; body_html: string }> = {
     ),
   },
   "Returbekräftelse (kund)": {
-    subject: "Vi har tagit emot din returbegäran – order {{ordernummer}}",
+    subject: "Vi har tagit emot din {{anmalan}} {{referens}}",
     body_html: wrap(
-      h1("Din returbegäran är mottagen") +
+      h1("Tack! Din {{anmalan}} är mottagen") +
       p("Hej {{kundnamn}},") +
-      p("Vi har tagit emot din returbegäran för order <strong>{{ordernummer}}</strong> och behandlar den så snart som möjligt.") +
-      p("<strong>Varor som returneras:</strong><br/>{{orderrader}}") +
-      p("Så snart returen registrerats hos oss återkommer vi med bekräftelse och eventuell återbetalning. Återbetalning sker till samma betalsätt som vid köpet.") +
-      p("Tack för ditt tålamod!")
+      p("Vi har tagit emot din {{anmalan}} för order <strong>{{ordernummer}}</strong>. Ditt referensnummer är <strong>{{referens}}</strong>.") +
+      p("<strong>Anmälda varor:</strong><br/>{{orderrader}}") +
+      p("{{meddelande_block}}") +
+      p("<strong>Så går det till nu</strong><br/>Vi går igenom din anmälan och mejlar dig bekräftelse och returinstruktioner inom 1 till 2 vardagar. Vänta gärna med att skicka tillbaka varan tills du fått instruktionerna, och märk paketet med {{referens}}.") +
+      p("Vid retur återbetalar vi till samma betalsätt som du använde vid köpet, så snart varan kommit tillbaka till oss.") +
+      p("Har du frågor? Svara bara på det här mejlet.") +
+      p("Vänliga hälsningar,<br/>Teknikhouse.se")
     ),
   },
   "Returnotis (butik)": {
-    subject: "Ny retur registrerad – order {{ordernummer}}",
+    subject: "Ny {{typ}} {{referens}}, order {{ordernummer}} ({{kundnamn}})",
     body_html: wrap(
-      h1("Ny retur att hantera") +
-      p("En kund har begärt retur.") +
-      p("<strong>Order:</strong> {{ordernummer}}<br/><strong>Kund:</strong> {{kundnamn}} ({{epost}})") +
+      h1("Ny {{typ}} att hantera") +
+      p("<strong>Referens:</strong> {{referens}}<br/><strong>Order:</strong> {{ordernummer}}<br/><strong>Kund:</strong> {{kundnamn}} ({{epost}})<br/><strong>Inkom:</strong> {{datum}}") +
       p("<strong>Varor:</strong><br/>{{orderrader}}") +
-      p("<strong>Anledning:</strong> {{anledning}}") +
-      p("Hantera returen i butiksadmin.")
+      p("<strong>Kundens meddelande:</strong><br/>{{meddelande}}") +
+      cta("Öppna ordern i admin", "{{adminlank}}") +
+      p("Svara kunden direkt genom att svara på det här mejlet.")
     ),
   },
   "Uppföljningsmail": {
@@ -154,6 +157,34 @@ const DEFAULTS: Record<string, { subject: string; body_html: string }> = {
       cta("Lämna omdöme &amp; hämta rabatt", "{{omdome_lank}}") +
       p("Använd rabattkoden <strong>{{rabattkod}}</strong> i kassan vid nästa beställning.") +
       p("Vi ser fram emot att höra vad du tycker!")
+    ),
+  },
+}
+
+/* Earlier defaults of the return templates. Rows still holding exactly these
+   (never edited by the shop) are upgraded to the new defaults above, which add
+   {{referens}} and drop the dash characters. Edited rows are never touched. */
+const LEGACY: Record<string, { subject: string; body_html: string }> = {
+  "Returbekräftelse (kund)": {
+    subject: "Vi har tagit emot din returbegäran \u2013 order {{ordernummer}}",
+    body_html: wrap(
+      h1("Din returbegäran är mottagen") +
+      p("Hej {{kundnamn}},") +
+      p("Vi har tagit emot din returbegäran för order <strong>{{ordernummer}}</strong> och behandlar den så snart som möjligt.") +
+      p("<strong>Varor som returneras:</strong><br/>{{orderrader}}") +
+      p("Så snart returen registrerats hos oss återkommer vi med bekräftelse och eventuell återbetalning. Återbetalning sker till samma betalsätt som vid köpet.") +
+      p("Tack för ditt tålamod!")
+    ),
+  },
+  "Returnotis (butik)": {
+    subject: "Ny retur registrerad \u2013 order {{ordernummer}}",
+    body_html: wrap(
+      h1("Ny retur att hantera") +
+      p("En kund har begärt retur.") +
+      p("<strong>Order:</strong> {{ordernummer}}<br/><strong>Kund:</strong> {{kundnamn}} ({{epost}})") +
+      p("<strong>Varor:</strong><br/>{{orderrader}}") +
+      p("<strong>Anledning:</strong> {{anledning}}") +
+      p("Hantera returen i butiksadmin.")
     ),
   },
 }
@@ -182,6 +213,14 @@ export async function ensureTables(pg: any) {
        WHERE "id"=? AND (COALESCE("subject",'')='' AND COALESCE("body_html",'')='')`,
       [def.subject, def.body_html, id]
     )
+    const old = LEGACY[name]
+    if (old) {
+      await pg.raw(
+        `UPDATE "email_template" SET "subject"=?, "body_html"=?, "updated_at"=now()
+         WHERE "id"=? AND "subject"=? AND "body_html"=?`,
+        [def.subject, def.body_html, id, old.subject, old.body_html]
+      )
+    }
   }
   ensured = true
 }
