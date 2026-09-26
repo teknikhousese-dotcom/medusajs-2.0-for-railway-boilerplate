@@ -210,6 +210,22 @@ async function resolveLegacyPath(path: string): Promise<LegacyResolve | null> {
   return r
 }
 
+// Svenska genvägar som besökare skriver in själva (kontakt, varukorg, kassa...).
+// Alla ger en 301 direkt till rätt sida så att ingen hamnar på en 404.
+const SV_ALIASES: Record<string, string> = {
+  "/kontakt": "/contact",
+  "/kontakta-oss": "/contact",
+  "/kundtjanst": "/info/kundtjanst",
+  "/villkor": "/info/villkor",
+  "/kopvillkor": "/info/villkor",
+  "/om-oss": "/info/om-oss",
+  "/integritetspolicy": "/info/integritetspolicy",
+  "/varukorg": "/cart",
+  "/kassa": "/checkout",
+  "/logga-in": "/account",
+  "/begagnat": "/mobiler-surfplattor",
+}
+
 // Avdelningar som alltid finns. Anvands bara om kategorilistan inte gick att hamta
 // (t.ex. precis efter en omstart), sa att gamla lankar inte blir 404 av en slump.
 const KNOWN_DEPTS = new Set([
@@ -238,6 +254,14 @@ export async function middleware(request: NextRequest) {
   {
     const lp = request.nextUrl.pathname
     const lsp = request.nextUrl.searchParams
+    {
+      let aliasKey = lp.toLowerCase()
+      while (aliasKey.length > 1 && aliasKey.charAt(aliasKey.length - 1) === "/") aliasKey = aliasKey.slice(0, -1)
+      const aliasTo = SV_ALIASES[aliasKey]
+      if (aliasTo) {
+        return NextResponse.redirect(new URL(aliasTo + (request.nextUrl.search || ""), request.url), 301)
+      }
+    }
     if (/^\/butikadmin\/googleshopping\.php$/i.test(lp) && BACKEND_URL) {
       const act = String(lsp.get("action") || "feed").toLowerCase()
       const feedPath = act.indexOf("inventory") >= 0 ? "/google-feed-inventory" : "/google-feed"
