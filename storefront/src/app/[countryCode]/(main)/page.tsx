@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { pageAlternates } from "@lib/seo"
 
 import FeaturedProducts from "@modules/home/components/featured-products"
 import ThHome from "@modules/home/components/th-home"
@@ -8,6 +9,7 @@ import { getRegion } from "@lib/data/regions"
 import { getProductsList } from "@lib/data/products"
 
 export const metadata: Metadata = {
+  alternates: pageAlternates("/"),
   title: "Mobilreservdelar till iPhone och Samsung | Teknikhouse",
   description:
     "Skärmar, batterier och reservdelar till iPhone, Samsung, iPad och fler, plus mobiltillbehör och verktyg. Butik på Sveavägen 139 i Stockholm. Fri frakt över 999 kr och 30 dagars öppet köp.",
