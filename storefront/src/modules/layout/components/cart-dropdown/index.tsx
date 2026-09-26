@@ -76,23 +76,23 @@ const CartDropdown = ({
 
   return (
     <div
-      className="h-full z-50"
+      className="h-full flex items-center z-50"
       onMouseEnter={openAndCancel}
       onMouseLeave={close}
     >
-      <Popover className="relative h-full">
-        <Popover.Button as="div" className="h-full">
+      <Popover className="relative h-full flex items-center">
+        <Popover.Button as="div" className="h-full flex items-center">
           <LocalizedClientLink
-            className="relative flex items-center gap-2 hover:text-[#F50000]"
+            className="relative flex items-center justify-center gap-2 h-11 min-w-[44px] px-1 small:px-2 leading-none hover:text-[#F50000]"
             href="/cart"
             data-testid="nav-cart-link"
-            aria-label="Varukorg"
+            aria-label={totalItems > 0 ? `Varukorg, ${totalItems} ${totalItems === 1 ? "vara" : "varor"}` : "Varukorg"}
           >
-            <span className="relative inline-flex">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M3 4h2l2.2 11a1 1 0 001 .8h9a1 1 0 001-.8L21 8H6.5" /><circle cx="9.5" cy="20" r="1.3" /><circle cx="17.5" cy="20" r="1.3" /></svg>
+            <span className="relative inline-flex shrink-0">
+              <svg className="block" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h2l2.2 11a1 1 0 001 .8h9a1 1 0 001-.8L21 8H6.5" /><circle cx="9.5" cy="20" r="1.3" /><circle cx="17.5" cy="20" r="1.3" /></svg>
               {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white" data-testid="nav-cart-count">
-                  {totalItems}
+                <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#F50000] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white tabular-nums" data-testid="nav-cart-count">
+                  {totalItems > 99 ? "99+" : totalItems}
                 </span>
               )}
             </span>
@@ -111,7 +111,7 @@ const CartDropdown = ({
         >
           <Popover.Panel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-white border-x border-b border-gray-200 w-[420px] text-ui-fg-base"
+            className="hidden small:block absolute top-[calc(100%+1px)] right-0 shadow-lg bg-white border-x border-b border-gray-200 w-[420px] text-ui-fg-base"
             data-testid="nav-cart-dropdown"
           >
             <div className="p-4 flex items-center justify-center">
