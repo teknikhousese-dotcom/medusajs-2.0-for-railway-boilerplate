@@ -147,7 +147,7 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
               <svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>
               <div>
                 <b>Garanti ingår</b>
-                <p>Garanti ingår alltid och alla produkter testas innan de skickas. Trygg e-handel.</p>
+                <p>Garanti ingår alltid och alla produkter testas innan de skickas. Handla tryggt och säkert hos oss.</p>
               </div>
             </div>
           </div>
