@@ -47,7 +47,7 @@ type P = { id: string; title?: string | null; categories?: { id: string }[] | nu
 async function fetchPage(offset: number) {
   return sdk.client.fetch<{ products: P[]; count: number }>("/store/products", {
     method: "GET",
-    query: { limit: 100, offset, fields: "id,title,categories.id" },
+    query: { limit: 100, offset, order: "id", fields: "id,title,categories.id" },
     next: { tags: ["device-finder"], revalidate: 1800 },
   } as any)
 }
@@ -64,7 +64,13 @@ async function fetchPartCounts(): Promise<Map<string, number[]>> {
     for (const pg of pages) if (pg?.products) all.push(...pg.products)
   }
   const m = new Map<string, number[]>()
+  /* Stabil ordning (order=id) och varje produkt räknas bara en gång. Utan
+  ordning kan två sidor överlappa, och då räknades samma produkt två gånger
+  så att väljaren visade en del fler än kategorisidan. */
+  const seen = new Set<string>()
   for (const p of all) {
+    if (!p?.id || seen.has(p.id)) continue
+    seen.add(p.id)
     const pi = partIndexOf(p.title || "")
     for (const c of p.categories || []) {
       if (!c?.id) continue
