@@ -5,6 +5,16 @@ import ProductTemplate from "@modules/products/templates"
 import { getRegion, listRegions } from "@lib/data/regions"
 import { getProductByHandle, getProductsList } from "@lib/data/products"
 import { getStoreName } from "@lib/util/env"
+import {
+  SITE_NAME,
+  absUrl,
+  breadcrumbLd,
+  jsonLd,
+  metaDescription,
+  pageAlternates,
+  productLd,
+} from "@lib/seo"
+import { productReviews, productSeoContext } from "@lib/seo-data"
 
 type Props = {
   params: Promise<{ countryCode: string; handle: string }>
@@ -61,15 +71,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const _md: any = product.metadata || {}
   const _metaTitle = (_md.meta_title && String(_md.meta_title).trim()) || `${product.title} | ${getStoreName()}`
-  const _metaDesc = (_md.meta_description && String(_md.meta_description).trim()) || product.title
+  const _metaDesc =
+    (_md.meta_description && String(_md.meta_description).trim()) ||
+    (_md.seo_desc && String(_md.seo_desc).trim()) ||
+    metaDescription(product.description) ||
+    product.title
+  const { path } = await productSeoContext(product)
+  const _url = absUrl(path)
+  const _images = [product.thumbnail, ...(product.images || []).map((i) => i.url)]
+    .filter((u, i, a): u is string => !!u && a.indexOf(u) === i)
+    .slice(0, 4)
 
   return {
     title: _metaTitle,
     description: _metaDesc,
+    alternates: pageAlternates(path),
     openGraph: {
+      type: "website",
+      url: _url,
+      siteName: SITE_NAME,
+      locale: "sv_SE",
       title: _metaTitle,
       description: _metaDesc,
-      images: product.thumbnail ? [product.thumbnail] : [],
+      images: _images.map((url) => ({ url, alt: product.title })),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: _metaTitle,
+      description: _metaDesc,
+      images: _images.slice(0, 1),
     },
   }
 }
@@ -87,11 +117,31 @@ export default async function ProductPage({ params }: Props) {
     notFound()
   }
 
+  const seo = await productSeoContext(pricedProduct)
+  const productJsonLd = productLd(
+    pricedProduct,
+    absUrl(seo.path),
+    await productReviews(pricedProduct.id)
+  )
+  const hasRichData = !!(productJsonLd.offers || productJsonLd.aggregateRating)
+
   return (
-    <ProductTemplate
-      product={pricedProduct}
-      region={region}
-      countryCode={countryCode}
-    />
+    <>
+      {hasRichData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd(productJsonLd) }}
+        />
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbLd(seo.crumbs)) }}
+      />
+      <ProductTemplate
+        product={pricedProduct}
+        region={region}
+        countryCode={countryCode}
+      />
+    </>
   )
 }
