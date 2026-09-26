@@ -281,7 +281,7 @@ function GridPage() {
   const td: any = { borderBottom: GRID, borderRight: GRID, padding: "4px 8px", fontSize: "13px", lineHeight: 1.3, verticalAlign: "middle", overflow: "hidden" }
   const tdLast: any = { ...td, borderRight: "none" }
   const tdOne: any = { ...td, whiteSpace: "nowrap", textOverflow: "ellipsis" }
-  const tdNum: any = { ...tdOne, textAlign: "right", padding: "4px 6px", fontVariantNumeric: "tabular-nums" }
+  const tdNum: any = { ...tdOne, textAlign: "center", padding: "4px 6px", fontVariantNumeric: "tabular-nums" }
   const clamp2: any = { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" }
   const lnk: any = { color: "#0060cc", textDecoration: "none" }
   const sep = <span style={{ color: "#bbb", margin: "0 3px" }}>|</span>
@@ -350,7 +350,7 @@ function GridPage() {
           </colgroup>
           <thead><tr>
             <th style={{ ...th, textAlign: "center", padding: "4px 0" }}><input type="checkbox" checked={allChecked} onChange={toggleAll} style={{ margin: 0, verticalAlign: "middle" }} /></th>
-            <th style={th}>Namn</th><th style={th}>Art.nr</th><th style={{ ...th, textAlign: "right", padding: "4px 6px" }}>Lager</th><th style={th}>Status</th>
+            <th style={th}>Namn</th><th style={th}>Art.nr</th><th style={{ ...th, textAlign: "center", padding: "4px 6px" }}>Lager</th><th style={{ ...th, textAlign: "center" }}>Status</th>
             <th style={th}>Varugrupp</th><th style={{ ...th, borderRight: "none" }}>Verktyg</th>
           </tr></thead>
           <tbody>
@@ -364,7 +364,7 @@ function GridPage() {
                   </td>
                   <td style={{ ...tdOne, fontSize: "12px" }} title={(r.variants || [])[0]?.sku || ""}>{(r.variants || [])[0]?.sku || "—"}</td>
                   <td style={tdNum}>{lagerProdukt(r)}</td>
-                  <td style={{ ...tdOne, fontSize: "11px", padding: "4px 6px" }} title={r.status === "published" ? "Publicerad" : "Utkast"}>{r.status === "published" ? <span style={{ color: "#1d7f4e" }}>{dot("#2a7")}Publicerad</span> : <span style={{ color: "#8a5a00" }}>{dot("#e0a000")}Utkast</span>}</td>
+                  <td style={{ ...tdOne, fontSize: "11px", padding: "4px 6px", textAlign: "center" }} title={r.status === "published" ? "Publicerad" : "Utkast"}>{r.status === "published" ? <span style={{ color: "#1d7f4e" }}>{dot("#2a7")}Publicerad</span> : <span style={{ color: "#8a5a00" }}>{dot("#e0a000")}Utkast</span>}</td>
                   <td style={{ ...tdOne, fontSize: "12px", color: "#444" }} title={catName(r)}>{catName(r)}</td>
                   <td style={{ ...tdLast, whiteSpace: "nowrap", fontSize: "12px" }}>
                     <a href={`${ADMIN}/produkt-form?id=${r.id}`} style={lnk}>Redigera</a>{sep}
