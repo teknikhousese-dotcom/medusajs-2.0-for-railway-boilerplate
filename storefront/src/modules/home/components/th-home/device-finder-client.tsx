@@ -201,7 +201,7 @@ export default function DeviceFinderClient({ data, regionId }: { data: DFData | 
           bn: b.n,
           path: b.p + "/" + m.s,
           nf,
-          hay: foldText(b.n + " " + m.n + " " + m.g) + " " + nf.replace(/\s+/g, "") + " " + foldText(b.n + m.n).replace(/\s+/g, ""),
+          hay: foldText(b.n + " " + m.n + " " + m.g) + " " + nf.replace(/\s+/g, "") + " " + foldText(b.n + m.n).replace(/\s+/g, "") + " " + foldText(b.n + m.n.replace(/^galaxy\s+/i, "")).replace(/\s+/g, ""),
           i: out.length,
         })
       }
