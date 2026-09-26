@@ -7,7 +7,7 @@ import { StoreProductCategory, StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { getStoreName } from "@lib/util/env"
-import { SITE_NAME, absUrl, breadcrumbLd, jsonLd, metaDescription } from "@lib/seo"
+import { SITE_NAME, absUrl, breadcrumbLd, categoryChain, categoryDescription, categoryTitle, jsonLd } from "@lib/seo"
 import { categoryCrumbs, categoryPaths } from "@lib/seo-data"
 
 type Props = {
@@ -53,26 +53,21 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   try {
     const { product_categories } = await getCategoryByHandle(category)
 
-    const title = product_categories
-      .map((category: StoreProductCategory) => category.name)
-      .join(" | ")
 
     const __last: any = product_categories[product_categories.length - 1]
-    const description =
-      metaDescription(__last.description) ||
-      `Köp ${__last.name} hos Teknikhouse. Fri frakt över 999 kr, 30 dagars öppet köp och snabb leverans från Stockholm.`
 
     const __md: any = __last?.metadata || {}
 
-    const { pathMap } = await categoryPaths()
+    const { categories: __all, pathMap } = await categoryPaths()
+    const __chain: any[] = categoryChain(__all as any, __last.handle)
+    if (__chain.length) __chain[__chain.length - 1] = __last
+    else __chain.push(__last)
     const __path = `/${pathMap.get(__last.handle) || category.join("/")}`
     const __canonical = __md.canonical
       ? absUrl(String(__md.canonical))
       : absUrl(__path) + (__pageNo > 1 ? `?page=${__pageNo}` : "")
-    const __title =
-      (__md.seo_title ? __md.seo_title : `${title} | ${getStoreName()}`) +
-      (__pageNo > 1 ? ` – sida ${__pageNo}` : "")
-    const __desc = __md.seo_desc ? __md.seo_desc : description
+    const __title = categoryTitle(__chain, __pageNo)
+    const __desc = categoryDescription(__chain)
 
     return {
       title: __title,
