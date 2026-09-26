@@ -45,7 +45,7 @@ const orderTime = (o: any): string => {
 }
 const viaText = (v?: string): string => {
   const map: Record<string, string> = { Mobil: "Mobiltelefon", Dator: "Dator/surfplatta", "Dator/Platta": "Dator/surfplatta" }
-  return (v && map[v]) || v || "—"
+  return (v && map[v]) || v || "-"
 }
 const payText = (st?: string): string => {
   switch (st) {
@@ -482,9 +482,9 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   const klarnaPending = isKlarna && !paidLike && !klarnaExpired && m.kustom_cancelled !== true && (m.wiki_activated === false || !!(klarna && klarna.kustom && !klarna.captured && !klarna.cancelled) || (!m.wiki_order_id && (o.payment_status === "authorized" || o.payment_status === "partially_authorized")))
   /* Wiki: rött ID = ej slutfört köp. För Klarna visar Wiki "Transaktionen har avbrutits." */
   const wikiRed = !!m.wiki_order_id && m.wiki_id_color === "red" && !paidLike && !klarnaPending
-  const otherText = klarnaExpired ? "Klarna-reservationen har gått ut – ej aktiverad" : (m.kustom_cancelled === true || (wikiRed && isKlarna) ? "Transaktionen har avbrutits" : (wikiRed ? "Ej slutfört köp" : payText(o.payment_status)))
-  const statusText = paidLike ? "Betald – transaktionen är genomförd" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : otherText)
-  const headText = paidLike ? "Betald" : (klarnaPending ? "Godkänd av Klarna – ej aktiverad" : otherText)
+  const otherText = klarnaExpired ? "Klarna-reservationen har gått ut, ej aktiverad" : (m.kustom_cancelled === true || (wikiRed && isKlarna) ? "Transaktionen har avbrutits" : (wikiRed ? "Ej slutfört köp" : payText(o.payment_status)))
+  const statusText = paidLike ? "Betald, transaktionen är genomförd" : (klarnaPending ? "Godkänd av Klarna, ej aktiverad" : otherText)
+  const headText = paidLike ? "Betald" : (klarnaPending ? "Godkänd av Klarna, ej aktiverad" : otherText)
   const statusColor = paidLike ? "#161" : (klarnaPending ? "#b36b00" : "#a00")
   const shipName = (sm && sm.name) || m.wiki_shipping_method || "Standard"
   const shipDesc = m.wiki_shipping_desc || (m.wiki_order_id ? "" : (shipName === "Standard" ? "2-3 vardagar. Fraktfritt vid köp över 999 kr." : ""))
@@ -557,7 +557,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
         {klarnaCanAct ? (
           <div style={gap}><a onClick={() => klarnaAction("capture")} style={{ ...ok, cursor: "pointer" }}>Aktivera och leverera</a> | <a onClick={() => klarnaAction("cancel")} style={{ ...err, cursor: "pointer" }}>Avbryt</a></div>
         ) : (klarna && klarna.kustom ? (
-          <div style={{ ...gap, padding: "6px 8px", border: "1px dashed #c9a13b", color: "#7a5b00" }}>{klarna.reachable ? ("Klarna-status: " + (klarna.status || "okänd") + " – kan inte aktiveras härifrån.") : "Klarna-reservationen kan inte nås via vår Kustom-koppling. Aktivera i Klarna/Kustom portalen."}</div>
+          <div style={{ ...gap, padding: "6px 8px", border: "1px dashed #c9a13b", color: "#7a5b00" }}>{klarna.reachable ? ("Klarna-status: " + (klarna.status || "okänd") + ". Kan inte aktiveras härifrån.") : "Klarna-reservationen kan inte nås via vår Kustom-koppling. Aktivera i Klarna/Kustom portalen."}</div>
         ) : null)}
         {ids}
       </>
@@ -577,7 +577,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
   } else {
     payBody = <div style={{ color: statusColor, ...gap }}>{statusText}</div>
   }
-  const payCell = <div style={{ lineHeight: 1.5 }}><div style={{ fontWeight: 700 }}>{pmName || "—"}</div>{payBody}</div>
+  const payCell = <div style={{ lineHeight: 1.5 }}><div style={{ fontWeight: 700 }}>{pmName || "-"}</div>{payBody}</div>
 
   const save = async () => {
     setSaved("Sparar…")
@@ -631,7 +631,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
         <table style={tbl}><tbody>
           <SectionRow title="Övrig information" />
           <KV k="Totalvikt" v={`${m.order_weight_g ?? 0}g`} />
-          <KV k="IP-adress vid beställning" v={m.ip_address || "—"} />
+          <KV k="IP-adress vid beställning" v={m.ip_address || "-"} />
           <KV k="Beställd via" v={viaText(m.ordered_via)} />
           <KV k="Tidpunkt vid beställning" v={when} />
           <KV k="Betalningstatus:" v={payCell} />
@@ -653,7 +653,7 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
             const pi = incl(it.unit_price, vat)
             return (
               <tr key={it.id}>
-                <td style={cellTd}>{it.variant_sku || (it.metadata && it.metadata.sku) || "—"}</td>
+                <td style={cellTd}>{it.variant_sku || (it.metadata && it.metadata.sku) || "-"}</td>
                 <td style={cellTd}>{it.title}{it.subtitle ? ` · ${it.subtitle}` : ""}</td>
                 <td style={{ ...cellTd, textAlign: "right" }}>{wkr(it.unit_price)}</td>
                 <td style={{ ...cellTd, textAlign: "right" }}>{wkr(pi)}</td>
