@@ -35,6 +35,9 @@ function DeptIcon({ name }: { name: string }) {
   return <svg className="shrink-0" viewBox="0 0 24 24" width="24" height="24">{path}</svg>
 }
 
+// Links here use prefetch={false}: the department bar is on every page and
+// prefetching all of it on load fired a dozen RSC requests per page view.
+
 /**
  * teknikhouse category navigation: icon department bar, one row (scrolls sideways if it does not fit).
  * Each department shows an outline icon above its label; hovering opens a
@@ -128,6 +131,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                 onMouseEnter={() => setOpenId(dep.id)}
               >
                 <Link
+                  prefetch={false}
                   href={depHref}
                   className={
                     "group flex flex-col items-center justify-start gap-1 min-w-[64px] max-w-[100px] px-1 pt-2 pb-1.5 border-b-2 transition-colors " +
@@ -152,6 +156,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                           return (
                             <div key={brand.id} className="min-w-0">
                               <Link
+                                prefetch={false}
                                 href={brandHref}
                                 className="block font-semibold text-ui-fg-base hover:text-[#F50000] mb-2"
                               >
@@ -162,6 +167,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
                                   {models.map((m) => (
                                     <li key={m.id}>
                                       <Link
+                                        prefetch={false}
                                         href={`${brandHref}/${seg(m, brand)}`}
                                         className="block text-ui-fg-subtle hover:text-ui-fg-base truncate"
                                       >
@@ -183,6 +189,7 @@ export default function CategoryMega({ categories }: { categories: Cat[] }) {
           })}
           <li className="flex">
             <Link
+              prefetch={false}
               href="/kampanjer"
               className="group flex flex-col items-center justify-start gap-1 min-w-[64px] max-w-[100px] px-1 pt-2 pb-1.5 border-b-2 border-transparent text-[#F50000] hover:text-[#D10000]"
             >
