@@ -141,11 +141,18 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   const [moveTo, setMoveTo] = useState("")
   const [busy, setBusy] = useState("")
   const [showTips, setShowTips] = useState(false)
-  const PAGE = 50
+  /* Antal ordrar per sida = Grundinställningar → "Orderlistan: antal ordrar per sida" (wiki-settings config.ordersPerPage). Wiki-standard 100. */
+  const [PAGE, setPAGE] = useState(0)
+  useEffect(() => {
+    fetch("/admin/wiki-settings?group=config", { credentials: "include" }).then((r) => r.json())
+      .then((d) => { const n = parseInt(String(d?.data?.ordersPerPage || "")); setPAGE(n > 0 ? Math.min(500, n) : 100) })
+      .catch(() => setPAGE(100))
+  }, [])
   const [fliks, setFliks] = useState<any[]>([{ key: "nya", label: "Nya" }, { key: "makulerade", label: "Makulerade" }, { key: "arkiverade", label: "Arkiverade" }])
 
   const FIELDS = "id,display_id,email,total,currency_code,created_at,payment_status,fulfillment_status,status,*shipping_address,payment_collections.payments.provider_id,+metadata"
   const load = async () => {
+    if (!PAGE) return
     setLoading(true)
     try {
       const p = new URLSearchParams()
@@ -168,7 +175,7 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
     } catch { /* ignore */ }
     setLoading(false)
   }
-  useEffect(() => { load() }, [tab, page, submittedQ])
+  useEffect(() => { load() }, [tab, page, submittedQ, PAGE])
 
   // Antal per flik (server-side count).
   useEffect(() => {
@@ -185,7 +192,16 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
   }, [])
 
   const pageRows = rows
-  const pages = Math.max(1, Math.ceil(count / PAGE))
+  const pages = Math.max(1, Math.ceil(count / (PAGE || 100)))
+  /* Sidlänkar som Wiki: 1 2 … (aktuell ±6, 15 st vid kanterna) … näst sista, sista. */
+  const pageLinks = (() => {
+    let a = Math.max(1, page - 6), b = Math.min(pages, page + 6)
+    if (a === 1) b = Math.min(pages, 15)
+    if (b === pages) a = Math.max(1, pages - 14)
+    const set = new Set<number>([1, 2, pages - 1, pages].filter((x) => x >= 1 && x <= pages))
+    for (let i = a; i <= b; i++) set.add(i)
+    return Array.from(set).sort((x, y) => x - y)
+  })()
 
   const selIds = Object.keys(sel).filter((k) => sel[k])
   const flytta = async () => {
@@ -323,8 +339,9 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
 
       <div style={{ fontSize: "11px", marginTop: "8px" }}>
         Sida:{" "}
-        {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-          <span key={p} onClick={() => setPage(p)} style={{ cursor: "pointer", padding: "2px 6px", margin: "0 1px", border: "1px solid #bbb", background: p === page ? "#666" : "#fafafa", color: p === page ? "#fff" : "#06c", borderRadius: "3px" }}>{p}</span>
+        {page > 1 && <span onClick={() => setPage(page - 1)} style={{ cursor: "pointer", padding: "2px 6px", marginRight: "4px", color: "#06c" }}>« Föregående</span>}
+        {pageLinks.map((p, i) => (
+          <span key={p}>{i > 0 && p - pageLinks[i - 1] > 1 && <span style={{ margin: "0 3px", color: "#999" }}>…</span>}<span onClick={() => setPage(p)} style={{ cursor: "pointer", padding: "2px 6px", margin: "0 1px", border: "1px solid #bbb", background: p === page ? "#666" : "#fafafa", color: p === page ? "#fff" : "#06c", borderRadius: "3px" }}>{p}</span></span>
         ))}
         {page < pages && <span onClick={() => setPage(page + 1)} style={{ cursor: "pointer", padding: "2px 6px", marginLeft: "4px", color: "#06c" }}>Nästa »</span>}
         <span style={{ marginLeft: "10px", color: "#666" }}>{loading ? "Laddar…" : `${count} ordrar${submittedQ ? " (sökresultat)" : ""}`}</span>
@@ -393,11 +410,10 @@ function OrderDetail({ id, onBack, onEdit }: { id: string; onBack: () => void; o
         if (m.read !== true) { // markera som läst (Olästa = fet stil i listan)
           try { fetch(`/admin/orders/${id}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ metadata: Object.assign({}, m, { read: true }) }) }) } catch { /* ignore */ }
         }
-        // prev/next by display_id
-        const lr = await fetch(`/admin/orders?limit=1000&order=-display_id&fields=id,display_id,+metadata`, { credentials: "include" })
-        const ld = await lr.json(); const list = ld.orders || []
-        const idx = list.findIndex((x: any) => x.id === id)
-        if (idx >= 0 && alive) setNav({ next: list[idx - 1], prev: list[idx + 1] })
+        /* prev/next i samma ordning som orderlistan (ordertid, nyast först) */
+        const nr = await fetch(`/admin/order-fliks?nav=${encodeURIComponent(id)}`, { credentials: "include" })
+        const nd = await nr.json()
+        if (alive) setNav({ next: nd.next || undefined, prev: nd.prev || undefined })
       } catch { if (alive) setLoading(false) }
     })()
     return () => { alive = false }
