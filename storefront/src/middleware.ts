@@ -221,9 +221,23 @@ const SV_ALIASES: Record<string, string> = {
   "/om-oss": "/info/om-oss",
   "/integritetspolicy": "/info/integritetspolicy",
   "/varukorg": "/cart",
-  "/kassa": "/checkout",
   "/logga-in": "/account",
   "/begagnat": "/mobiler-surfplattor",
+}
+
+// Kassan heter /kassa med svenska steg (?steg=leverans | betalning | adress | granska).
+// Gamla /checkout-adresser och engelska steg (?step=delivery ...) skickas hit med 301.
+// Målet får alltid ett steg-värde, så en gammal webbläsarcachad 301 /kassa -> /checkout
+// (bara exakt /kassa) aldrig kan ge en omdirigeringsloop.
+const CHECKOUT_STEG_SV: Record<string, string> = {
+  delivery: "leverans",
+  payment: "betalning",
+  address: "adress",
+  review: "granska",
+  leverans: "leverans",
+  betalning: "betalning",
+  adress: "adress",
+  granska: "granska",
 }
 
 // Avdelningar som alltid finns. Anvands bara om kategorilistan inte gick att hamta
@@ -257,6 +271,20 @@ export async function middleware(request: NextRequest) {
     {
       let aliasKey = lp.toLowerCase()
       while (aliasKey.length > 1 && aliasKey.charAt(aliasKey.length - 1) === "/") aliasKey = aliasKey.slice(0, -1)
+      if (aliasKey === "/checkout") {
+        const kassaDest = new URL("/kassa", request.url)
+        let hasSteg = false
+        lsp.forEach((v, k) => {
+          if (k === "step" || k === "steg") {
+            kassaDest.searchParams.set("steg", CHECKOUT_STEG_SV[String(v).toLowerCase()] || "leverans")
+            hasSteg = true
+          } else {
+            kassaDest.searchParams.append(k, v)
+          }
+        })
+        if (!hasSteg) kassaDest.searchParams.set("steg", lsp.get("cart_id") ? "adress" : "leverans")
+        return NextResponse.redirect(kassaDest, 301)
+      }
       const aliasTo = SV_ALIASES[aliasKey]
       if (aliasTo) {
         return NextResponse.redirect(new URL(aliasTo + (request.nextUrl.search || ""), request.url), 301)
@@ -281,7 +309,7 @@ export async function middleware(request: NextRequest) {
   }
   const searchParams = request.nextUrl.searchParams
   const cartId = searchParams.get("cart_id")
-  const checkoutStep = searchParams.get("step")
+  const checkoutStep = searchParams.get("steg") || searchParams.get("step")
   const cartIdCookie = request.cookies.get("_medusa_cart_id")
   const cacheIdCookie = request.cookies.get("_medusa_cache_id")
 
@@ -361,9 +389,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(`${stripped}${search}`, request.url), 308)
     }
     const cc = countryCode || DEFAULT_REGION
-    const p = request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
+    const rawPath = request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
+    const p = /^\/kassa\/?$/i.test(rawPath) ? "/checkout" : rawPath
     if (cartId) {
-      const step = checkoutStep ? "" : `${search ? "&" : "?"}step=address`
+      const step = checkoutStep ? "" : `${search ? "&" : "?"}steg=adress`
       const res = NextResponse.rewrite(new URL(`/${cc}${p}${search}${step}`, request.url))
       if (!cacheIdCookie) res.cookies.set("_medusa_cache_id", cacheId, CACHE_ID_COOKIE_OPTIONS)
       res.cookies.set("_medusa_cart_id", cartId, { maxAge: 60 * 60 * 24 })
