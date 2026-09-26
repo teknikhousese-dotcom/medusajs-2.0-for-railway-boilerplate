@@ -7,6 +7,8 @@ import { StoreProductCategory, StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { getStoreName } from "@lib/util/env"
+import { SITE_NAME, absUrl, breadcrumbLd, jsonLd, metaDescription } from "@lib/seo"
+import { categoryCrumbs, categoryPaths } from "@lib/seo-data"
 
 type Props = {
   params: Promise<{ category: string[]; countryCode: string }>
@@ -43,8 +45,10 @@ export async function generateStaticParams() {
   return staticParams
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category } = await params
+  const { page: __page } = await searchParams
+  const __pageNo = Math.max(1, parseInt(String(__page || "1"), 10) || 1)
 
   try {
     const { product_categories } = await getCategoryByHandle(category)
@@ -53,28 +57,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .map((category: StoreProductCategory) => category.name)
       .join(" | ")
 
+    const __last: any = product_categories[product_categories.length - 1]
     const description =
-      product_categories[product_categories.length - 1].description ??
-      `${title} category.`
+      metaDescription(__last.description) ||
+      `Köp ${__last.name} hos Teknikhouse. Fri frakt över 999 kr, 30 dagars öppet köp och snabb leverans från Stockholm.`
 
-    const __md: any =
-      (product_categories[product_categories.length - 1] as any)?.metadata || {}
+    const __md: any = __last?.metadata || {}
+
+    const { pathMap } = await categoryPaths()
+    const __path = `/${pathMap.get(__last.handle) || category.join("/")}`
+    const __canonical = __md.canonical
+      ? absUrl(String(__md.canonical))
+      : absUrl(__path) + (__pageNo > 1 ? `?page=${__pageNo}` : "")
+    const __title =
+      (__md.seo_title ? __md.seo_title : `${title} | ${getStoreName()}`) +
+      (__pageNo > 1 ? ` – sida ${__pageNo}` : "")
+    const __desc = __md.seo_desc ? __md.seo_desc : description
 
     return {
-      title: __md.seo_title ? __md.seo_title : `${title} | ${getStoreName()}`,
-      description: __md.seo_desc ? __md.seo_desc : description,
+      title: __title,
+      description: __desc,
       alternates: {
-        canonical: __md.canonical ? __md.canonical : `${category.join("/")}`,
+        canonical: __canonical,
+        languages: { "sv-SE": __canonical, "x-default": __canonical },
       },
-      ...(__md.og_title || __md.og_desc || __md.og_image
-        ? {
-            openGraph: {
-              title: __md.og_title || undefined,
-              description: __md.og_desc || undefined,
-              images: __md.og_image ? [__md.og_image] : undefined,
-            },
-          }
-        : {}),
+      openGraph: {
+        type: "website",
+        url: __canonical,
+        siteName: SITE_NAME,
+        locale: "sv_SE",
+        title: __md.og_title || __title,
+        description: __md.og_desc || __desc,
+        ...(__md.og_image ? { images: [__md.og_image] } : {}),
+      },
       ...(__md.noindex === "1"
         ? { robots: { index: false, follow: false } }
         : {}),
@@ -94,12 +109,25 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     notFound()
   }
 
+  const __seo = await categoryPaths()
+  const __crumbs = categoryCrumbs(
+    __seo.categories,
+    __seo.pathMap,
+    product_categories[product_categories.length - 1]?.handle
+  )
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbLd(__crumbs)) }}
+    />
     <CategoryTemplate
       categories={product_categories}
       sortBy={sortBy}
       page={page}
       countryCode={countryCode}
     />
+    </>
   )
 }
