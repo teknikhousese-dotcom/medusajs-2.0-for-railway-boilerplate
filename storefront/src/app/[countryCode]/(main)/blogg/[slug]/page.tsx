@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const { post } = await getPost(slug)
   if (!post) return { title: "Inlägget hittades inte | Teknikhouse" }
-  const canonical = `https://teknikhouse.se/blogg/${post.slug}/`
+  const canonical = `https://www.teknikhouse.se/blogg/${post.slug}`
   const title = post.meta_title || `${post.title} | Teknikhouse`
   const desc = post.meta_desc || post.excerpt || ""
   return {
@@ -53,7 +53,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     headline: post.title, datePublished: post.published_at, dateModified: post.published_at,
     image: post.cover_image || undefined, author: { "@type": "Organization", name: "Teknikhouse" },
     publisher: { "@type": "Organization", name: "Nordic Teknik House AB" },
-    mainEntityOfPage: `https://teknikhouse.se/blogg/${post.slug}/`,
+    mainEntityOfPage: `https://www.teknikhouse.se/blogg/${post.slug}`,
   }
 
   return (
