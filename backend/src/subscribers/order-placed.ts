@@ -60,19 +60,25 @@ export default async function orderPlacedHandler({
     const { data: rows } = await query.graph({
       entity: 'order',
       filters: { id: data.id },
-      fields: ['id', 'metadata', 'payment_collections.payments.provider_id'],
+      fields: ['id', 'metadata', 'payment_collections.payments.provider_id', 'payment_collections.payments.data'],
     })
     const row: any = rows?.[0]
-    const pid: string =
-      row?.payment_collections?.[0]?.payments?.[0]?.provider_id || ''
+    const pay: any = row?.payment_collections?.[0]?.payments?.[0]
+    const pid: string = pay?.provider_id || ''
     let pm = ''
     if (/swish/i.test(pid)) pm = 'SWISH'
-    else if (/klarna/i.test(pid)) pm = 'KLARNA'
+    else if (/klarna|kustom/i.test(pid)) pm = 'KLARNA'
     else if (/stripe|card/i.test(pid)) pm = 'Kort'
     const current = (row?.metadata?.payment_method as string) || ''
-    if (pm && current !== pm) {
+    /* Kustom (KCO) orders: store kustom_order_id so the admin Klarna panel can capture/refund. */
+    const kid: string = /kustom/i.test(pid) ? String(pay?.data?.kustom_order_id || '') : ''
+    const needKid = !!kid && row?.metadata?.kustom_order_id !== kid
+    if ((pm && current !== pm) || needKid) {
+      const meta: any = { ...(row?.metadata || {}) }
+      if (pm) meta.payment_method = pm
+      if (needKid) meta.kustom_order_id = kid
       await orderModuleService.updateOrders(data.id, {
-        metadata: { ...(row?.metadata || {}), payment_method: pm },
+        metadata: meta,
       })
     }
   } catch (error) {
