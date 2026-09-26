@@ -12,7 +12,7 @@ import { getProductsList } from "@lib/data/products"
 import ProductPreview from "@modules/products/components/product-preview"
 
 export const metadata: Metadata = {
-  title: "Kassa",
+  title: "Kassa | Teknikhouse",
 }
 
 const fetchCart = async () => {
