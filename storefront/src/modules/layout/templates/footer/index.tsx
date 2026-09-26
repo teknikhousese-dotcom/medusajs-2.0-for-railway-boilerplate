@@ -56,7 +56,7 @@ export default async function Footer() {
             <h5>Kontakta oss</h5>
             <a href="mailto:info@teknikhouse.se">info@teknikhouse.se</a>
             <address className="addr">Sveavägen 139<br />113 46 Stockholm</address>
-            <a href="https://se.trustpilot.com/review/teknikhouse.se" target="_blank" rel="noreferrer">Läs våra omdömen på Trustpilot</a>
+            <a href="https://www.trustindex.io/reviews/teknikhouse.se" target="_blank" rel="noopener noreferrer">Läs våra omdömen</a>
             <p className="note">Undrar du var din order är? <LocalizedClientLink href="/contact">Skriv till oss</LocalizedClientLink> med ordernumret så kollar vi.</p>
           </div>
         </div>
