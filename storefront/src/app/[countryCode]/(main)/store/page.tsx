@@ -4,8 +4,10 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import StoreTemplate from "@modules/store/templates"
 
 export const metadata: Metadata = {
-  title: "Alla produkter",
-  description: "Utforska hela vårt sortiment.",
+  title: "Alla produkter | Teknikhouse",
+  description:
+    "Hela sortimentet hos Teknikhouse: mobilreservdelar, skärmar, batterier, verktyg och tillbehör. Eget lager i Stockholm, fri frakt över 999 kr och öppet köp.",
+  alternates: { canonical: "https://www.teknikhouse.se/store" },
 }
 
 type Params = {
