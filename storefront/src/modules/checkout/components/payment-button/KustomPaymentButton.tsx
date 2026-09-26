@@ -68,33 +68,56 @@ const KustomPaymentButton = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notReady])
 
-  // dangerouslySetInnerHTML does not execute <script> tags; KCO needs them, so
-  // re-inject each script node once the snippet is in the DOM.
+  /*
+   * Inject the KCO html_snippet imperatively, exactly once per snippet.
+   * The holder div is rendered WITHOUT children/dangerouslySetInnerHTML so React
+   * never re-writes its innerHTML on later re-renders (e.g. the cart refresh that
+   * follows initiatePaymentSession). Previously React replaced the container
+   * right after Kustom's bootstrap had mounted its iframe, leaving only the
+   * snippet's fallback "Something went wrong / old browser" page.
+   * innerHTML does not execute <script> tags, so each one is re-created.
+   */
+  const injected = useRef<string | null>(null)
   useEffect(() => {
-    if (!snippet || !holder.current) return
-    const scripts = holder.current.querySelectorAll("script")
+    const el = holder.current
+    if (!snippet || !el) return
+    if (injected.current === snippet && el.firstChild) return
+    injected.current = snippet
+    try {
+      document
+        .querySelectorAll("iframe[id^='klarna-']")
+        .forEach((f) => f.parentNode?.removeChild(f))
+      delete (window as any)._klarnaCheckout
+    } catch {
+      /* ignore */
+    }
+    el.innerHTML = snippet
+    const scripts = el.querySelectorAll("script")
     scripts.forEach((old) => {
       const s = document.createElement("script")
       for (const a of Array.from(old.attributes)) s.setAttribute(a.name, a.value)
       s.text = old.text
       old.parentNode?.replaceChild(s, old)
     })
-  }, [snippet])
+  })
 
   if (error) {
     return <ErrorMessage error={error} data-testid="kustom-payment-error-message" />
   }
 
-  if (loading || !snippet) {
-    return (
-      <div className="flex items-center gap-2 text-ui-fg-subtle">
-        <Spinner />
-        <Text className="txt-medium text-ui-fg-subtle">Laddar Klarna…</Text>
-      </div>
-    )
-  }
+  const waiting = loading || !snippet
 
-  return <div ref={holder} dangerouslySetInnerHTML={{ __html: snippet }} />
+  return (
+    <>
+      {waiting && (
+        <div className="flex items-center gap-2 text-ui-fg-subtle">
+          <Spinner />
+          <Text className="txt-medium text-ui-fg-subtle">Laddar Klarna…</Text>
+        </div>
+      )}
+      <div ref={holder} suppressHydrationWarning />
+    </>
+  )
 }
 
 export default KustomPaymentButton
