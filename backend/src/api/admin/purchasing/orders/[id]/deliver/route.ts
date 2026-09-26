@@ -30,7 +30,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     }
     results.push({ line_id: line.id, delivered_now: qty, qty_delivered: newDelivered, stock_updated: stockUpdated })
   }
-  if (b.archive === true) await q(pg, `UPDATE "purchase_order" SET "status" = 'archived', "updated_at" = now() WHERE "id" = ?`, [id])
+  if (b.archive === true) await q(pg, `UPDATE "purchase_order" SET "status" = 'archived', "archived_at" = COALESCE("archived_at", now()), "updated_at" = now() WHERE "id" = ?`, [id])
   const orows = await q(pg, `SELECT * FROM "purchase_order" WHERE "id" = ?`, [id])
   res.json({ order: orows[0], results })
 }
