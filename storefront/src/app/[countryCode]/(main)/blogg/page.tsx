@@ -3,7 +3,7 @@ import Link from "next/link"
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://backend-production-c278d.up.railway.app"
 const PUBKEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "pk_59ff167578b5ec25a84af9a76d15c105da93e6f06e6b49a88a9bba24f9e02b85"
-const CANONICAL = "https://teknikhouse.se/blogg/"
+const CANONICAL = "https://www.teknikhouse.se/blogg"
 
 export const revalidate = 300
 
