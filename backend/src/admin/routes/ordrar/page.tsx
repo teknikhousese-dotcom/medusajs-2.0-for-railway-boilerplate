@@ -165,6 +165,14 @@ function OrderList({ onOpen }: { onOpen: (id: string) => void }) {
         // Server-side sök över ALLA ordrar (inte bara den laddade sidan).
         p.set("q", term)
       }
+      /* Sök på Wiki-ordernummer (metadata.wiki_order_id) först, som i Wiki. */
+      if (term && /^[0-9]+$/.test(term)) {
+        const w = await fetch(`/admin/order-fliks?wiki=${encodeURIComponent(term)}`, { credentials: "include" }).then((r) => r.json()).catch(() => ({}))
+        if (w && w.id) {
+          const wr = await fetch(`/admin/orders?limit=1&id=${encodeURIComponent(w.id)}&fields=${encodeURIComponent(FIELDS)}`, { credentials: "include" }).then((r) => r.json()).catch(() => ({}))
+          if (wr && wr.orders && wr.orders.length) { setRows(wr.orders); setCount(wr.orders.length); setLoading(false); return }
+        }
+      }
       const url = term
         ? `/admin/orders?${p.toString()}`
         : `/admin/order-fliks?flik=${encodeURIComponent(tab)}&limit=${PAGE}&offset=${(page - 1) * PAGE}`
