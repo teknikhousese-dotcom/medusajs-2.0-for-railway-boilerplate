@@ -50,7 +50,11 @@ const Item = ({ item, type = "full" }: ItemProps) => {
           window.location.reload()
           return
         }
-        setError(err.message)
+        setError(
+          /inventory|stock/i.test(String(err?.message || ""))
+            ? "Det finns inte så många i lager. Välj ett lägre antal."
+            : "Kunde inte ändra antalet. Ladda om sidan och försök igen."
+        )
       })
       .finally(() => {
         setUpdating(false)
