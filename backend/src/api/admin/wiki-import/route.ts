@@ -16,6 +16,21 @@ let CHANNEL_ID: string | null = null
 
 const FLIK_BY_NUM: Record<string, string> = { "0": "nya", "1": "makulerade", "-1": "arkiverade" }
 const DOTS = ["", "gul", "gron", "rod"]
+/* Extra Wiki-fält som kan skrivas via orders/orders_update (skrapade från Wikis ordersida). */
+const EXTRA_KEYS = ["ip_address", "wiki_shipping_method", "wiki_shipping_desc", "wiki_klarna_order_id", "wiki_klarna_reference", "wiki_klarna_butik_id", "wiki_klarna_valid_until"]
+
+/* Wiki-tider är svensk lokal tid ("YYYY-MM-DD HH:MM:SS"); gör om till rätt UTC-instant. */
+function sthlmDate(s: any): Date {
+  const str = String(s || "").trim()
+  const mm = str.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/)
+  if (!mm) return new Date(str)
+  const asUtc = Date.UTC(+mm[1], +mm[2] - 1, +mm[3], +mm[4], +mm[5], +(mm[6] || 0))
+  const fmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Stockholm", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+  const parts: Record<string, string> = {}
+  for (const p of fmt.formatToParts(new Date(asUtc))) parts[p.type] = p.value
+  const local = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour % 24, +parts.minute, +parts.second)
+  return new Date(asUtc - (local - asUtc))
+}
 
 function flikOf(o: any): string | undefined {
   const v = o.orderflik ?? o.flik ?? o.metadata?.orderflik
@@ -83,6 +98,10 @@ function wikiStatusMeta(o: any, opts: { keepEmptyComment?: boolean } = {}): Reco
   if (mr !== undefined) m.wiki_makulerad_row = mr === true
   const ret = pick(o, "wiki_has_return")
   if (ret !== undefined) m.wiki_has_return = ret === true
+  for (const k of EXTRA_KEYS) {
+    const v = pick(o, k)
+    if (v !== undefined && v !== null && String(v).trim() !== "") m[k] = String(v).trim()
+  }
   if (Object.keys(m).length) m.wiki_status_synced_at = new Date().toISOString()
   return m
 }
@@ -201,7 +220,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
             ...status,
           },
         })
-        await orderModule.updateOrders(order.id, { created_at: new Date(o.created_at) }).catch(() => {})
+        await orderModule.updateOrders(order.id, { created_at: sthlmDate(o.created_at) }).catch(() => {})
         await orderModule.updateOrders(order.id, { status: "completed" }).catch(() => {})
         created.push({ wiki_order_id: wid, id: order.id, display_id: order.display_id, freight_only: !items.length })
       } catch (e: any) { failed.push({ wiki_order_id: wid, error: e.message }) }
