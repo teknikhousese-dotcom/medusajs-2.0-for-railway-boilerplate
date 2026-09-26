@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 
 const TRUST = [
   { b: "Fri frakt", t: "över 999 kr" },
-  { b: "4,6 / 5", t: "på Trustpilot" },
+  { b: "Verifierad butik", t: "hos Trustindex" },
   { b: "30 dagars", t: "öppet köp" },
-  { b: "Snabb leverans", t: "skickas 1–2 dagar" },
+  { b: "Snabb leverans", t: "skickas 1-2 dagar" },
 ]
 
 const fetchCart = async () => {

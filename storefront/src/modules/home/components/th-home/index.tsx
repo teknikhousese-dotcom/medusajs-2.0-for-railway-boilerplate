@@ -131,26 +131,6 @@ const CSS = `
 .th .intro .imore{display:none}
 .th .intro .itoggle{display:none}
 
-/* newsletter */
-.th .news{background:linear-gradient(135deg,#1b1714,#332c26);border-radius:24px;padding:44px;display:grid;grid-template-columns:1fr minmax(0,460px);align-items:center;gap:32px;color:#fff}
-.th .news h2{font-family:var(--round);font-size:clamp(22px,2.8vw,28px);font-weight:600;line-height:1.2;margin:0 0 8px;color:#fff;letter-spacing:-.02em}
-.th .news p{margin:0;color:#c9c2ba;font-size:15px;line-height:1.6;max-width:460px}
-.th .newsform{width:100%}
-.th .newsrow{display:flex;gap:8px;background:#fff;border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.th .newsrow input{flex:1 1 auto;min-width:0;border:0;outline:0;background:transparent;font-size:16px;color:var(--ink);padding:12px 12px;border-radius:10px;font-family:inherit}
-.th .newsrow input::placeholder{color:var(--faint)}
-.th .newsrow:focus-within{box-shadow:0 0 0 3px rgba(245,0,0,.45),0 10px 30px rgba(0,0,0,.25)}
-.th .newsrow button{flex:0 0 auto;background:var(--red);color:#fff;border:0;border-radius:10px;padding:0 22px;min-height:46px;font-family:var(--round);font-weight:600;font-size:15px;cursor:pointer;transition:background .15s}
-.th .newsrow button:hover{background:var(--red-d)}
-.th .newsrow button:disabled{opacity:.65;cursor:default}
-.th .newsnote{margin-top:10px;font-size:12.5px;line-height:1.5;color:#a79f96}
-.th .newsnote a{color:#fff;text-decoration:underline;text-underline-offset:2px}
-.th .newsmsg{margin-top:10px;font-size:13.5px;font-weight:600;line-height:1.45}
-.th .newsmsg.err{color:#ffb3a8}
-.th .newsok{display:flex;gap:12px;align-items:flex-start;background:rgba(26,157,85,.16);border:1px solid rgba(26,157,85,.5);border-radius:14px;padding:16px 18px;color:#fff;font-size:15px;line-height:1.5}
-.th .newsok b{display:block;font-family:var(--round);font-weight:600}
-.th .newsok span{color:#c9c2ba;font-size:13.5px}
-.th .newsok i{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:14px}
 
 /* section subheading */
 .th .shead .stext{display:flex;flex-direction:column;gap:3px}
@@ -194,7 +174,6 @@ const CSS = `
 }
 @media(max-width:560px){.th .cats{grid-template-columns:repeat(2,1fr)}.th .rvgrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:1000px){
-  .th .news{grid-template-columns:1fr;padding:34px 28px}
   .th .usp .wrap{gap:18px 14px}
   .th .uspitem{justify-content:flex-start}
 }
@@ -222,14 +201,8 @@ const CSS = `
   .th .repair .l{padding:28px 22px}
   .th .deal{padding:28px 24px}
   .th .deal h3,.th .deal p{max-width:100%}
-  .th .news{padding:28px 20px;border-radius:20px}
 }
 @media(max-width:420px){
-  .th .newsrow{flex-direction:column;background:transparent;box-shadow:none;padding:0;gap:10px}
-  .th .newsrow:focus-within{box-shadow:none}
-  .th .newsrow input{background:#fff;border-radius:12px;padding:14px}
-  .th .newsrow input:focus{box-shadow:0 0 0 3px rgba(245,0,0,.45)}
-  .th .newsrow button{width:100%;min-height:50px;border-radius:12px}
 }`
 
 export default function ThHome({ region, products = [] }: { region?: any; products?: any[] }) {
@@ -415,13 +388,7 @@ export default function ThHome({ region, products = [] }: { region?: any; produc
 
       {/* NEWSLETTER */}
       <section className="blk" style={{ paddingTop: 0 }}><div className="wrap">
-        <div className="news">
-          <div>
-            <h2>Nyheter och tips från oss</h2>
-            <p>Vi mejlar när det kommer nya delar, när vi har kampanj och när vi har skrivit något matnyttigt. Du kan avsluta prenumerationen när du vill.</p>
-          </div>
-          <NewsletterSignup />
-        </div>
+        <NewsletterSignup />
       </div></section>
     </div>
   )

@@ -32,7 +32,7 @@ const PAGES: Record<string, Page> = {
           "Garanti ingår alltid. Det är säkert att handla hos oss.",
           "Alla begagnade mobiler och surfplattor är olåsta och säljs utan abonnemang, till lågt pris utan att kompromissa med kvaliteten.",
           "Vi samarbetar med PostNord och DHL.",
-          "Vi är anslutna till Svensk Digital Handel för din trygghet, och våra kunder ger oss betyget ”Utmärkt” på Trustpilot."
+          "Vi är anslutna till Svensk Digital Handel för din trygghet, och våra kunder ger oss betyget ”Utmärkt” på Trustindex."
         ]
       },
       {

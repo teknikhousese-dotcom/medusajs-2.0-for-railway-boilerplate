@@ -11,7 +11,7 @@ const isOutOfStock = (p: any) => {
   return v === false || v === "false" || v === 0 || v === "0"
 }
 
-// Header block of the buy column: brand + stock + Trustpilot row, the product
+// Header block of the buy column: brand + stock + verified-shop row, the product
 // title, and (when we actually have them) artikelnr / EAN. Kept generic so it
 // works for every category — no spare-part-specific wording. The full
 // description lives in the Produktinformation tab (ProductTabs).
@@ -51,7 +51,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
             {oos ? "Slut i lager" : "I lager"}
           </span>
           <span className="ml-auto inline-flex items-center gap-x-1.5 text-xs text-ui-fg-subtle">
-            <span style={{ color: "#FFB020" }}>★</span> Trustpilot 4,9
+            <span style={{ color: "#1a9d55" }}>✓</span> Verifierad butik
           </span>
         </div>
 
