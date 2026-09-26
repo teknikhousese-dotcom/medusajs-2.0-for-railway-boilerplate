@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { placeOrder } from "@lib/data/cart"
+import { placeOrder, prepareKustomCart } from "@lib/data/cart"
 
 // Kustom (Klarna/Kort) redirects the buyer here after a completed KCO purchase.
 // The Medusa cart still lives in the cookie, and its Kustom payment session is
-// now authorizable (Kustom reports checkout_complete), so placeOrder() completes
-// the cart into an order and redirects to the normal order confirmation page.
+// now authorizable (Kustom reports checkout_complete). First the backend copies
+// email, phone and addresses from the Kustom order onto the cart (Klarna-first
+// checkout has no address step), then placeOrder() completes the cart into an
+// order and redirects to the normal order confirmation page.
 export default function KustomConfirmationPage() {
   const [error, setError] = useState<string | null>(null)
   const done = useRef(false)
@@ -14,9 +16,29 @@ export default function KustomConfirmationPage() {
   useEffect(() => {
     if (done.current) return
     done.current = true
-    placeOrder().catch((e: any) =>
+    const run = async () => {
+      let kid = ""
+      try {
+        kid = new URLSearchParams(window.location.search).get("kustom_order_id") || ""
+      } catch {
+        kid = ""
+      }
+      if (kid) {
+        let r: any = await prepareKustomCart(kid)
+        if (r && !r.ok && r.reason === "not_complete") {
+          await new Promise((ok) => setTimeout(ok, 2500))
+          r = await prepareKustomCart(kid)
+        }
+      }
+      await placeOrder()
+    }
+    run().catch((e: any) => {
+      /* redirect() from the server action is not an error */
+      if (e && typeof e.digest === "string" && e.digest.startsWith("NEXT_REDIRECT")) {
+        return
+      }
       setError(e?.message || "Kunde inte slutföra ordern.")
-    )
+    })
   }, [])
 
   return (
