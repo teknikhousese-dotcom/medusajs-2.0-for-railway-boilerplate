@@ -2,7 +2,6 @@ import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { cache } from "react"
 import { HttpTypes } from "@medusajs/types"
-import { getCacheDirectives } from "./cookies"
 
 /**
  * Reads go through sdk.client.fetch rather than the sdk.store.* helpers.
@@ -18,11 +17,22 @@ import { getCacheDirectives } from "./cookies"
  * typechecked cleanly and why the docs recommend it. It has never worked.
  * client.fetch takes a real RequestInit, so `next` and `cache` reach fetch.
  */
+// Regions are the same for every visitor and change a few times a year at
+// most, so they are cached globally for an hour under the plain "regions" tag.
+// They used to go through the per-visitor getCacheDirectives, which caches
+// nothing for a visitor without a cache id (first page view, crawlers, uptime
+// checks), so every such render fetched /store/regions again. The nav calls
+// listRegions on every page, which made it one of the hottest backend calls.
+const REGION_CACHE = {
+  cache: "force-cache" as const,
+  next: { revalidate: 3600, tags: ["regions"] },
+}
+
 export const listRegions = cache(async function () {
   return sdk.client
     .fetch<HttpTypes.StoreRegionListResponse>("/store/regions", {
       method: "GET",
-      ...(await getCacheDirectives("regions")),
+      ...REGION_CACHE,
     })
     .then(({ regions }) => regions)
     .catch(medusaError)
@@ -32,7 +42,7 @@ export const retrieveRegion = cache(async function (id: string) {
   return sdk.client
     .fetch<HttpTypes.StoreRegionResponse>(`/store/regions/${id}`, {
       method: "GET",
-      ...(await getCacheDirectives("regions")),
+      ...REGION_CACHE,
     })
     .then(({ region }) => region)
     .catch(medusaError)
