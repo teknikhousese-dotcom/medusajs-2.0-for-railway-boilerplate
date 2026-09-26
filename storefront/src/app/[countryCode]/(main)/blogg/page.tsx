@@ -52,7 +52,7 @@ export default async function BloggPage() {
     <div className="content-container py-10 lg:py-14">
       <div className="max-w-3xl">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#F50000] mb-3">Teknikhouse Blogg</p>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-[#14161C] break-words">Störst i Sverige på mobilreservdelar, tillbehör &amp; verktyg</h1>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-[#14161C] break-words">Guider om mobilreservdelar, tillbehör &amp; verktyg</h1>
         <p className="mt-4 text-ui-fg-subtle text-base sm:text-lg leading-relaxed">
           Eget lager och grossist. Här delar vi guider om mobilreparation och reservdelar och visar hur du säljer din iPhone, Samsung eller MacBook till oss, tryggt och till ett rättvist pris.
         </p>
