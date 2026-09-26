@@ -285,7 +285,7 @@ function GridPage() {
   const clamp2: any = { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" }
   const lnk: any = { color: "#0060cc", textDecoration: "none" }
   const sep = <span style={{ color: "#bbb", margin: "0 3px" }}>|</span>
-  const dot = (c: string) => <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: c, marginRight: "4px", verticalAlign: "middle", position: "relative", top: "-1px" }} />
+  const dot = (c: string) => <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: c, marginRight: "3px", verticalAlign: "middle", position: "relative", top: "-1px" }} />
   const sel = ids()
 
   return (
@@ -344,9 +344,9 @@ function GridPage() {
             <col />
             <col style={{ width: "95px" }} />
             <col style={{ width: "52px" }} />
-            <col style={{ width: "82px" }} />
+            <col style={{ width: "84px" }} />
             <col style={{ width: "140px" }} />
-            <col style={{ width: "338px" }} />
+            <col style={{ width: "336px" }} />
           </colgroup>
           <thead><tr>
             <th style={{ ...th, textAlign: "center", padding: "4px 0" }}><input type="checkbox" checked={allChecked} onChange={toggleAll} style={{ margin: 0, verticalAlign: "middle" }} /></th>
@@ -364,7 +364,7 @@ function GridPage() {
                   </td>
                   <td style={{ ...tdOne, fontSize: "12px" }} title={(r.variants || [])[0]?.sku || ""}>{(r.variants || [])[0]?.sku || "—"}</td>
                   <td style={tdNum}>{lagerProdukt(r)}</td>
-                  <td style={{ ...tdOne, fontSize: "11px" }} title={r.status === "published" ? "Publicerad" : "Utkast"}>{r.status === "published" ? <span style={{ color: "#1d7f4e" }}>{dot("#2a7")}Publicerad</span> : <span style={{ color: "#8a5a00" }}>{dot("#e0a000")}Utkast</span>}</td>
+                  <td style={{ ...tdOne, fontSize: "11px", padding: "4px 6px" }} title={r.status === "published" ? "Publicerad" : "Utkast"}>{r.status === "published" ? <span style={{ color: "#1d7f4e" }}>{dot("#2a7")}Publicerad</span> : <span style={{ color: "#8a5a00" }}>{dot("#e0a000")}Utkast</span>}</td>
                   <td style={{ ...tdOne, fontSize: "12px", color: "#444" }} title={catName(r)}>{catName(r)}</td>
                   <td style={{ ...tdLast, whiteSpace: "nowrap", fontSize: "12px" }}>
                     <a href={`${ADMIN}/produkt-form?id=${r.id}`} style={lnk}>Redigera</a>{sep}
@@ -377,7 +377,7 @@ function GridPage() {
                 {(r.variants || []).length > 1 && (r.variants || []).map((v: any) => (
                 <tr key={v.id} style={{ background: "#f4f7fb" }}>
                 <td style={{ ...td, padding: "3px 0" }}></td>
-                <td style={{ ...tdOne, padding: "3px 8px 3px 22px", color: "#555", fontSize: "12px" }} title={variantText(v, r) || v.title || r.title}>↳ {variantText(v, r) || v.title || r.title}</td>
+                <td style={{ ...td, padding: "3px 8px 3px 22px", color: "#555", fontSize: "12px" }} title={variantText(v, r) || v.title || r.title}><div style={clamp2}>↳ {variantText(v, r) || v.title || r.title}</div></td>
                 <td style={{ ...tdOne, padding: "3px 8px", fontSize: "12px", color: "#555" }} title={v.sku || ""}>{v.sku || "—"}</td>
                 <td style={{ ...tdNum, padding: "3px 6px", fontSize: "12px" }}>{lagerVariant(v)}</td>
                 <td style={{ ...td, padding: "3px 8px" }}></td>
