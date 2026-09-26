@@ -4,92 +4,148 @@ import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 
 /**
- * Server-side product search used by the /results page.
+ * Produktsök för /results-sidan.
  *
- * Backed by Medusa's own catalog (no MeiliSearch service needed). Medusa's raw
- * `q` param is a strict substring match, which fails on Swedish diacritics
- * ("skarm" vs "skärm") and on word order, so instead we keep a small in-memory
- * index of { id, folded title } for the whole published catalog and match every
- * query token against it, accent-folded. This mirrors teknikhouse's forgiving
- * search: "iphone 11 skarm" finds "iPhone 11 Skärm …".
- *
- * The index is cached in module scope for 10 minutes (the storefront runs as a
- * long-lived Node server on Railway, so this persists across requests). If the
- * index can't be built we fall back to Medusa's plain `q` search.
+ * Primärt: backendens egen sökmotor GET /store/search (relevansrankning,
+ * svenska synonymer, rätt totalantal och sidindelning). Om den inte svarar
+ * (t.ex. under en deploy) används ett enklare index här i storefronten, där
+ * alla ord i sökningen måste finnas i titeln.
  */
 
-type Idx = { id: string; t: string }
+export type SearchSort = "relevance" | "price_asc" | "price_desc" | "newest" | "name"
+
+export type SearchHit = {
+  id: string
+  title: string
+  handle: string
+  thumbnail: string | null
+  href: string
+  in_stock: boolean
+  price: number | null
+}
+
+export type SearchCategory = { id: string; name: string; path: string; count: number }
+
+export type SearchResponse = {
+  q: string
+  count: number
+  offset: number
+  limit: number
+  partial: boolean
+  hits: SearchHit[]
+  categories: SearchCategory[]
+}
+
+const safeDecode = (s: string) => {
+  try {
+    return decodeURIComponent(s)
+  } catch {
+    return s
+  }
+}
+
+type Idx = { id: string; t: string; handle: string; title: string; thumbnail: string | null }
 let INDEX: Idx[] | null = null
 let INDEX_AT = 0
 const TTL = 10 * 60 * 1000
 
 const DIACRITICS = new RegExp("[\\u0300-\\u036f]", "g")
-const fold = (s: string) =>
-  (s || "").toLowerCase().normalize("NFD").replace(DIACRITICS, "")
+const fold = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(DIACRITICS, "")
 
 async function loadIndex(): Promise<Idx[]> {
   const now = Date.now()
   if (INDEX && now - INDEX_AT < TTL) return INDEX
-
   const out: Idx[] = []
   let offset = 0
-  const limit = 100 // store API caps page size at 100; asking for more errors
+  const limit = 100
   for (let i = 0; i < 200; i++) {
-    const { products, count } =
-      await sdk.client.fetch<HttpTypes.StoreProductListResponse>(
-        "/store/products",
-        {
-          method: "GET",
-          query: { limit, offset, fields: "id,title" },
-          cache: "no-store",
-        }
-      )
+    const { products, count } = await sdk.client.fetch<HttpTypes.StoreProductListResponse>("/store/products", {
+      method: "GET",
+      query: { limit, offset, fields: "id,title,handle,thumbnail" },
+      cache: "no-store",
+    })
     const list = products || []
-    for (const p of list) out.push({ id: p.id as string, t: fold(p.title || "") })
+    for (const p of list) {
+      out.push({
+        id: p.id as string,
+        t: fold(p.title || ""),
+        handle: p.handle || "",
+        title: p.title || "",
+        thumbnail: p.thumbnail || null,
+      })
+    }
     offset += list.length
     if (list.length < limit || offset >= (count || 0)) break
   }
-
   INDEX = out
   INDEX_AT = now
   return out
 }
 
-export async function search(query: string) {
-  // The dynamic route segment arrives URL-encoded (e.g. "iphone%20batteri"),
-  // so decode before tokenising — otherwise multi-word queries are one token
-  // with a literal %20 and never match.
-  let raw = query || ""
-  try {
-    raw = decodeURIComponent(raw)
-  } catch {}
-  const folded = fold(raw.trim())
-  if (!folded) return []
-  const tokens = folded.split(/\s+/).filter(Boolean)
-  if (!tokens.length) return []
-
+async function fallbackSearch(q: string, limit: number, offset: number): Promise<SearchResponse> {
+  const tokens = fold(q.trim()).split(/\s+/).filter(Boolean)
+  const empty: SearchResponse = { q, count: 0, offset, limit, partial: false, hits: [], categories: [] }
+  if (!tokens.length) return empty
   try {
     const index = await loadIndex()
-    const hits = index.filter((p) => tokens.every((tok) => p.t.includes(tok)))
-    // Cap the id set: the results page fetches every id in one request, so an
-    // unbounded list (a broad term like "skarm" matches hundreds) overflows the
-    // query string and crashes the page. 100 is plenty for a search result set.
-    return hits.slice(0, 100).map((p) => ({ id: p.id }))
-  } catch {
-    // Fallback: Medusa's plain substring search if the index build failed.
-    try {
-      const { products } =
-        await sdk.client.fetch<HttpTypes.StoreProductListResponse>(
-          "/store/products",
-          {
-            method: "GET",
-            query: { q: raw, limit: 100, fields: "id" },
-            cache: "no-store",
-          }
-        )
-      return (products || []).map((p) => ({ id: p.id }))
-    } catch {
-      return []
+    const all = index.filter((p) => tokens.every((tok) => p.t.includes(tok)))
+    return {
+      ...empty,
+      count: all.length,
+      hits: all.slice(offset, offset + limit).map((p) => ({
+        id: p.id,
+        title: p.title,
+        handle: p.handle,
+        thumbnail: p.thumbnail,
+        href: "/products/" + p.handle,
+        in_stock: true,
+        price: null,
+      })),
     }
+  } catch {
+    return empty
   }
+}
+
+export async function searchProducts({
+  query,
+  page = 1,
+  limit = 24,
+  sort = "relevance",
+}: {
+  query: string
+  page?: number
+  limit?: number
+  sort?: SearchSort
+}): Promise<SearchResponse> {
+  const q = safeDecode(query || "").trim()
+  const offset = Math.max(0, (Math.max(1, page) - 1) * limit)
+  if (!q) return { q, count: 0, offset, limit, partial: false, hits: [], categories: [] }
+  try {
+    const res = await sdk.client.fetch<SearchResponse>("/store/search", {
+      method: "GET",
+      query: { q, limit, offset, sort },
+      cache: "no-store",
+    })
+    if (res && Array.isArray(res.hits)) {
+      return {
+        q,
+        count: Number(res.count) || 0,
+        offset,
+        limit,
+        partial: !!res.partial,
+        hits: res.hits,
+        categories: res.categories || [],
+      }
+    }
+  } catch {
+    /* backend-sök saknas eller svarar inte: använd reserven nedan */
+  }
+  return fallbackSearch(q, limit, offset)
+}
+
+/** Äldre anrop: bara id:n för de 100 första träffarna. */
+export async function search(query: string) {
+  const r = await searchProducts({ query, limit: 100 })
+  return r.hits.map((h) => ({ id: h.id }))
 }
