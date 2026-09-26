@@ -71,6 +71,31 @@ export function customerFromKustomOrder(ko: any): {
   }
 }
 
+/*
+ * B2B in Klarna (allowed_customer_types person + organization): when the
+ * shopper buys as a company, KCO returns customer.type "organization",
+ * customer.organization_registration_id and billing_address.organization_name.
+ * Stored on the cart metadata (copied to the order) as customer_type, org_nr
+ * and company_name, same keys as the Swish address step uses.
+ */
+export function organizationFromKustomOrder(ko: any): {
+  customer_type: "organization" | "person"
+  org_nr: string
+  company_name: string
+} {
+  const type = s(ko?.customer?.type).toLowerCase()
+  const org_nr = s(ko?.customer?.organization_registration_id)
+  const company_name =
+    s(ko?.billing_address?.organization_name) ||
+    s(ko?.shipping_address?.organization_name)
+  const isOrg = type === "organization" || !!org_nr
+  return {
+    customer_type: isOrg ? "organization" : "person",
+    org_nr: isOrg ? org_nr : "",
+    company_name: isOrg ? company_name : "",
+  }
+}
+
 export type ApplyResult = {
   ok: boolean
   reason?: string
@@ -127,6 +152,7 @@ export async function applyKustomOrderToCart(
       "email",
       "completed_at",
       "total",
+      "metadata",
       "shipping_address.address_1",
       "payment_collection.id",
       "payment_collection.payment_sessions.id",
@@ -146,6 +172,15 @@ export async function applyKustomOrderToCart(
   if (c.email) upd.email = c.email
   if (c.shipping_address) upd.shipping_address = c.shipping_address
   if (c.billing_address) upd.billing_address = c.billing_address
+  const org = organizationFromKustomOrder(ko)
+  if (org.customer_type === "organization") {
+    upd.metadata = {
+      ...((cart.metadata as Record<string, any>) || {}),
+      customer_type: "organization",
+      org_nr: org.org_nr,
+      company_name: org.company_name,
+    }
+  }
 
   let updated = false
   if (Object.keys(upd).length > 1) {
