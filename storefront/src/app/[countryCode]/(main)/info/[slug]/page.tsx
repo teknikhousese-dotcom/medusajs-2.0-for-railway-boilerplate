@@ -20,19 +20,19 @@ const PAGES: Record<string, Page> = {
     "blocks": [
       {
         "h": "Vilka vi är",
-        "p": "Vi erbjuder marknadens bredaste sortiment av begagnade mobiler & surfplattor, reservdelar och tillbehör för mobiltelefoner, surfplattor, datorer och hemelektronik. Målet är att erbjuda absolut bästa möjliga kundservice till både privatpersoner och företagskunder. Hos oss hittar du även batterier, skärmar och baksidor."
+        "p": "Vi erbjuder ett brett sortiment av begagnade mobiler & surfplattor, reservdelar och tillbehör för mobiltelefoner, surfplattor, datorer och hemelektronik. Målet är att erbjuda absolut bästa möjliga kundservice till både privatpersoner och företagskunder. Hos oss hittar du även batterier, skärmar och baksidor."
       },
       {
-        "h": "Därför handlar du tryggt hos oss",
+        "h": "Handla tryggt och säkert hos oss",
         "ul": [
-          "Vi har lång erfarenhet i branschen och högsta kvalitet på reservdelar och tillbehör.",
+          "Vi har lång erfarenhet i branschen och är noga med kvaliteten på reservdelar och tillbehör.",
           "Vi hjälper företag och privatpersoner att reparera sina mobila enheter.",
           "Vi testar alla produkter grundligt och utbudet uppdateras hela tiden, det finns alltid nya saker att upptäcka.",
           "Vi säljer produkter som är testade av experter, alltid till låga priser.",
           "Garanti ingår alltid. Det är säkert att handla hos oss.",
           "Alla begagnade mobiler och surfplattor är olåsta och säljs utan abonnemang, till lågt pris utan att kompromissa med kvaliteten.",
           "Vi samarbetar med PostNord och DHL.",
-          "Vi är anslutna till Svensk Digital Handel för din trygghet, och våra kunder ger oss betyget ”Utmärkt” på Trustindex."
+          "Du betalar säkert med Swish, kort eller Klarna, och våra kunder ger oss betyget ”Utmärkt” på Trustindex, 4,6 av 5 i över 2 100 omdömen."
         ]
       },
       {
@@ -326,7 +326,7 @@ const PAGES: Record<string, Page> = {
   },
   "salj-din-enhet": {
     "title": "Sälj din enhet",
-    "intro": "Sälj din iPhone, MacBook, iPad, Apple Watch eller Android-mobil till Teknikhouse, marknadens högsta bud sedan 2014. Kostnadsfri och oförbindande värdering, och pengarna in på ditt konto så fort vi testat din enhet.",
+    "intro": "Sälj din iPhone, MacBook, iPad, Apple Watch eller Android-mobil till Teknikhouse och få ett personligt bud. Kostnadsfri och oförbindande värdering, och pengarna in på ditt konto så fort vi testat din enhet.",
     "blocks": [
       { "p": "Inget pris visas online. Du skickar in uppgifterna om din enhet, sedan går vi igenom dem och mejlar dig ett personligt prisförslag, helt utan förpliktelser. Mejla info@teknikhouse.se för att komma igång." },
       { "h": "Så funkar det", "ul": [
