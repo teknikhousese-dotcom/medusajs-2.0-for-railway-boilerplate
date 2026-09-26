@@ -13,8 +13,8 @@ import { getStoreName } from "@lib/util/env"
  * in their own region rather than one the backend guessed.
  */
 export const metadata: Metadata = {
-  title: `Reset password | ${getStoreName()}`,
-  description: "Set a new password for your account.",
+  title: `Välj nytt lösenord | ${getStoreName()}`,
+  description: "Välj ett nytt lösenord för ditt konto.",
   // A reset link is single use and personal. Nothing here should be indexed,
   // and robots.txt cannot express this since the path carries a query string.
   robots: { index: false, follow: false },
@@ -39,18 +39,17 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
 
   if (!token) {
     return (
-      <div className="w-full flex justify-start px-8 py-8">
+      <div className="content-container w-full flex justify-center py-10 sm:py-16">
         <div className="max-w-sm w-full flex flex-col items-center">
-          <h1 className="text-large-semi uppercase mb-6">
-            This link is incomplete
+          <h1 className="text-large-semi uppercase mb-6 text-center">
+            Länken är inte komplett
           </h1>
           <p className="text-center text-base-regular text-ui-fg-base mb-8">
-            The reset link is missing its token, which usually means the address
-            was copied by hand and part of it was left behind. Ask for a new
-            link and open it directly from the email.
+            En del av länken saknas. Det händer oftast när adressen kopierats
+            för hand. Be om en ny länk och öppna den direkt från mejlet.
           </p>
           <LocalizedClientLink href="/account" className="underline">
-            Back to sign in
+            Tillbaka till inloggningen
           </LocalizedClientLink>
         </div>
       </div>
@@ -58,7 +57,7 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="w-full flex justify-start px-8 py-8">
+    <div className="content-container w-full flex justify-center py-10 sm:py-16">
       <ResetPassword token={token} email={email} />
     </div>
   )
