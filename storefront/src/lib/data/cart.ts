@@ -16,6 +16,7 @@ import {
 } from "./cookies"
 import { getProductsById } from "./products"
 import { getRegion } from "./regions"
+import { checkoutHref } from "@lib/util/checkout-step"
 
 /**
  * The cart is cached under a tag scoped to this visitor, and every mutation
@@ -396,10 +397,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   }
 
   /* Leveransadress is step 3 (after Leverans + Betalning): go on to pay. */
-  const nextStep = updated?.shipping_methods?.length ? "review" : "delivery"
-  redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=${nextStep}`
-  )
+  redirect(checkoutHref(updated?.shipping_methods?.length ? "granska" : "leverans"))
 }
 
 /**
